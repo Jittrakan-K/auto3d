@@ -110,3 +110,4 @@ design/         ไฟล์ดีไซน์และภาพเรนเด�
 - replicad: MIT (`docs/vendor/kernel/replicad.LICENSE`)
 - three.js: MIT (`docs/vendor/three.LICENSE`)
 - ฟอนต์ IBM Plex: SIL Open Font License
+- ฟอนต์ Press Start 2P (โลโก้): SIL Open Font License

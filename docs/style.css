@@ -4,6 +4,7 @@
 @font-face{font-family:"Plex Thai";font-weight:400;src:url(vendor/fonts/ibm-plex-sans-thai-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+2212,U+00D7,U+203A;font-display:swap}
 @font-face{font-family:"Plex Thai";font-weight:500;src:url(vendor/fonts/ibm-plex-sans-thai-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+2212,U+00D7,U+203A;font-display:swap}
 @font-face{font-family:"Plex Thai";font-weight:600;src:url(vendor/fonts/ibm-plex-sans-thai-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F,U+2212,U+00D7,U+203A;font-display:swap}
+@font-face{font-family:"Pixel";font-weight:400;src:url(vendor/fonts/press-start-2p-latin-400-normal.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"Plex Num";font-weight:400;src:url(vendor/fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"Plex Num";font-weight:500;src:url(vendor/fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2");font-display:swap}
 
@@ -40,7 +41,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* header */
 .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;min-height:48px;padding:4px 16px;background:var(--sheet);border-bottom:1px solid var(--rule)}
-.brand{display:flex;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:32px;height:32px;image-rendering:pixelated;display:block}
+.wordmark{font-family:"Pixel","Plex Num",monospace;font-size:14px;font-weight:400;line-height:1;letter-spacing:0;text-transform:none}
+.wordmark span{color:var(--blue)}
 .status{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .state{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .state::before{content:"";width:8px;height:8px;border:1.5px solid var(--muted);border-radius:50%}
