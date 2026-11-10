@@ -42,7 +42,20 @@
   <section class="brief" aria-label="คำสั่ง">
     <form id="brief-form">
       <label for="prompt">อธิบายชิ้นงาน</label>
-      <textarea id="prompt" rows="7" placeholder="เช่น แผ่นเพลทเหล็ก 120 x 80 หนา 10 มม. เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 มม."></textarea>
+      <details class="hint">
+        <summary>คำสั่งที่สร้างได้ทันทีโดยไม่ใช้ AI</summary>
+        <ul>
+          <li>แผ่นอะคริลิค 30x60x5 เจาะรู Ø5 ที่ 15,15 และ 45,15</li>
+          <li>แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5</li>
+          <li>บล็อกอลูมิเนียม กว้าง 50 ยาว 80 สูง 30 รูกลาง Ø10 ลึก 15</li>
+          <li>เพลา Ø20 ยาว 100 ลบคม C1</li>
+          <li>ท่อ OD 30 ID 20 ยาว 50</li>
+          <li>หน้าแปลน Ø120 หนา 12 รูกลาง Ø50 รูน็อต 6 รู PCD 95 Ø11</li>
+          <li>กล่อง 40x40x20 ร่อง 30x6 หรือ ช่อง 40x20 ลึก 3</li>
+        </ul>
+        <p>ตำแหน่ง x,y วัดจากมุมชิ้นงาน ชิ้นงานที่ซับซ้อนกว่านี้หรือมี Drawing ระบบจะส่งต่อให้ Claude</p>
+      </details>
+      <textarea id="prompt" rows="6" placeholder="เช่น แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5"></textarea>
 
       <div id="drop" class="drop" tabindex="0" role="button" aria-label="แนบ Drawing">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M15 8.5l-6.2 6.2a4 4 0 0 1-5.7-5.7L9.6 2.5a2.7 2.7 0 0 1 3.8 3.8L7 12.6a1.3 1.3 0 0 1-1.9-1.9l5.8-5.8"/></svg>
@@ -55,13 +68,14 @@
         <input id="modify" type="checkbox" checked> แก้จากชิ้นงานปัจจุบัน
       </label>
 
-      <button id="generate" class="btn primary wide" type="submit">สร้างโมเดล</button>
+      <button id="generate" class="btn primary wide" type="submit">สร้างโมเดลและไฟล์ STEP</button>
       <p id="busy" class="busy" hidden role="status"></p>
       <p id="error" class="error" hidden role="alert"></p>
     </form>
 
     <section id="pro-flow" class="pro" hidden aria-labelledby="pro-title">
       <h2 id="pro-title">ออกแบบด้วย Claude Pro</h2>
+      <p id="pro-reason" class="error" hidden></p>
       <p class="muted small">ใช้แชตของ Claude ที่คุณสมัครไว้ ไม่ต้องใช้ API key ไม่เสียเงินเพิ่ม</p>
       <ol class="steps">
         <li>กด <b>คัดลอกคำสั่ง</b> แล้วกด <b>เปิด Claude</b> วางในแชตใหม่แล้วส่ง<span id="pro-attach" hidden> แนบไฟล์ Drawing ในแชตของ Claude ด้วย</span></li>
@@ -130,7 +144,7 @@
           <table class="tb-files">
             <thead><tr><th scope="col">ไฟล์</th><th scope="col">เปิดใน SOLIDWORKS</th><th><span class="sr">คำสั่ง</span></th></tr></thead>
             <tbody>
-              <tr><th scope="row">STEP AP214</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
+              <tr><th scope="row">STEP AP203</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
               <tr><th scope="row">มาโคร .swb</th><td>รันใน 2018 ขึ้นไป ได้ SLDPRT รุ่นนั้น</td><td><button id="dl-macro" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
             </tbody>
           </table>

@@ -2,6 +2,7 @@ import { Viewer } from "./js/viewer.js";
 import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js";
 import { useHelpers, render as renderMacro } from "./js/macro.js";
 import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
+import { quickPlan } from "./js/quick.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
@@ -174,7 +175,29 @@ $("brief-form").onsubmit = async (e) => {
   fail("");
   const prompt = $("prompt").value;
   if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
-  if (!state.key) { openPro(); return; }
+  if (!state.key) {
+    if (state.files.length) {
+      openPro("การอ่าน Drawing ต้องใช้ Claude คัดลอกคำสั่งให้แล้ว");
+      return;
+    }
+    // Plain parts: read the command here, build, and hand over the STEP file in one click.
+    const quick = quickPlan(prompt);
+    if (quick.error) {
+      openPro(`ระบบอ่านคำสั่งนี้เองไม่ได้: ${quick.error} หรือให้ Claude ออกแบบ คัดลอกคำสั่งให้แล้ว`);
+      return;
+    }
+    busy("กำลังสร้างโมเดล");
+    await nextFrame();
+    try {
+      const built = tryBuild(quick.plan);
+      if (built.error) { openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`); return; }
+      show($("pro-flow"), false);
+      await showJob(quick.plan, built.plan, built.result);
+      download(state.job.step, `${safeName(state.job.plan.name)}.step`);
+    } catch (err) { fail(`เกิดข้อผิดพลาด: ${err.message}`); }
+    finally { busy(""); }
+    return;
+  }
   busy(state.files.length ? "กำลังอ่าน Drawing และออกแบบ อาจใช้เวลา 1 ถึง 3 นาที" : "กำลังออกแบบ อาจใช้เวลาประมาณ 1 นาที");
   try {
     const blocks = [];
@@ -221,8 +244,10 @@ async function copyText(text, note) {
   n.textContent = note; show(n, true);
 }
 
-function openPro() {
+function openPro(reason = "") {
   show($("pro-flow"), true);
+  $("pro-reason").textContent = reason;
+  show($("pro-reason"), !!reason);
   show($("pro-attach"), state.files.length > 0);
   show($("pro-fix"), false);
   $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });

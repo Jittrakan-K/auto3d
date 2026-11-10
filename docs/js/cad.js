@@ -120,6 +120,15 @@ function wireOf(loop, pl, z = 0) {
 }
 
 // Outlines with the loops nested directly inside them as openings.
+function groupsOf(loops) {
+  const polys = loops.map(samplePoly);
+  const depth = polys.map((p, i) => polys.filter((q, j) => j !== i && polyArea(q) > polyArea(p) && inside(p[0], q)).length);
+  return loops.flatMap((loop, i) => (depth[i] % 2 ? [] : [{
+    outer: loop,
+    holes: loops.filter((_, j) => depth[j] === depth[i] + 1 && inside(polys[j][0], polys[i])),
+  }]));
+}
+
 function facesOf(loops, pl, z = 0) {
   const polys = loops.map(samplePoly);
   const depth = polys.map((p, i) => polys.filter((q, j) => j !== i && polyArea(q) > polyArea(p) && inside(p[0], q)).length);
@@ -150,7 +159,12 @@ function prism(loops, pl, z0, z1, draftDeg) {
     }));
   }
   const vec = new R.Vector(pl.n.map((v) => v * (z1 - z0)));
-  return fuseAll(facesOf(loops, pl, z0).map((f) => R.basicFaceExtrusion(f, vec)));
+  const solid = (loop) => R.basicFaceExtrusion(R.makeFace(wireOf(loop, pl, z0)), vec);
+  return fuseAll(groupsOf(loops).map(({ outer, holes }) => {
+    let s = solid(outer);
+    for (const h of holes) s = s.cut(solid(h));
+    return s;
+  }));
 }
 
 function bounds(shape) {
@@ -334,8 +348,29 @@ export function build(plan) {
   };
 }
 
-export function stepBlob(result, name) {
-  return R.exportSTEP([{ shape: result.shape, name }]);
+// STEP AP203 (CONFIG_CONTROL_DESIGN): the most widely read STEP schema, opened by SOLIDWORKS 2018.
+const SCHEMA = { AP214: 4, AP203: 3, AP242: 5 };
+export function stepBlob(result, name, schema = "AP203") {
+  const oc = R.getOC();
+  const r = R.GCWithScope();
+  const doc = R.createAssembly([{ shape: result.shape, name, color: "#c8ced1" }]);
+  const session = r(new oc.XSControl_WorkSession());
+  const writer = r(new oc.STEPCAFControl_Writer(session, false));
+  writer.SetColorMode(schema !== "AP203");
+  writer.SetLayerMode(false);
+  writer.SetNameMode(true);
+  oc.Interface_Static.SetCVal("write.step.unit", "MM");
+  oc.Interface_Static.SetIVal("write.surfacecurve.mode", 1);
+  oc.Interface_Static.SetIVal("write.precision.mode", 0);
+  oc.Interface_Static.SetIVal("write.step.assembly", 2);
+  oc.Interface_Static.SetIVal("write.step.schema", SCHEMA[schema]);
+  oc.Interface_Static.SetCVal("write.step.product.name", name);
+  const file = "/export.step";
+  const progress = r(new oc.Message_ProgressRange());
+  if (!writer.Perform(doc.wrapped, file, progress)) throw new Error("writing the STEP file failed");
+  const data = oc.FS.readFile(file);
+  oc.FS.unlink(file);
+  return new Blob([data], { type: "application/step" });
 }
 
 export async function verifyStep(blob, expected) {

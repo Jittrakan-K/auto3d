@@ -406,13 +406,27 @@ def _apply(step: Step, feature: Any, body: Optional[cq.Shape]) -> cq.Shape:
     raise BuildError(step.id, f"unknown step kind {step.kind}")
 
 
+def write_step_ap203(shape: cq.Shape, path: Path, name: str) -> None:
+    """STEP AP203 (CONFIG_CONTROL_DESIGN): the most widely read schema, same as the web version."""
+    from OCP.IFSelect import IFSelect_RetDone
+    from OCP.Interface import Interface_Static
+    from OCP.STEPControl import STEPControl_AsIs, STEPControl_Writer
+
+    writer = STEPControl_Writer()
+    Interface_Static.SetIVal_s("write.step.schema", 3)
+    Interface_Static.SetCVal_s("write.step.unit", "MM")
+    Interface_Static.SetCVal_s("write.step.product.name", name)
+    writer.Model(True)
+    writer.Transfer(shape.wrapped, STEPControl_AsIs)
+    if writer.Write(str(path)) != IFSelect_RetDone:
+        raise IOError(f"writing {path} failed")
+
+
 def export(result: BuildResult, folder: Path, stem: str) -> dict[str, Path]:
     folder.mkdir(parents=True, exist_ok=True)
     step_path = folder / f"{stem}.step"
     stl_path = folder / f"{stem}.stl"
-    cq.exporters.export(
-        cq.Workplane("XY").newObject([result.shape]), str(step_path), opt={"write_pcurves": True}
-    )
+    write_step_ap203(result.shape, step_path, stem)
     result.shape.exportStl(str(stl_path), tolerance=0.05, angularTolerance=0.15)
     return {"step": step_path, "stl": stl_path}
 
