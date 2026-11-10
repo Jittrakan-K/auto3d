@@ -230,9 +230,23 @@ function openPro() {
 }
 
 function extractPlan(text) {
-  const block = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = block ? block[1] : text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-  try { return JSON.parse(body); } catch (e) { throw new Error(`อ่าน JSON ในคำตอบไม่ได้: ${e.message}`); }
+  if (!text.trim()) throw new Error("ยังไม่ได้วางคำตอบจาก Claude");
+  if (text.includes("PLAN FORMAT (JSON") || text.includes("ANSWER FORMAT:")) {
+    throw new Error("ข้อความที่วางคือคำสั่งที่เว็บคัดลอกไปให้ Claude ไม่ใช่คำตอบ ให้วางคำสั่งนี้ในแชตของ Claude ก่อน แล้วคัดลอกคำตอบของ Claude มาวางที่นี่");
+  }
+  // Try every code block, newest last, then the outermost braces.
+  const blocks = [...text.matchAll(/```[a-zA-Z]*\s*([\s\S]*?)```/g)].map((m) => m[1]).reverse();
+  const first = text.indexOf("{"), last = text.lastIndexOf("}");
+  if (first >= 0 && last > first) blocks.push(text.slice(first, last + 1));
+  let error = "ไม่พบโค้ด JSON ในคำตอบ";
+  for (const body of blocks) {
+    try {
+      const value = JSON.parse(body);
+      if (value && typeof value === "object" && Array.isArray(value.features)) return value;
+      error = "JSON ในคำตอบไม่ใช่แผนชิ้นงาน (ไม่มี features)";
+    } catch (e) { error = `อ่าน JSON ในคำตอบไม่ได้: ${e.message}`; }
+  }
+  throw new Error(error);
 }
 
 $("pro-copy").onclick = () => copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
@@ -240,12 +254,17 @@ $("pro-build").onclick = async () => {
   show($("pro-fix"), false); show($("pro-note"), false);
   let raw;
   try { raw = extractPlan($("pro-reply").value); }
-  catch (e) { $("pro-error").textContent = e.message; show($("pro-fix"), true); return; }
+  catch (e) {
+    $("pro-error").textContent = e.message;
+    show($("pro-fix"), true);
+    show($("pro-copy-error"), !e.message.startsWith("ข้อความที่วาง") && !e.message.startsWith("ยังไม่ได้"));
+    return;
+  }
   busy("กำลังสร้างโมเดล");
   await nextFrame();
   try {
     const built = tryBuild(raw);
-    if (built.error) { $("pro-error").textContent = built.error; show($("pro-fix"), true); return; }
+    if (built.error) { $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
     await showJob(raw, built.plan, built.result);
     $("pro-reply").value = "";
     state.files = []; renderFiles();
