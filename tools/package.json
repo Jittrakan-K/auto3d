@@ -1,0 +1,13 @@
+{
+  "name": "autodesign3d-tools",
+  "private": true,
+  "type": "module",
+  "description": "Checks that the GitHub Pages engine (docs/js) gives the same results as the Python engine",
+  "scripts": { "parity": "node parity.mjs" },
+  "devDependencies": {
+    "replicad": "1.2.1",
+    "replicad-opencascadejs": "1.2.1",
+    "dxf-parser": "1.1.2",
+    "esbuild": "0.25.0"
+  }
+}

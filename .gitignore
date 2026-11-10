@@ -1,0 +1,15 @@
+# local settings and secrets
+.env
+
+# environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+
+# generated files
+output/
+sw_test_log.txt
+~$*
+
+# node tools
+node_modules/

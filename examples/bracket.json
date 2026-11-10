@@ -1,0 +1,114 @@
+{
+ "name": "Mounting_Bracket",
+ "description": "ฉากยึด L เจาะรู 4 รูและร่อง",
+ "density_g_cm3": 7.85,
+ "parameters": [
+  {
+   "name": "W",
+   "value": 100,
+   "label": "ความกว้างแผ่นฐาน"
+  },
+  {
+   "name": "D",
+   "value": 80,
+   "label": "ความลึกแผ่นฐาน"
+  },
+  {
+   "name": "T",
+   "value": 6,
+   "label": "ความหนา"
+  },
+  {
+   "name": "H",
+   "value": 60,
+   "label": "ความสูงแผ่นตั้ง"
+  },
+  {
+   "name": "HOLE",
+   "value": 9,
+   "label": "รูยึด"
+  }
+ ],
+ "features": [
+  {
+   "id": "F1",
+   "type": "extrude",
+   "name": "Base plate",
+   "plane": "Top",
+   "sketch": [
+    {
+     "type": "rect",
+     "w": "=W",
+     "h": "=D"
+    }
+   ],
+   "depth": "=T"
+  },
+  {
+   "id": "F2",
+   "type": "extrude",
+   "name": "Upright",
+   "plane": "Front",
+   "offset": "=D/2-T",
+   "sketch": [
+    {
+     "type": "rect",
+     "cx": 0,
+     "cy": "=H/2",
+     "w": "=W",
+     "h": "=H"
+    }
+   ],
+   "depth": "=T"
+  },
+  {
+   "id": "F3",
+   "type": "hole",
+   "name": "Base holes",
+   "plane": "Top",
+   "offset": "=T",
+   "direction": "reverse",
+   "grid": {
+    "cx": 0,
+    "cy": 0,
+    "nx": 2,
+    "ny": 2,
+    "dx": "=W-30",
+    "dy": "=D-40"
+   },
+   "diameter": "=HOLE",
+   "through": true
+  },
+  {
+   "id": "F4",
+   "type": "cut",
+   "name": "Wall slot",
+   "plane": "Front",
+   "offset": "=D/2",
+   "direction": "reverse",
+   "sketch": [
+    {
+     "type": "slot",
+     "cx": 0,
+     "cy": "=H-20",
+     "length": 40,
+     "width": 10
+    }
+   ],
+   "through": true
+  },
+  {
+   "id": "F5",
+   "type": "fillet",
+   "name": "Vertical corners",
+   "radius": 6,
+   "edges": {
+    "parallel_to": "Y",
+    "on": {
+     "axis": "Z",
+     "at": "min"
+    }
+   }
+  }
+ ]
+}

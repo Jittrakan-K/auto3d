@@ -1,0 +1,10 @@
+cadquery==2.8.0
+fastapi==0.162.0
+uvicorn==0.38.0
+python-multipart
+pydantic>=2.8,<3
+anthropic>=2.5,<3
+ezdxf==1.4.5
+matplotlib
+python-dotenv
+pywin32; sys_platform == "win32"

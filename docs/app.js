@@ -1,0 +1,262 @@
+import { Viewer } from "./js/viewer.js";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js";
+import { useHelpers, render as renderMacro } from "./js/macro.js";
+import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
+
+const $ = (id) => document.getElementById(id);
+const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
+const KEY_STORE = "autodesign3d.key";
+const MODEL_STORE = "autodesign3d.model";
+const state = { job: null, files: [], key: "", model: MODELS[0], kernel: null, DxfParser: null, schema: null, system: "" };
+const viewer = new Viewer($("viewport"));
+
+// Storage can be blocked (private windows), so every access is guarded.
+const store = {
+  get(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+  set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch { /* not saved */ } },
+};
+
+function show(el, on) { el.hidden = !on; }
+function fail(message) { $("error").textContent = message; show($("error"), !!message); }
+function busy(text) {
+  $("busy").textContent = text || "";
+  show($("busy"), !!text);
+  $("generate").disabled = !!text || !state.kernel;
+  $("rebuild").disabled = !!text;
+}
+function list(el, items) {
+  el.replaceChildren(...items.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+}
+const fmt = (n, d = 2) => Number(n).toLocaleString("en-US", { maximumFractionDigits: d });
+const safeName = (n) => (n || "part").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").trim() || "part";
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+function download(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+// ---------- status ----------
+function refreshStatus() {
+  const ai = $("st-ai");
+  ai.className = "state " + (state.key ? "on" : "off");
+  ai.textContent = state.key ? "Claude พร้อมใช้" : "Claude ยังไม่มีคีย์";
+  ai.title = state.key ? `ใช้ ${state.model}` : "ใส่ API key ที่ปุ่มตั้งค่า";
+  const cad = $("st-cad");
+  cad.className = "state " + (state.kernel ? "on" : state.kernelError ? "off" : "wait");
+  cad.textContent = state.kernel ? "ตัวสร้างโมเดลพร้อม" : state.kernelError ? "โหลดตัวสร้างโมเดลไม่ได้" : "ตัวสร้างโมเดลกำลังโหลด";
+  $("generate").disabled = !state.kernel;
+}
+
+async function loadKernel() {
+  const [K, helpers, schema, system] = await Promise.all([
+    import("./vendor/kernel/cad-kernel.js"),
+    fetch("assets/macro-helpers.bas").then((r) => r.text()),
+    fetch("assets/plan-schema.json").then((r) => r.json()),
+    fetch("assets/system-prompt.txt").then((r) => r.text()),
+  ]);
+  const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
+  const oc = await K.opencascade({ locateFile: () => wasm });
+  K.setOC(oc);
+  useKernel(K);
+  useHelpers(helpers);
+  Object.assign(state, { kernel: K, DxfParser: K.DxfParser, schema, system });
+}
+
+// ---------- files ----------
+function renderFiles() {
+  $("file-list").replaceChildren(...state.files.map((f, i) => {
+    const li = document.createElement("li");
+    const name = document.createElement("span"); name.textContent = f.name;
+    const del = document.createElement("button");
+    del.type = "button"; del.textContent = "เอาออก";
+    del.onclick = () => { state.files.splice(i, 1); renderFiles(); };
+    li.append(name, del);
+    return li;
+  }));
+}
+function addFiles(files) { state.files.push(...files); renderFiles(); }
+const drop = $("drop");
+drop.onclick = () => $("file").click();
+drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+$("file").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+for (const ev of ["dragover", "dragenter"]) drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); });
+for (const ev of ["dragleave", "drop"]) drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); });
+drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+
+// ---------- result ----------
+async function showJob(raw, plan, result) {
+  const step = stepBlob(result, plan.name);
+  const verify = await verifyStep(step, result.volume_mm3);
+  state.job = { raw, plan, result, step, macro: renderMacro(result.steps, plan.name) };
+  document.body.classList.add("has-model");
+  show($("rebuild"), false);
+  show($("empty"), false);
+  show($("no-model"), false);
+  show($("details"), true);
+  show($("title-block"), true);
+  show($("modify-row"), true);
+
+  $("tb-name").textContent = plan.name;
+  $("tb-size").textContent = result.size.map((v) => fmt(v)).join(" × ");
+  $("tb-vol").textContent = fmt(result.volume_mm3 / 1000);
+  $("tb-mass").textContent = fmt(result.mass_g);
+  const v = $("tb-verify");
+  v.textContent = verify.ok ? "ผ่าน ปริมาตรตรงกัน" : `ค่าต่างกัน ${verify.diff_percent}%`;
+  v.classList.toggle("bad", !verify.ok);
+
+  show($("questions-box"), plan.questions.length > 0);
+  list($("questions"), plan.questions);
+  show($("assume-box"), plan.assumptions.length > 0);
+  list($("assumptions"), plan.assumptions);
+  renderDims(raw, plan);
+  list($("features"), plan.features.map((f) => f.name || f.id));
+  $("plan-json").value = JSON.stringify(raw, null, 2);
+  viewer.load(meshOf(result));
+}
+
+function renderDims(raw, plan) {
+  const rows = plan.parameters.map((p, i) => {
+    const tr = document.createElement("tr");
+    if (p.confidence === "low") tr.className = "low";
+    const a = document.createElement("td");
+    a.textContent = p.label || p.name;
+    if (p.confidence === "low") {
+      const tag = document.createElement("span");
+      tag.className = "tag"; tag.textContent = "ค่าประมาณ ตรวจก่อนใช้";
+      a.append(" ", tag);
+    }
+    if (p.source) { const s = document.createElement("small"); s.textContent = p.source; a.append(s); }
+    const b = document.createElement("td");
+    const input = document.createElement("input");
+    input.type = "number"; input.step = "any"; input.value = +p.value.toFixed(4);
+    input.setAttribute("aria-label", p.label || p.name);
+    const src = raw.parameters[i];
+    if (typeof src.value === "string" && src.value.startsWith("=")) {
+      input.disabled = true; input.title = `คำนวณจาก ${src.value.slice(1)}`;
+    }
+    input.oninput = () => {
+      if (input.value === "") return;
+      src.value = Number(input.value);
+      show($("rebuild"), true);
+    };
+    b.append(input);
+    tr.append(a, b);
+    return tr;
+  });
+  if (!rows.length) {
+    const tr = document.createElement("tr"), td = document.createElement("td");
+    td.colSpan = 2; td.textContent = "แผนนี้ไม่มีตัวแปรให้แก้"; tr.append(td); rows.push(tr);
+  }
+  $("dims").replaceChildren(...rows);
+}
+
+async function buildRaw(raw) {
+  fail(""); busy("กำลังสร้างโมเดล");
+  await nextFrame();
+  try {
+    const built = tryBuild(raw);
+    if (built.error) throw new Error(built.error);
+    await showJob(raw, built.plan, built.result);
+  } catch (e) { fail(e.message); }
+  finally { busy(""); }
+}
+
+// ---------- actions ----------
+$("brief-form").onsubmit = async (e) => {
+  e.preventDefault();
+  fail("");
+  if (!state.key) { fail("ใส่ Claude API key ก่อน หรือลองชิ้นงานตัวอย่างด้านล่าง"); openSettings(); return; }
+  const prompt = $("prompt").value;
+  if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
+  busy(state.files.length ? "กำลังอ่าน Drawing และออกแบบ อาจใช้เวลา 1 ถึง 3 นาที" : "กำลังออกแบบ อาจใช้เวลาประมาณ 1 นาที");
+  try {
+    const blocks = [];
+    for (const f of state.files) blocks.push(...(await toBlocks(f, state.DxfParser)));
+    const r = await makePlan({
+      key: state.key, model: state.model, system: state.system, schema: state.schema,
+      prompt, blocks, currentPlan: state.job && $("modify").checked ? state.job.raw : null,
+      onStatus: (t) => busy(t),
+    });
+    await showJob(r.raw, r.plan, r.result);
+    state.files = []; renderFiles();
+  } catch (err) { fail(err instanceof AiError ? err.message : `เกิดข้อผิดพลาด: ${err.message}`); }
+  finally { busy(""); }
+};
+
+$("rebuild").onclick = () => buildRaw(state.job.raw);
+$("build-json").onclick = () => {
+  let raw;
+  try { raw = JSON.parse($("plan-json").value); } catch (e) { fail(`JSON ไม่ถูกต้อง: ${e.message}`); return; }
+  buildRaw(raw);
+};
+$("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan.name)}.step`);
+$("dl-macro").onclick = () => download(new Blob([state.job.macro], { type: "text/plain" }), `${safeName(state.job.plan.name)}.swb`);
+
+function press(selector, chosen) {
+  document.querySelectorAll(selector).forEach((b) => b.setAttribute("aria-pressed", String(b === chosen)));
+}
+document.querySelectorAll("[data-view]").forEach((b) => {
+  b.onclick = () => {
+    const name = b.dataset.view;
+    press("[data-view]", b);
+    $("views").dataset.mode = name === "quad" ? "quad" : "single";
+    $("single-label").textContent = VIEW_NAMES[name] || "";
+    viewer.setView(name);
+  };
+});
+document.querySelectorAll("[data-look]").forEach((b) => {
+  b.onclick = () => { press("[data-look]", b); viewer.setLook(b.dataset.look); };
+});
+
+// ---------- settings ----------
+function openSettings() {
+  show($("settings-error"), false);
+  $("remember").checked = !!store.get(KEY_STORE);
+  $("settings").showModal();
+}
+$("open-settings").onclick = openSettings;
+$("close-settings").onclick = () => $("settings").close();
+$("settings-form").onsubmit = (e) => {
+  e.preventDefault();
+  const key = $("api-key").value.trim();
+  if (key && !/^[A-Za-z0-9_-]{20,300}$/.test(key)) {
+    $("settings-error").textContent = "รูปแบบ API key ไม่ถูกต้อง";
+    show($("settings-error"), true);
+    return;
+  }
+  if (key) state.key = key;
+  state.model = $("model").value;
+  store.set(MODEL_STORE, state.model);
+  store.set(KEY_STORE, $("remember").checked ? state.key : "");
+  $("api-key").value = "";
+  refreshStatus();
+  $("settings").close();
+};
+
+(async () => {
+  state.key = store.get(KEY_STORE);
+  state.model = MODELS.includes(store.get(MODEL_STORE)) ? store.get(MODEL_STORE) : MODELS[0];
+  $("model").replaceChildren(...MODELS.map((m) => new Option(m, m, false, m === state.model)));
+  refreshStatus();
+  try {
+    const names = await fetch("examples/index.json").then((r) => r.json());
+    const examples = await Promise.all(names.map((n) => fetch(`examples/${n}`).then((r) => r.json())));
+    $("examples").replaceChildren(...examples.map((x) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = x.description || x.name;
+      b.onclick = () => { if (state.kernel) buildRaw(structuredClone(x)); };
+      return b;
+    }));
+    await loadKernel();
+  } catch (e) {
+    state.kernelError = true;
+    fail(`โหลดตัวสร้างโมเดลไม่ได้: ${e.message}`);
+  }
+  refreshStatus();
+})();

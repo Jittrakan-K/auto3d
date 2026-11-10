@@ -1,0 +1,123 @@
+{
+ "name": "Pipe_Flange",
+ "description": "หน้าแปลนท่อ รูน็อต 6 รู",
+ "density_g_cm3": 7.85,
+ "parameters": [
+  {
+   "name": "OD",
+   "value": 120,
+   "label": "เส้นผ่านศูนย์กลางนอก"
+  },
+  {
+   "name": "ID",
+   "value": 50,
+   "label": "รูใน"
+  },
+  {
+   "name": "TF",
+   "value": 14,
+   "label": "ความหนาปีก"
+  },
+  {
+   "name": "HUB",
+   "value": 70,
+   "label": "เส้นผ่านศูนย์กลางคอ"
+  },
+  {
+   "name": "HH",
+   "value": 34,
+   "label": "ความสูงรวม"
+  }
+ ],
+ "features": [
+  {
+   "id": "F1",
+   "type": "revolve",
+   "name": "Flange body",
+   "plane": "Front",
+   "axis_a": [
+    0,
+    0
+   ],
+   "axis_b": [
+    0,
+    100
+   ],
+   "sketch": [
+    {
+     "type": "profile",
+     "start": [
+      "=ID/2",
+      0
+     ],
+     "segments": [
+      {
+       "line_to": [
+        "=OD/2",
+        0
+       ]
+      },
+      {
+       "line_to": [
+        "=OD/2",
+        "=TF"
+       ]
+      },
+      {
+       "line_to": [
+        "=HUB/2",
+        "=TF"
+       ]
+      },
+      {
+       "line_to": [
+        "=HUB/2",
+        "=HH"
+       ]
+      },
+      {
+       "line_to": [
+        "=ID/2",
+        "=HH"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "F2",
+   "type": "hole",
+   "name": "Bolt holes",
+   "plane": "Top",
+   "offset": "=TF",
+   "direction": "reverse",
+   "bolt_circle": {
+    "pcd": 95,
+    "count": 6
+   },
+   "diameter": 11,
+   "through": true
+  },
+  {
+   "id": "F3",
+   "type": "chamfer",
+   "name": "Bore chamfer",
+   "distance": 2,
+   "edges": {
+    "kind": "circle",
+    "on": {
+     "axis": "Y",
+     "at": "max"
+    },
+    "near": [
+     [
+      25,
+      34,
+      0
+     ]
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,135 @@
+{
+ "name": "Stepped_Shaft",
+ "description": "เพลาขั้นมีร่องลิ่ม",
+ "density_g_cm3": 7.85,
+ "parameters": [
+  {
+   "name": "D1",
+   "value": 30,
+   "label": "Ø ช่วงกลาง"
+  },
+  {
+   "name": "D2",
+   "value": 20,
+   "label": "Ø ปลาย"
+  },
+  {
+   "name": "L1",
+   "value": 40,
+   "label": "ความยาวปลาย"
+  },
+  {
+   "name": "L2",
+   "value": 80,
+   "label": "ความยาวกลาง"
+  }
+ ],
+ "features": [
+  {
+   "id": "F1",
+   "type": "revolve",
+   "name": "Shaft",
+   "plane": "Front",
+   "axis_a": [
+    0,
+    0
+   ],
+   "axis_b": [
+    100,
+    0
+   ],
+   "sketch": [
+    {
+     "type": "profile",
+     "start": [
+      0,
+      0
+     ],
+     "segments": [
+      {
+       "line_to": [
+        0,
+        "=D2/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=L1",
+        "=D2/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=L1",
+        "=D1/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=L1+L2",
+        "=D1/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=L1+L2",
+        "=D2/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=2*L1+L2",
+        "=D2/2"
+       ]
+      },
+      {
+       "line_to": [
+        "=2*L1+L2",
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "F2",
+   "type": "cut",
+   "name": "Keyway",
+   "plane": "Top",
+   "offset": "=D1/2",
+   "direction": "reverse",
+   "sketch": [
+    {
+     "type": "slot",
+     "cx": "=L1+L2/2",
+     "cy": 0,
+     "length": 50,
+     "width": 8
+    }
+   ],
+   "depth": 4
+  },
+  {
+   "id": "F3",
+   "type": "chamfer",
+   "name": "End chamfers",
+   "distance": 1,
+   "edges": {
+    "kind": "circle",
+    "near": [
+     [
+      0,
+      10,
+      0
+     ],
+     [
+      140,
+      10,
+      0
+     ]
+    ]
+   }
+  }
+ ]
+}

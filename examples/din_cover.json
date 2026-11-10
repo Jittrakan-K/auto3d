@@ -1,0 +1,133 @@
+{
+ "name": "Control_Box_Cover",
+ "description": "ฝาครอบกล่องคอนโทรล อลูมิเนียม",
+ "density_g_cm3": 2.7,
+ "parameters": [
+  {
+   "name": "L",
+   "value": 160,
+   "label": "ความยาว"
+  },
+  {
+   "name": "W",
+   "value": 100,
+   "label": "ความกว้าง"
+  },
+  {
+   "name": "H",
+   "value": 24,
+   "label": "ความสูง"
+  },
+  {
+   "name": "WALL",
+   "value": 4,
+   "label": "ความหนาผนัง"
+  }
+ ],
+ "features": [
+  {
+   "id": "F1",
+   "type": "extrude",
+   "name": "Block",
+   "plane": "Top",
+   "sketch": [
+    {
+     "type": "rect",
+     "w": "=L",
+     "h": "=W"
+    }
+   ],
+   "depth": "=H"
+  },
+  {
+   "id": "F2",
+   "type": "fillet",
+   "name": "Corner radius",
+   "radius": 8,
+   "edges": {
+    "parallel_to": "Y"
+   }
+  },
+  {
+   "id": "F3",
+   "type": "cut",
+   "name": "Pocket",
+   "plane": "Top",
+   "sketch": [
+    {
+     "type": "rect",
+     "w": "=L-2*WALL",
+     "h": "=W-2*WALL"
+    }
+   ],
+   "depth": "=H-WALL"
+  },
+  {
+   "id": "F4",
+   "type": "hole",
+   "name": "Cable gland",
+   "plane": "Right",
+   "offset": "=L/2",
+   "direction": "reverse",
+   "points": [
+    [
+     0,
+     12
+    ]
+   ],
+   "diameter": 16,
+   "depth": "=WALL+1"
+  },
+  {
+   "id": "F5",
+   "type": "hole",
+   "name": "Screw cbore",
+   "plane": "Top",
+   "offset": "=H",
+   "direction": "reverse",
+   "grid": {
+    "nx": 2,
+    "ny": 1,
+    "dx": 100
+   },
+   "diameter": 4.5,
+   "depth": "=WALL",
+   "cbore_d": 8,
+   "cbore_depth": 2
+  },
+  {
+   "id": "F6",
+   "type": "hole",
+   "name": "Screw csk",
+   "plane": "Top",
+   "offset": "=H",
+   "direction": "reverse",
+   "points": [
+    [
+     0,
+     30
+    ],
+    [
+     0,
+     -30
+    ]
+   ],
+   "diameter": 4.5,
+   "depth": "=WALL",
+   "csk_d": 9
+  },
+  {
+   "id": "F7",
+   "type": "chamfer",
+   "name": "Top edge",
+   "distance": 1,
+   "edges": {
+    "on": {
+     "axis": "Y",
+     "at": "max"
+    },
+    "parallel_to": "X"
+   }
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+* text=auto
+*.bat text eol=crlf
+*.swb text eol=crlf
+*.woff2 binary
+*.webp binary
