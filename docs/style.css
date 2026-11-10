@@ -80,6 +80,12 @@ textarea:focus,input:focus,select:focus{border-color:var(--blue)}
 .busy{margin-top:8px;color:var(--text-2)}
 .error{margin-top:8px;color:var(--bad);overflow-wrap:anywhere}
 
+.pro{margin-top:24px;padding:16px;border:1px solid var(--ink);border-radius:4px;background:var(--sheet)}
+.pro h2{margin:0 0 4px}
+.pro .steps{margin:0 0 12px;padding-left:20px;color:var(--text-2)}
+.pro label{margin-top:16px}
+.row.start{justify-content:flex-start}
+a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 .samples{margin-top:32px}.samples h2{margin-top:0;margin-bottom:0}
 .samples>p{font-size:13px;margin-bottom:8px}
 .sample-list{display:flex;flex-direction:column;border-top:1px solid var(--rule)}

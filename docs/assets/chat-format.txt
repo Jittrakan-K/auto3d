@@ -1,0 +1,31 @@
+PLAN FORMAT (JSON, lengths in mm, any number may instead be a string "=expression" using parameter names, + - * / ** ( ), sqrt sin cos tan abs min max round, pi)
+
+{
+  "name": "Short_English_Name",
+  "description": "",
+  "density_g_cm3": 7.85,
+  "parameters": [{"name": "L", "value": 120, "label": "Thai label", "source": "where it came from", "confidence": "high|medium|low"}],
+  "features": [ ...features in build order... ],
+  "assumptions": ["Thai text"],
+  "questions": ["Thai text"]
+}
+
+The first feature must be an extrude or a revolve with cut false. Every feature has a unique "id" (F1, F2, ...) and a "name".
+
+FEATURES
+- extrude: {"id","name","type":"extrude","plane":"Front|Top|Right","offset":0,"sketch":[entities],"depth":>0,"direction":"normal|reverse|both"}
+- cut: {"id","name","type":"cut","plane","offset","sketch":[entities],"depth":>0 OR "through":true,"direction":"normal|reverse|both"}  ("both" only with through)
+- revolve: {"id","name","type":"revolve","plane","sketch":[entities],"axis_a":[x,y],"axis_b":[x,y],"angle_deg":360,"cut":false}
+- hole: {"id","name","type":"hole","plane","offset","direction":"normal|reverse","points":[[x,y],...] and/or "bolt_circle":{"cx","cy","pcd","count","start_deg"} and/or "grid":{"cx","cy","nx","ny","dx","dy"},"diameter","depth" OR "through":true, optional "cbore_d"+"cbore_depth" OR "csk_d"+"csk_angle_deg"}
+- fillet: {"id","name","type":"fillet","radius","edges":selector}
+- chamfer: {"id","name","type":"chamfer","distance","edges":selector}
+
+SKETCH ENTITIES (2D sketch coordinates on the plane)
+- {"type":"rect","cx":0,"cy":0,"w":>0,"h":>0}
+- {"type":"circle","cx":0,"cy":0,"d":>0}
+- {"type":"slot","cx","cy","length","width","angle_deg"}  (length is tip to tip and must exceed width)
+- {"type":"regular_polygon","cx","cy","sides":3..64,"d":across corners,"angle_deg"}
+- {"type":"profile","start":[x,y],"segments":[{"line_to":[x,y]},{"arc_to":[x,y],"center":[x,y],"ccw":true}]}  (closes itself)
+
+EDGE SELECTOR (all filled conditions must match; {} means every edge)
+{"parallel_to":"X|Y|Z","on":{"axis":"X|Y|Z","at":number|"max"|"min"},"kind":"line|circle","near":[[x,y,z],...]}

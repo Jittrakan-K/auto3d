@@ -60,6 +60,28 @@
       <p id="error" class="error" hidden role="alert"></p>
     </form>
 
+    <section id="pro-flow" class="pro" hidden aria-labelledby="pro-title">
+      <h2 id="pro-title">ออกแบบด้วย Claude Pro</h2>
+      <p class="muted small">ใช้แชตของ Claude ที่คุณสมัครไว้ ไม่ต้องใช้ API key ไม่เสียเงินเพิ่ม</p>
+      <ol class="steps">
+        <li>กด <b>คัดลอกคำสั่ง</b> แล้วกด <b>เปิด Claude</b> วางในแชตใหม่แล้วส่ง<span id="pro-attach" hidden> แนบไฟล์ Drawing ในแชตของ Claude ด้วย</span></li>
+        <li>คัดลอกคำตอบของ Claude ทั้งหมด มาวางในช่องด้านล่าง</li>
+      </ol>
+      <div class="row start">
+        <button id="pro-copy" class="btn" type="button">คัดลอกคำสั่ง</button>
+        <a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">เปิด Claude</a>
+      </div>
+      <label for="pro-reply">คำตอบจาก Claude</label>
+      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="วางคำตอบที่มีโค้ด JSON ตรงนี้"></textarea>
+      <button id="pro-build" class="btn primary wide" type="button">สร้างโมเดลจากคำตอบ</button>
+      <div id="pro-fix" hidden>
+        <p id="pro-error" class="error"></p>
+        <button id="pro-copy-error" class="btn" type="button">คัดลอกข้อผิดพลาดไปให้ Claude แก้</button>
+        <p class="muted small">วางข้อความนี้ในแชตเดิมของ Claude แล้วนำคำตอบใหม่มาวางแทน</p>
+      </div>
+      <p id="pro-note" class="busy" role="status" hidden></p>
+    </section>
+
     <div class="samples">
       <h2>ชิ้นงานตัวอย่าง</h2>
       <p class="muted">สร้างได้ทันที ไม่ต้องใช้ API key</p>
@@ -166,7 +188,7 @@
     <label for="api-key">Claude API key</label>
     <input id="api-key" type="password" autocomplete="off" placeholder="sk-ant-...">
     <label class="check"><input id="remember" type="checkbox"> จำคีย์ไว้ในเบราว์เซอร์นี้</label>
-    <p class="muted small">คีย์ส่งตรงจากเบราว์เซอร์ไปที่ Claude เท่านั้น ไม่ผ่านเซิร์ฟเวอร์อื่น ถ้าไม่ติ๊กจำไว้ คีย์จะหายเมื่อปิดแท็บ ค่าใช้จ่ายคิดกับบัญชีของคีย์นี้</p>
+    <p class="muted small">ไม่จำเป็นถ้าใช้ Claude Pro ผ่านแชต คีย์ API คิดเงินแยกจาก Claude Pro คีย์ส่งตรงจากเบราว์เซอร์ไปที่ Claude เท่านั้น ไม่ผ่านเซิร์ฟเวอร์อื่น ถ้าไม่ติ๊กจำไว้ คีย์จะหายเมื่อปิดแท็บ ค่าใช้จ่ายคิดกับบัญชีของคีย์นี้</p>
     <label for="model">โมเดล AI</label>
     <select id="model"></select>
     <p class="muted small">claude-opus-5-5 อ่าน Drawing ได้ละเอียดกว่า claude-sonnet-5-5 ถูกและเร็วกว่า</p>

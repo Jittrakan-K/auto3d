@@ -44,9 +44,9 @@ function download(blob, name) {
 // ---------- status ----------
 function refreshStatus() {
   const ai = $("st-ai");
-  ai.className = "state " + (state.key ? "on" : "off");
-  ai.textContent = state.key ? "Claude พร้อมใช้" : "Claude ยังไม่มีคีย์";
-  ai.title = state.key ? `ใช้ ${state.model}` : "ใส่ API key ที่ปุ่มตั้งค่า";
+  ai.className = "state on";
+  ai.textContent = state.key ? "Claude API พร้อมใช้" : "Claude Pro ผ่านแชต";
+  ai.title = state.key ? `ใช้ ${state.model}` : "ไม่มี API key ใช้แชตของ Claude Pro แทน";
   const cad = $("st-cad");
   cad.className = "state " + (state.kernel ? "on" : state.kernelError ? "off" : "wait");
   cad.textContent = state.kernel ? "ตัวสร้างโมเดลพร้อม" : state.kernelError ? "โหลดตัวสร้างโมเดลไม่ได้" : "ตัวสร้างโมเดลกำลังโหลด";
@@ -60,6 +60,7 @@ async function loadKernel() {
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
   ]);
+  state.chatFormat = await fetch("assets/chat-format.txt").then((r) => r.text());
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   const oc = await K.opencascade({ locateFile: () => wasm });
   K.setOC(oc);
@@ -171,9 +172,9 @@ async function buildRaw(raw) {
 $("brief-form").onsubmit = async (e) => {
   e.preventDefault();
   fail("");
-  if (!state.key) { fail("ใส่ Claude API key ก่อน หรือลองชิ้นงานตัวอย่างด้านล่าง"); openSettings(); return; }
   const prompt = $("prompt").value;
   if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
+  if (!state.key) { openPro(); return; }
   busy(state.files.length ? "กำลังอ่าน Drawing และออกแบบ อาจใช้เวลา 1 ถึง 3 นาที" : "กำลังออกแบบ อาจใช้เวลาประมาณ 1 นาที");
   try {
     const blocks = [];
@@ -188,6 +189,73 @@ $("brief-form").onsubmit = async (e) => {
   } catch (err) { fail(err instanceof AiError ? err.message : `เกิดข้อผิดพลาด: ${err.message}`); }
   finally { busy(""); }
 };
+
+// ---------- Claude Pro: copy the request into a chat, paste the answer back ----------
+function chatPrompt() {
+  const rules = state.system
+    .replace(/and you always deliver it by calling the submit_cad_plan tool\. Never answer with the plan as text\./, "and you reply with the plan as one JSON code block.")
+    .replace(/EXAMPLE of a valid plan:[\s\S]*$/, "");
+  const example = (state.system.match(/EXAMPLE of a valid plan:\s*([\s\S]*)$/) || [])[1] || "";
+  const current = state.job && $("modify").checked ? `\n\nCURRENT PLAN (change only what the request asks):\n${JSON.stringify(state.job.raw)}` : "";
+  const drawing = state.files.length ? `\n\nThe drawing is attached to this message (${state.files.map((f) => f.name).join(", ")}).` : "";
+  return `${rules.trim()}
+
+${state.chatFormat.trim()}
+
+EXAMPLE:
+${example.trim()}
+
+ANSWER FORMAT: reply with exactly one \`\`\`json code block holding the complete plan, then at most three short lines in Thai. No other code.${current}${drawing}
+
+REQUEST:
+${$("prompt").value.trim() || "Model the part shown in the attached drawing."}`;
+}
+
+async function copyText(text, note) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const t = document.createElement("textarea");
+    t.value = text; document.body.append(t); t.select(); document.execCommand("copy"); t.remove();
+  }
+  const n = $("pro-note");
+  n.textContent = note; show(n, true);
+}
+
+function openPro() {
+  show($("pro-flow"), true);
+  show($("pro-attach"), state.files.length > 0);
+  show($("pro-fix"), false);
+  $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });
+  copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
+}
+
+function extractPlan(text) {
+  const block = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = block ? block[1] : text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  try { return JSON.parse(body); } catch (e) { throw new Error(`อ่าน JSON ในคำตอบไม่ได้: ${e.message}`); }
+}
+
+$("pro-copy").onclick = () => copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
+$("pro-build").onclick = async () => {
+  show($("pro-fix"), false); show($("pro-note"), false);
+  let raw;
+  try { raw = extractPlan($("pro-reply").value); }
+  catch (e) { $("pro-error").textContent = e.message; show($("pro-fix"), true); return; }
+  busy("กำลังสร้างโมเดล");
+  await nextFrame();
+  try {
+    const built = tryBuild(raw);
+    if (built.error) { $("pro-error").textContent = built.error; show($("pro-fix"), true); return; }
+    await showJob(raw, built.plan, built.result);
+    $("pro-reply").value = "";
+    state.files = []; renderFiles();
+    $("pro-note").textContent = "สร้างโมเดลแล้ว"; show($("pro-note"), true);
+  } finally { busy(""); }
+};
+$("pro-copy-error").onclick = () => copyText(
+  `The plan could not be built. Fix it and reply with the complete corrected plan in one \`\`\`json block.\n\n${$("pro-error").textContent}`,
+  "คัดลอกข้อผิดพลาดแล้ว วางในแชตเดิมของ Claude"
+);
 
 $("rebuild").onclick = () => buildRaw(state.job.raw);
 $("build-json").onclick = () => {
