@@ -193,7 +193,6 @@ $("brief-form").onsubmit = async (e) => {
       if (built.error) { openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`); return; }
       show($("pro-flow"), false);
       await showJob(quick.plan, built.plan, built.result);
-      download(state.job.step, `${safeName(state.job.plan.name)}.step`);
     } catch (err) { fail(`เกิดข้อผิดพลาด: ${err.message}`); }
     finally { busy(""); }
     return;
