@@ -306,12 +306,31 @@ def _open_browser(port: int) -> None:
         time.sleep(0.5)
 
 
+def _port_busy(port: int) -> bool:
+    import socket
+
+    with socket.socket() as s:
+        s.settimeout(0.5)
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
 def run() -> None:
     import threading
 
     import uvicorn
 
     port = int(os.environ.get("AUTODESIGN_PORT", "8765"))
+    if _port_busy(port):  # already running, e.g. started earlier from the web page
+        if os.environ.get("AUTODESIGN_NO_BROWSER") != "1":
+            import webbrowser
+
+            webbrowser.open(f"http://127.0.0.1:{port}/")
+        return
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    if sys.stdout is None:  # pythonw.exe has no console, so keep a log file instead
+        log = open(OUTPUT / "app.log", "a", encoding="utf-8", buffering=1)  # noqa: SIM115 - lives as long as the app
+        sys.stdout = sys.stderr = log
+    (OUTPUT / "app.pid").write_text(str(os.getpid()), encoding="ascii")
     if os.environ.get("AUTODESIGN_NO_BROWSER") != "1":
         threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
     uvicorn.run(app, host="127.0.0.1", port=port)

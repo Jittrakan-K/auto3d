@@ -5,7 +5,7 @@ import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
 import { quickPlan } from "./js/quick.js";
 import { addEntry, getEntry } from "./js/history.js";
 import { zipBlob } from "./js/zip.js";
-import { localStatus, localSldprt, LocalError } from "./js/local.js";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
@@ -330,15 +330,22 @@ function localHelp(text) {
 async function refreshLocal() {
   const st = await localStatus();
   const cell = $("sw-local-state");
-  if (!st.running) cell.textContent = "ต้องเปิด start.bat บนเครื่อง";
+  if (!st.running) cell.textContent = "กดสร้างไฟล์ เว็บจะเปิดแอปบนเครื่องให้";
   else if (!st.sw.available) cell.textContent = st.sw.reason;
   else cell.textContent = `SOLIDWORKS ${st.sw.version} ในเครื่องนี้` + (st.sw.version > 2018 ? " (เปิดได้ใน " + st.sw.version + " ขึ้นไป)" : " เปิดได้ 2018 ขึ้นไป");
   return st;
 }
 $("dl-sldprt").onclick = async () => {
   localHelp(""); fail("");
-  const st = await refreshLocal();
-  if (!st.running) { localHelp("ยังไม่พบแอป AUTO DESIGN 3D ที่รันบนเครื่องนี้"); return; }
+  let st = await refreshLocal();
+  if (!st.running) {
+    $("dl-sldprt").disabled = true;
+    busy("กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด");
+    try { st = await launchLocal(45000, (s) => busy(`กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด (รออีก ${s} วินาที)`)); }
+    finally { busy(""); $("dl-sldprt").disabled = false; }
+    await refreshLocal();
+    if (!st.running) { localHelp("เปิดแอปบนเครื่องให้อัตโนมัติไม่ได้"); return; }
+  }
   if (!st.sw.available) { localHelp(st.sw.reason); return; }
   busy(`SOLIDWORKS ${st.sw.version} กำลังสร้างทีละฟีเจอร์ อาจใช้เวลา 1 ถึง 2 นาที`);
   $("dl-sldprt").disabled = true;

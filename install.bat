@@ -24,6 +24,7 @@ if errorlevel 1 goto failed
 if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 goto failed
+call "%~dp0setup_web_link.bat" quiet
 echo.
 echo Setup finished. Double-click start.bat to open AUTO DESIGN 3D.
 pause

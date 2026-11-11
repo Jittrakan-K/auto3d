@@ -17,6 +17,24 @@ export async function localStatus(timeoutMs = 1500) {
   } finally { clearTimeout(t); }
 }
 
+// Ask Windows to start the app through the autodesign3d:// link (registered by
+// install.bat or setup_web_link.bat), then wait until it answers.
+export async function launchLocal(waitMs = 45000, onTick = () => {}) {
+  const frame = document.createElement("iframe");
+  frame.hidden = true;
+  frame.src = "autodesign3d://start";
+  document.body.append(frame);
+  setTimeout(() => frame.remove(), 3000);
+  const until = Date.now() + waitMs;
+  while (Date.now() < until) {
+    await new Promise((r) => setTimeout(r, 1500));
+    onTick(Math.ceil((until - Date.now()) / 1000));
+    const st = await localStatus(1200);
+    if (st.running) return st;
+  }
+  return { running: false };
+}
+
 export async function localSldprt(raw) {
   let r;
   try {
