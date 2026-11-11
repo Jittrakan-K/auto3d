@@ -61,7 +61,7 @@ export const task = {
     const card = $("task");
     card.hidden = false;
     card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
-    setPill("run", "กำลังทำงาน");
+    setPill("run", "In progress");
     document.querySelector(".progress").classList.remove("done", "fail");
     $("progress-bar").style.width = "0%";
     $("progress-pct").textContent = "0";
@@ -97,7 +97,7 @@ export const task = {
     if (current) current.className = current.className.replace("now", "done");
     current = null;
     running = false;
-    setPill("ok", "เสร็จแล้ว");
+    setPill("ok", "Completed");
     setPercent(100, `${name} is ready`);
     document.querySelector(".progress").classList.add("done");
     setStage("Part ready", "Check the dimensions on the right, then download the files below", false);
@@ -109,7 +109,7 @@ export const task = {
     if (current) current.className = current.className.replace("now", "fail");
     else item(message, "fail");
     current = null;
-    setPill("bad", "ไม่สำเร็จ");
+    setPill("bad", "Failed");
     document.querySelector(".progress").classList.add("fail");
     $("progress-label").textContent = "Build failed";
     setStage("Could not build", message.length > 140 ? message.slice(0, 140) + "…" : message, false);
@@ -120,7 +120,7 @@ export const task = {
     if (current) current.className = current.className.replace("now", "done");
     current = null;
     running = false;
-    setPill("run", "รอคำตอบ");
+    setPill("run", "Waiting");
     setStage(title, sub, false);
   },
 };

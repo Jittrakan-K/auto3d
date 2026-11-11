@@ -4,10 +4,10 @@ PLAN FORMAT (JSON, lengths in mm, any number may instead be a string "=expressio
   "name": "Short_English_Name",
   "description": "",
   "density_g_cm3": 7.85,
-  "parameters": [{"name": "L", "value": 120, "label": "Thai label", "source": "where it came from", "confidence": "high|medium|low"}],
+  "parameters": [{"name": "L", "value": 120, "label": "short English label", "source": "where it came from", "confidence": "high|medium|low"}],
   "features": [ ...features in build order... ],
-  "assumptions": ["Thai text"],
-  "questions": ["Thai text"]
+  "assumptions": ["English text"],
+  "questions": ["English text"]
 }
 
 The first feature must be an extrude or a revolve with cut false. Every feature has a unique "id" (F1, F2, ...) and a "name".

@@ -415,3 +415,10 @@ body:not(.has-model) .result{opacity:.75}
 .sw-setup .steps{gap:6px;padding-left:20px}
 .sw-setup .steps li::marker{color:var(--violet);font-weight:600}
 .sw-setup .note{margin-top:4px;padding-top:10px;border-top:1px dashed var(--dash);color:var(--muted);line-height:1.6}
+
+/* SOLIDWORKS help folds away once a part is on screen */
+details.sw-setup>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.sw-setup>summary::-webkit-details-marker{display:none}
+details.sw-setup>summary::after{content:"";width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .2s;flex:none;margin-top:-4px}
+details.sw-setup[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+details.sw-setup:not([open]){gap:0}

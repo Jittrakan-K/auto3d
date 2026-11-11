@@ -1,32 +1,32 @@
 {
  "name": "Pipe_Flange",
- "description": "หน้าแปลนท่อ รูน็อต 6 รู",
+ "description": "Pipe flange with 6 bolt holes",
  "density_g_cm3": 7.85,
  "parameters": [
   {
    "name": "OD",
    "value": 120,
-   "label": "เส้นผ่านศูนย์กลางนอก"
+   "label": "Outer diameter"
   },
   {
    "name": "ID",
    "value": 50,
-   "label": "รูใน"
+   "label": "Bore"
   },
   {
    "name": "TF",
    "value": 14,
-   "label": "ความหนาปีก"
+   "label": "Flange thickness"
   },
   {
    "name": "HUB",
    "value": 70,
-   "label": "เส้นผ่านศูนย์กลางคอ"
+   "label": "Hub diameter"
   },
   {
    "name": "HH",
    "value": 34,
-   "label": "ความสูงรวม"
+   "label": "Overall height"
   }
  ],
  "features": [

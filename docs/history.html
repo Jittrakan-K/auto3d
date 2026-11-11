@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ประวัติงาน · AUTO DESIGN 3D</title>
+<title>History · AUTO DESIGN 3D</title>
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -14,31 +14,31 @@
 <body class="history-page">
 <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
 <div class="app app-2">
-  <nav class="rail" aria-label="เมนูหลัก">
-    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D หน้าหลัก"><img src="favicon.svg" width="34" height="34" alt=""></a>
-    <a class="rail-btn" href="./" title="งานใหม่"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>งานใหม่</span></a>
-    <a class="rail-btn active" href="history.html" aria-current="page" title="ประวัติ"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>ประวัติ</span></a>
+  <nav class="rail" aria-label="Main menu">
+    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-btn" href="./" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
+    <a class="rail-btn active" href="history.html" aria-current="page" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <span class="rail-gap"></span>
   </nav>
 <main class="log stage">
   <div class="log-head">
     <div>
-      <h1>ประวัติการสร้างงาน</h1>
+      <h1>History</h1>
       <p class="muted" id="log-count"></p>
     </div>
     <div class="log-tools">
-      <input id="log-search" type="search" placeholder="ค้นหาชื่อหรือคำสั่ง" aria-label="ค้นหาในประวัติ">
-      <button id="log-export" class="btn" type="button">สำรองเป็นไฟล์</button>
-      <button id="log-import" class="btn" type="button">นำเข้าไฟล์สำรอง</button>
+      <input id="log-search" type="search" placeholder="Search name or command" aria-label="Search history">
+      <button id="log-export" class="btn" type="button">Back up</button>
+      <button id="log-import" class="btn" type="button">Restore</button>
       <input id="log-file" type="file" accept=".json,application/json" hidden>
     </div>
   </div>
-  <p class="muted small">ประวัติเก็บในเบราว์เซอร์นี้เท่านั้น เปิดจากเครื่องอื่นหรือล้างข้อมูลเบราว์เซอร์จะไม่เห็น ใช้ "สำรองเป็นไฟล์" เพื่อย้ายไปเครื่องอื่น</p>
+  <p class="muted small">History is kept in this browser only. Use Back up and Restore to move it to another computer</p>
   <p id="log-msg" class="note" hidden></p>
 
   <div id="log-empty" class="log-empty" hidden>
-    <p>ยังไม่มีงานในประวัติ งานที่สร้างจากหน้าหลักจะถูกเก็บไว้ที่นี่อัตโนมัติ</p>
-    <a class="btn primary" href="./">ไปสร้างงานแรก</a>
+    <p>No parts yet. Every part you build is saved here</p>
+    <a class="btn primary" href="./">Build your first part</a>
   </div>
   <ol id="log-list" class="log-list"></ol>
 </main>

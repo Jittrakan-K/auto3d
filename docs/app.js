@@ -8,7 +8,7 @@ import { task } from "./js/progress.js";
 import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js";
 
 const $ = (id) => document.getElementById(id);
-const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
+const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
 const KEY_STORE = "autodesign3d.key";
 const MODEL_STORE = "autodesign3d.model";
 const state = { job: null, files: [], key: "", model: MODELS[0], kernel: null, DxfParser: null, schema: null, system: "" };
@@ -53,7 +53,7 @@ function refreshStatus() {
   const ai = $("st-ai");
   ai.className = "state on";
   ai.textContent = state.key ? "Claude API ready" : "Claude Pro via chat";
-  ai.title = state.key ? `ใช้ ${state.model}` : "ไม่มี API key ใช้แชตของ Claude Pro แทน";
+  ai.title = state.key ? `Using ${state.model}` : "No API key, Claude Pro chat is used instead";
   const cad = $("st-cad");
   cad.className = "state " + (state.kernel ? "on" : state.kernelError ? "off" : "wait");
   cad.textContent = state.kernel ? "CAD engine ready" : state.kernelError ? "CAD engine failed to load" : "Loading CAD engine";
@@ -82,7 +82,7 @@ function renderFiles() {
     const li = document.createElement("li");
     const name = document.createElement("span"); name.textContent = f.name;
     const del = document.createElement("button");
-    del.type = "button"; del.textContent = "เอาออก";
+    del.type = "button"; del.textContent = "Remove";
     del.onclick = () => { state.files.splice(i, 1); renderFiles(); };
     li.append(name, del);
     return li;
@@ -103,11 +103,11 @@ drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
 async function showJob(raw, plan, result, source) {
   if (!task.running) task.start(source || plan.name);
   await task.ticks(plan.features.map((f) => f.name || f.id), 30, 70);
-  await task.step("เขียนไฟล์ STEP AP203", 76);
+  await task.step("Write STEP AP203 file", 76);
   const step = stepBlob(result, plan.name);
-  await task.step("ตรวจปริมาตรไฟล์ STEP เทียบกับโมเดล", 86);
+  await task.step("Check STEP volume against the model", 86);
   const verify = await verifyStep(step, result.volume_mm3);
-  await task.step("เตรียมมาโคร SOLIDWORKS", 94);
+  await task.step("Prepare SOLIDWORKS macro", 94);
   state.job = { raw, plan, result, step, macro: renderMacro(result.steps, plan.name), source: source || state.job?.source || "" };
   document.body.classList.add("has-model");
   show($("rebuild"), false);
@@ -116,6 +116,7 @@ async function showJob(raw, plan, result, source) {
   show($("details"), true);
   show($("title-block"), true);
   for (const id of ["dl-step", "dl-sldprt", "dl-sw"]) $(id).disabled = false;
+  if (!document.body.classList.contains("seen-model")) { $("sw-setup").open = false; document.body.classList.add("seen-model"); }
   show($("modify-row"), true);
 
   $("tb-name").textContent = plan.name;
@@ -123,7 +124,7 @@ async function showJob(raw, plan, result, source) {
   $("tb-vol").textContent = fmt(result.volume_mm3 / 1000);
   $("tb-mass").textContent = fmt(result.mass_g);
   const v = $("tb-verify");
-  v.textContent = verify.ok ? "ผ่าน ปริมาตรตรงกัน" : `ค่าต่างกัน ${verify.diff_percent}%`;
+  v.textContent = verify.ok ? "Passed" : `Off by ${verify.diff_percent}%`;
   v.className = `pill ${verify.ok ? "ok" : "bad"}`;
 
   show($("questions-box"), plan.questions.length > 0);
@@ -154,8 +155,8 @@ function renderRecent(fresh = false) {
     const li = document.createElement("li");
     if (fresh && i === 0) li.className = "fresh";
     const name = document.createElement("span"); name.className = "r-name"; name.textContent = e.source || e.name; name.title = e.source || e.name;
-    const pill = document.createElement("span"); pill.className = "pill ok"; pill.textContent = "เสร็จแล้ว";
-    const a = document.createElement("a"); a.href = `./?open=${encodeURIComponent(e.id)}`; a.textContent = "ดูรายละเอียด";
+    const pill = document.createElement("span"); pill.className = "pill ok"; pill.textContent = "Completed";
+    const a = document.createElement("a"); a.href = `./?open=${encodeURIComponent(e.id)}`; a.textContent = "See details";
     a.onclick = (ev) => { ev.preventDefault(); state.job = { source: e.source }; buildRaw(structuredClone(e.raw), null, e.source || e.name); };
     li.append(name, pill, a);
     return li;
@@ -170,7 +171,7 @@ function renderDims(raw, plan) {
     a.textContent = p.label || p.name;
     if (p.confidence === "low") {
       const tag = document.createElement("span");
-      tag.className = "tag"; tag.textContent = "ค่าประมาณ ตรวจก่อนใช้";
+      tag.className = "tag"; tag.textContent = "Estimate, please check";
       a.append(" ", tag);
     }
     if (p.source) { const s = document.createElement("small"); s.textContent = p.source; a.append(s); }
@@ -180,7 +181,7 @@ function renderDims(raw, plan) {
     input.setAttribute("aria-label", p.label || p.name);
     const src = raw.parameters[i];
     if (typeof src.value === "string" && src.value.startsWith("=")) {
-      input.disabled = true; input.title = `คำนวณจาก ${src.value.slice(1)}`;
+      input.disabled = true; input.title = `Calculated from ${src.value.slice(1)}`;
     }
     input.oninput = () => {
       if (input.value === "") return;
@@ -193,16 +194,16 @@ function renderDims(raw, plan) {
   });
   if (!rows.length) {
     const tr = document.createElement("tr"), td = document.createElement("td");
-    td.colSpan = 2; td.textContent = "แผนนี้ไม่มีตัวแปรให้แก้"; tr.append(td); rows.push(tr);
+    td.colSpan = 2; td.textContent = "This plan has no editable dimensions"; tr.append(td); rows.push(tr);
   }
   $("dims").replaceChildren(...rows);
 }
 
 async function buildRaw(raw, source, title) {
-  fail(""); busy("กำลังสร้างโมเดล");
-  task.start(title || source || raw.name || "ชิ้นงาน");
-  await task.step("ตรวจแผนงาน", 12);
-  await task.step("ขึ้นรูปโมเดล 3D", 25);
+  fail(""); busy("Building the model");
+  task.start(title || source || raw.name || "Part");
+  await task.step("Check the plan", 12);
+  await task.step("Build the 3D model", 25);
   try {
     const built = tryBuild(raw);
     if (built.error) throw new Error(built.error);
@@ -216,44 +217,44 @@ $("brief-form").onsubmit = async (e) => {
   e.preventDefault();
   fail("");
   const prompt = $("prompt").value;
-  if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
+  if (!prompt.trim() && !state.files.length) { fail("Type a command or attach a drawing first"); return; }
   if (!state.key) {
     if (state.files.length) {
       task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
-      await task.step("คัดลอกคำสั่งและเปิด Claude", 8, 0);
-      await openPro("การอ่าน Drawing ต้องใช้ Claude เว็บคัดลอกคำสั่งและเปิด Claude ให้แล้ว");
+      await task.step("Copy the request and open Claude", 8, 0);
+      await openPro("Reading a drawing needs Claude. The request is copied and Claude is open in a new tab");
       openClaude();
       task.pause("Waiting for Claude", "Paste the request in Claude, attach the drawing and send. Copy the answer and come back here");
       return;
     }
     // Plain parts: read the command here, build, and hand over the STEP file in one click.
     task.start(prompt.trim());
-    await task.step("อ่านคำสั่ง (ไม่ใช้ AI)", 8, 0);
+    await task.step("Read the command (no AI)", 8, 0);
     const quick = quickPlan(prompt);
     if (quick.error) {
-      openPro(`ระบบอ่านคำสั่งนี้เองไม่ได้: ${quick.error} หรือให้ Claude ออกแบบ คัดลอกคำสั่งให้แล้ว`);
+      openPro(`This command could not be read here: ${quick.error}. Let Claude design it, the request is copied`);
       task.pause("Handed to Claude", "This part needs Claude. Paste the copied request in a Claude chat");
       return;
     }
-    await task.step(`วางแผน ${quick.plan.features.length} ฟีเจอร์`, 16);
-    await task.step("ขึ้นรูปโมเดล 3D", 25);
-    busy("กำลังสร้างโมเดล");
+    await task.step(`Plan ${quick.plan.features.length} features`, 16);
+    await task.step("Build the 3D model", 25);
+    busy("Building the model");
     try {
       const built = tryBuild(quick.plan);
       if (built.error) {
-        openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`);
+        openPro(`This command could not be built here: ${built.error}. Let Claude design it, the request is copied`);
         task.pause("Handed to Claude", "This command could not be built here. Paste the copied request in a Claude chat");
         return;
       }
       show($("pro-flow"), false);
       await showJob(quick.plan, built.plan, built.result, prompt.trim());
-    } catch (err) { fail(`เกิดข้อผิดพลาด: ${err.message}`); }
+    } catch (err) { fail(`Something went wrong: ${err.message}`); }
     finally { busy(""); }
     return;
   }
-  busy(state.files.length ? "กำลังอ่าน Drawing และออกแบบ อาจใช้เวลา 1 ถึง 3 นาที" : "กำลังออกแบบ อาจใช้เวลาประมาณ 1 นาที");
+  busy(state.files.length ? "Reading the drawing and designing, 1 to 3 minutes" : "Designing, about 1 minute");
   task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
-  await task.step(state.files.length ? "เตรียม Drawing ส่งให้ Claude" : "ส่งคำสั่งให้ Claude", 6, 0);
+  await task.step(state.files.length ? "Send the drawing to Claude" : "Send the command to Claude", 6, 0);
   let aiPct = 8;
   try {
     const blocks = [];
@@ -265,7 +266,7 @@ $("brief-form").onsubmit = async (e) => {
     });
     await showJob(r.raw, r.plan, r.result, prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
     state.files = []; renderFiles();
-  } catch (err) { fail(err instanceof AiError ? err.message : `เกิดข้อผิดพลาด: ${err.message}`); }
+  } catch (err) { fail(err instanceof AiError ? err.message : `Something went wrong: ${err.message}`); }
   finally { busy(""); }
 };
 
@@ -284,7 +285,7 @@ ${state.chatFormat.trim()}
 EXAMPLE:
 ${example.trim()}
 
-ANSWER FORMAT: reply with exactly one \`\`\`json code block holding the complete plan, then at most three short lines in Thai. No other code.${current}${drawing}
+ANSWER FORMAT: reply with exactly one \`\`\`json code block holding the complete plan, then at most three short lines in English. No other code.${current}${drawing}
 
 REQUEST:
 ${$("prompt").value.trim() || "Model the part shown in the attached drawing."}`;
@@ -304,7 +305,7 @@ async function copyText(text, note) {
 function openClaude() {
   state.awaitingReply = true;
   const w = window.open("https://claude.ai/new", "_blank");
-  if (!w) { $("pro-note").textContent = "เบราว์เซอร์บล็อกการเปิดแท็บใหม่ กดปุ่มเปิด Claude แทน"; show($("pro-note"), true); }
+  if (!w) { $("pro-note").textContent = "The browser blocked the new tab. Click Open Claude instead"; show($("pro-note"), true); }
 }
 
 // When the user comes back from Claude with the answer copied, build it straight away.
@@ -334,67 +335,67 @@ function openPro(reason = "") {
   show($("pro-fix"), false);
   $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });
   return copyText(chatPrompt(), state.files.length
-    ? "คัดลอกคำสั่งแล้ว ในแชต Claude กด Ctrl+V แนบไฟล์ Drawing แล้วส่ง"
-    : "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
+    ? "Request copied. In Claude press Ctrl+V, attach the drawing and send"
+    : "Request copied. Paste it into a new Claude chat");
 }
 
 function extractPlan(text) {
-  if (!text.trim()) throw new Error("ยังไม่ได้วางคำตอบจาก Claude");
+  if (!text.trim()) throw new Error("Paste Claude's answer first");
   if (text.includes("PLAN FORMAT (JSON") || text.includes("ANSWER FORMAT:")) {
-    throw new Error("ข้อความที่วางคือคำสั่งที่เว็บคัดลอกไปให้ Claude ไม่ใช่คำตอบ ให้วางคำสั่งนี้ในแชตของ Claude ก่อน แล้วคัดลอกคำตอบของ Claude มาวางที่นี่");
+    throw new Error("That is the request for Claude, not the answer. Paste it in Claude first, then copy Claude's answer back here");
   }
   // Try every code block, newest last, then the outermost braces.
   const blocks = [...text.matchAll(/```[a-zA-Z]*\s*([\s\S]*?)```/g)].map((m) => m[1]).reverse();
   const first = text.indexOf("{"), last = text.lastIndexOf("}");
   if (first >= 0 && last > first) blocks.push(text.slice(first, last + 1));
-  let error = "ไม่พบโค้ด JSON ในคำตอบ";
+  let error = "No JSON found in the answer";
   for (const body of blocks) {
     try {
       const value = JSON.parse(body);
       if (value && typeof value === "object" && Array.isArray(value.features)) return value;
-      error = "JSON ในคำตอบไม่ใช่แผนชิ้นงาน (ไม่มี features)";
-    } catch (e) { error = `อ่าน JSON ในคำตอบไม่ได้: ${e.message}`; }
+      error = "The JSON in the answer is not a part plan (no features)";
+    } catch (e) { error = `Could not read the JSON in the answer: ${e.message}`; }
   }
   throw new Error(error);
 }
 
-$("pro-copy").onclick = () => copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
+$("pro-copy").onclick = () => copyText(chatPrompt(), "Request copied. Paste it into a new Claude chat");
 $("pro-build").onclick = async () => {
   show($("pro-fix"), false); show($("pro-note"), false);
-  task.start($("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
-  await task.step("อ่านคำตอบจาก Claude", 10, 0);
+  task.start($("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "Plan from Claude Pro"));
+  await task.step("Read Claude's answer", 10, 0);
   let raw;
   try { raw = extractPlan($("pro-reply").value); }
   catch (e) {
     task.fail(e.message);
     $("pro-error").textContent = e.message;
     show($("pro-fix"), true);
-    show($("pro-copy-error"), !e.message.startsWith("ข้อความที่วาง") && !e.message.startsWith("ยังไม่ได้"));
+    show($("pro-copy-error"), !e.message.startsWith("That is the request") && !e.message.startsWith("Paste Claude"));
     return;
   }
-  await task.step("ขึ้นรูปโมเดล 3D", 25);
-  busy("กำลังสร้างโมเดล");
+  await task.step("Build the 3D model", 25);
+  busy("Building the model");
   try {
     const built = tryBuild(raw);
     if (built.error) { task.fail(built.error); $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
     await showJob(raw, built.plan, built.result,
-      $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
+      $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "Plan from Claude Pro"));
     $("pro-reply").value = "";
     state.awaitingReply = false;
     state.files = []; renderFiles();
-    $("pro-note").textContent = "สร้างโมเดลแล้ว"; show($("pro-note"), true);
+    show($("pro-flow"), false);
   } finally { busy(""); }
 };
 $("pro-copy-error").onclick = () => copyText(
   `The plan could not be built. Fix it and reply with the complete corrected plan in one \`\`\`json block.\n\n${$("pro-error").textContent}`,
-  "คัดลอกข้อผิดพลาดแล้ว วางในแชตเดิมของ Claude"
+  "Error copied. Paste it in the same Claude chat"
 );
 
-$("rebuild").onclick = () => buildRaw(state.job.raw, `${(state.job.source || state.job.plan.name).replace(/ \(แก้ขนาด\)$/, "")} (แก้ขนาด)`);
+$("rebuild").onclick = () => buildRaw(state.job.raw, `${(state.job.source || state.job.plan.name).replace(/ \((?:แก้ขนาด|edited)\)$/, "")} (edited)`);
 $("build-json").onclick = () => {
   let raw;
-  try { raw = JSON.parse($("plan-json").value); } catch (e) { fail(`JSON ไม่ถูกต้อง: ${e.message}`); return; }
-  buildRaw(raw, "แก้จาก JSON");
+  try { raw = JSON.parse($("plan-json").value); } catch (e) { fail(`Invalid JSON: ${e.message}`); return; }
+  buildRaw(raw, "Edited JSON plan");
 };
 $("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan.name)}.step`);
 // ---------- .SLDPRT through SOLIDWORKS on this computer ----------
@@ -406,42 +407,47 @@ function localHelp(text) {
 async function refreshLocal() {
   const st = await localStatus();
   const cell = $("sw-local-state");
-  if (st.blocked) cell.textContent = "เบราว์เซอร์บล็อกการเชื่อมต่อกับเครื่อง";
-  else if (!st.running) cell.textContent = "ยังไม่พบแอปบนเครื่อง";
+  if (st.blocked) cell.textContent = "Browser blocked local access";
+  else if (!st.running) cell.textContent = "Desktop app not found";
   else if (!st.sw.available) cell.textContent = st.sw.reason;
-  else cell.textContent = `SOLIDWORKS ${st.sw.version} ในเครื่องนี้` + (st.sw.version > 2018 ? " (เปิดได้ใน " + st.sw.version + " ขึ้นไป)" : " เปิดได้ 2018 ขึ้นไป");
+  else cell.textContent = `SOLIDWORKS ${st.sw.version} on this PC, opens in ${st.sw.version}+`;
   return st;
 }
 $("dl-sldprt").onclick = async () => {
   localHelp(""); fail("");
   let st = await refreshLocal();
-  if (st.blocked) { localHelp("เบราว์เซอร์บล็อกไม่ให้เว็บนี้เชื่อมต่อกับเครื่อง กดไอคอนหน้า URL > การตั้งค่าเว็บไซต์ แล้วอนุญาต \"อุปกรณ์ในเครือข่าย\" จากนั้นกดสร้างไฟล์อีกครั้ง"); return; }
+  if (st.blocked) { localHelp("The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"); return; }
   if (!st.running) {
     $("dl-sldprt").disabled = true;
-    busy("กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด");
-    try { st = await launchLocal(45000, (s) => busy(`กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด (รออีก ${s} วินาที)`)); }
+    busy("Starting the desktop app. Click Open if the browser asks");
+    try { st = await launchLocal(45000, (s) => busy(`Starting the desktop app. Click Open if the browser asks (${s} s left)`)); }
     finally { busy(""); $("dl-sldprt").disabled = false; }
     await refreshLocal();
     if (!st.running) {
       localHelp(st.blocked
-        ? "เบราว์เซอร์บล็อกไม่ให้เว็บนี้เชื่อมต่อกับเครื่อง กดไอคอนหน้า URL > การตั้งค่าเว็บไซต์ แล้วอนุญาต \"อุปกรณ์ในเครือข่าย\" จากนั้นกดสร้างไฟล์อีกครั้ง"
-        : "เปิดแอปบนเครื่องไม่สำเร็จ ถ้าไม่มีหน้าต่างถามให้เปิด AUTO DESIGN 3D แปลว่ายังไม่ได้ลงทะเบียนลิงก์ ทำตามข้อ 1 ด้านล่าง ถ้ามีหน้าต่างถามและกดเปิดแล้ว ให้ลองเปิด start.bat แทนแล้วกดสร้างไฟล์อีกครั้ง");
+        ? "The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"
+        : "The desktop app did not start. If the browser never asked to open AUTO DESIGN 3D, do step 1 below. If it did, run start.bat and try again");
       return;
     }
   }
   if (!st.sw.available) { localHelp(st.sw.reason); return; }
-  busy(`SOLIDWORKS ${st.sw.version} กำลังสร้างทีละฟีเจอร์ อาจใช้เวลา 1 ถึง 2 นาที`);
+  busy(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
   $("dl-sldprt").disabled = true;
   try {
     const r = await localSldprt(state.job.raw);
     download(r.blob, r.name);
-    $("sw-local-state").textContent = r.ok ? `ได้ ${r.name} แล้ว` : r.message;
+    $("sw-local-state").textContent = r.ok ? `Saved ${r.name}` : r.message;
     if (!r.ok) fail(r.message);
   } catch (e) {
-    if (e instanceof LocalError) localHelp(e.message); else fail(`เกิดข้อผิดพลาด: ${e.message}`);
+    if (e instanceof LocalError) localHelp(e.message); else fail(`Something went wrong: ${e.message}`);
   } finally { busy(""); $("dl-sldprt").disabled = false; }
 };
 
+$("open-help").onclick = (e) => {
+  e.preventDefault();
+  $("sw-setup").open = true;
+  $("sw-setup").scrollIntoView({ behavior: "smooth", block: "start" });
+};
 $("copy-launcher").onclick = async () => {
   const b = $("copy-launcher");
   try {
@@ -451,9 +457,9 @@ $("copy-launcher").onclick = async () => {
       const t = document.createElement("textarea");
       t.value = code; document.body.append(t); t.select(); document.execCommand("copy"); t.remove();
     }
-    b.textContent = "คัดลอกแล้ว";
-  } catch { b.textContent = "คัดลอกไม่ได้ ลองอีกครั้ง"; }
-  setTimeout(() => { b.textContent = "คัดลอกโค้ดปุ่มลัด"; }, 2500);
+    b.textContent = "Copied";
+  } catch { b.textContent = "Copy failed, try again"; }
+  setTimeout(() => { b.textContent = "Copy launcher code"; }, 2500);
 };
 
 $("dl-sw").onclick = () => {
@@ -490,7 +496,7 @@ $("settings-form").onsubmit = (e) => {
   e.preventDefault();
   const key = $("api-key").value.trim();
   if (key && !/^[A-Za-z0-9_-]{20,300}$/.test(key)) {
-    $("settings-error").textContent = "รูปแบบ API key ไม่ถูกต้อง";
+    $("settings-error").textContent = "That does not look like an API key";
     show($("settings-error"), true);
     return;
   }
@@ -509,7 +515,7 @@ function openFromHistory() {
   if (!id) return;
   history.replaceState(null, "", location.pathname);
   const entry = getEntry(id);
-  if (!entry) { fail("ไม่พบงานนี้ในประวัติแล้ว"); return; }
+  if (!entry) { fail("This part is no longer in the history"); return; }
   state.job = { source: entry.source };
   buildRaw(structuredClone(entry.raw), null, entry.source || entry.name);
 }
@@ -526,14 +532,14 @@ function openFromHistory() {
     $("examples").replaceChildren(...examples.map((x) => {
       const b = document.createElement("button");
       b.type = "button"; b.textContent = x.description || x.name;
-      b.onclick = () => { if (state.kernel) buildRaw(structuredClone(x), `ตัวอย่าง: ${x.description || x.name}`); };
+      b.onclick = () => { if (state.kernel) buildRaw(structuredClone(x), `Sample: ${x.description || x.name}`); };
       return b;
     }));
     await loadKernel();
     openFromHistory();
   } catch (e) {
     state.kernelError = true;
-    fail(`โหลดตัวสร้างโมเดลไม่ได้: ${e.message}`);
+    fail(`The CAD engine failed to load: ${e.message}`);
   }
   refreshStatus();
 })();

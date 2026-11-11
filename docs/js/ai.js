@@ -31,7 +31,7 @@ const toBase64 = (buf) => {
 };
 
 async function imageBlock(file) {
-  const bmp = await createImageBitmap(file).catch(() => { throw new AiError(`เปิดรูป ${file.name} ไม่ได้`); });
+  const bmp = await createImageBitmap(file).catch(() => { throw new AiError(`Could not open the image ${file.name}`); });
   const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bmp.width, bmp.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bmp.width * scale);
@@ -48,7 +48,7 @@ async function imageBlock(file) {
 
 function dxfSummary(text, DxfParser) {
   let doc;
-  try { doc = new DxfParser().parseSync(text); } catch (e) { throw new AiError(`อ่าน DXF ไม่ได้: ${e.message}`); }
+  try { doc = new DxfParser().parseSync(text); } catch (e) { throw new AiError(`Could not read the DXF: ${e.message}`); }
   const f = (p) => `(${+p.x.toPrecision(4)},${+p.y.toPrecision(4)})`;
   const lines = [`DXF units code: ${doc.header?.$INSUNITS ?? 0} (4 = mm, 1 = inch, 0 = unspecified)`];
   const dims = [], notes = [], geom = [];
@@ -69,13 +69,13 @@ function dxfSummary(text, DxfParser) {
 export async function toBlocks(file, DxfParser) {
   const ext = file.name.toLowerCase().split(".").pop();
   if (ext === "pdf") {
-    if (file.size > MAX_PDF_BYTES) throw new AiError(`${file.name} ใหญ่เกิน 30 MB`);
+    if (file.size > MAX_PDF_BYTES) throw new AiError(`${file.name} is larger than 30 MB`);
     return [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: toBase64(await file.arrayBuffer()) }, title: file.name }];
   }
   if (["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext)) return imageBlock(file);
   if (ext === "dxf") return [{ type: "text", text: `Exact data extracted from ${file.name}:\n${dxfSummary(await file.text(), DxfParser)}` }];
-  if (ext === "dwg") throw new AiError("ยังอ่าน DWG ไม่ได้ กรุณา Save As เป็น DXF หรือ PDF ก่อน");
-  throw new AiError(`ไม่รองรับไฟล์ ${file.name} ใช้ PDF, PNG, JPG หรือ DXF`);
+  if (ext === "dwg") throw new AiError("DWG is not supported yet. Save it as DXF or PDF first");
+  throw new AiError(`${file.name} is not supported. Use PDF, PNG, JPG or DXF`);
 }
 
 // ---------- the request loop ----------
@@ -93,17 +93,17 @@ async function call(key, body) {
       body: JSON.stringify(body),
     });
   } catch {
-    throw new AiError("เชื่อมต่อ Claude ไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่");
+    throw new AiError("Could not reach Claude. Check the connection and try again");
   }
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401) throw new AiError("Claude API key ไม่ถูกต้อง");
-  if (res.status === 429) throw new AiError("เรียก Claude ถี่เกินไปหรือเครดิตหมด รอสักครู่แล้วลองใหม่");
-  if (!res.ok) throw new AiError(`Claude ตอบกลับผิดพลาด: ${data.error?.message || res.status}`);
+  if (res.status === 401) throw new AiError("The Claude API key is not valid");
+  if (res.status === 429) throw new AiError("Too many requests or no credit left. Wait a moment and try again");
+  if (!res.ok) throw new AiError(`Claude returned an error: ${data.error?.message || res.status}`);
   return data;
 }
 
 export async function makePlan({ key, model, system, schema, prompt, blocks, currentPlan, onStatus = () => {} }) {
-  if (!key) throw new AiError("ยังไม่ได้ใส่ Claude API key กดตั้งค่าก่อน");
+  if (!key) throw new AiError("No Claude API key yet. Add one in Settings");
   let text = prompt.trim() || "Model the part shown in the attached drawing.";
   if (currentPlan) text = `Current plan:\n${JSON.stringify(currentPlan)}\n\nRequested change:\n${text}`;
   const messages = [{ role: "user", content: [...blocks, { type: "text", text }] }];
@@ -114,9 +114,9 @@ export async function makePlan({ key, model, system, schema, prompt, blocks, cur
   }];
   let lastError = "Claude did not return a plan";
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    onStatus(`ออกแบบรอบที่ ${attempt}`);
+    onStatus(`Designing, attempt ${attempt}`);
     const response = await call(key, { model, max_tokens: 16000, system, tools, messages });
-    if (response.stop_reason === "refusal") throw new AiError("Claude ปฏิเสธคำขอนี้");
+    if (response.stop_reason === "refusal") throw new AiError("Claude declined this request");
     messages.push({ role: "assistant", content: response.content });
     const use = response.content.find((b) => b.type === "tool_use" && b.name === TOOL);
     if (!use) {
@@ -124,11 +124,11 @@ export async function makePlan({ key, model, system, schema, prompt, blocks, cur
       messages.push({ role: "user", content: `Deliver the plan by calling ${TOOL}.` });
       continue;
     }
-    onStatus(`ตรวจแผนรอบที่ ${attempt}`);
+    onStatus(`Checking the plan, attempt ${attempt}`);
     const built = tryBuild(use.input);
     if (!built.error) return { raw: use.input, ...built, attempts: attempt };
     lastError = built.error;
     messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: use.id, is_error: true, content: built.error }] });
   }
-  throw new AiError(`ลอง ${MAX_ATTEMPTS} รอบแล้วยังสร้างโมเดลไม่ได้: ${lastError}`);
+  throw new AiError(`Still could not build after ${MAX_ATTEMPTS} attempts: ${lastError}`);
 }

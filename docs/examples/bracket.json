@@ -1,32 +1,32 @@
 {
  "name": "Mounting_Bracket",
- "description": "ฉากยึด L เจาะรู 4 รูและร่อง",
+ "description": "L bracket with 4 holes and a slot",
  "density_g_cm3": 7.85,
  "parameters": [
   {
    "name": "W",
    "value": 100,
-   "label": "ความกว้างแผ่นฐาน"
+   "label": "Base width"
   },
   {
    "name": "D",
    "value": 80,
-   "label": "ความลึกแผ่นฐาน"
+   "label": "Base depth"
   },
   {
    "name": "T",
    "value": 6,
-   "label": "ความหนา"
+   "label": "Thickness"
   },
   {
    "name": "H",
    "value": 60,
-   "label": "ความสูงแผ่นตั้ง"
+   "label": "Upright height"
   },
   {
    "name": "HOLE",
    "value": 9,
-   "label": "รูยึด"
+   "label": "Mounting hole"
   }
  ],
  "features": [

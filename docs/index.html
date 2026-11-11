@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,14 +9,14 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
-<meta name="description" content="สร้างไฟล์ STEP และมาโคร SOLIDWORKS 2018 ขึ้นไป จากคำสั่งหรือ Drawing">
+<meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
 <div id="file-open" hidden style="max-width:560px;margin:80px auto;padding:24px;border:2px solid #1a1d1c;font:16px/1.7 'Leelawadee UI',Tahoma,sans-serif;color:#1a1d1c;background:#fff">
-  <h1 style="font-size:20px;margin:0 0 12px">เปิดเว็บนี้ผ่านลิงก์ GitHub Pages</h1>
-  <p style="margin:0">เบราว์เซอร์ไม่ยอมให้ไฟล์ที่เปิดจากโฟลเดอร์โหลดส่วนประกอบของเว็บ ให้เปิดจากลิงก์ของ GitHub Pages เช่น <b>https://ชื่อผู้ใช้.github.io/auto-design-3d/</b> วิธีตั้งค่าอยู่ใน README.md</p>
+  <h1 style="font-size:20px;margin:0 0 12px">Open this site through its GitHub Pages link</h1>
+  <p style="margin:0">Browsers block a page opened from a folder from loading its parts. Open it from GitHub Pages instead, e.g. <b>https://jittrakan-k.github.io/auto3d/</b>. Setup is in README.md</p>
 </div>
 <script>
   if (location.protocol === "file:") {
@@ -28,16 +28,16 @@
 </script>
 <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
 <div class="app">
-  <nav class="rail" aria-label="เมนูหลัก">
-    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D หน้าหลัก"><img src="favicon.svg" width="34" height="34" alt=""></a>
-    <a class="rail-btn active" href="./" aria-current="page" title="งานใหม่"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>งานใหม่</span></a>
-    <a class="rail-btn" href="history.html" title="ประวัติ"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>ประวัติ</span></a>
+  <nav class="rail" aria-label="Main menu">
+    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-btn active" href="./" aria-current="page" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
+    <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <span class="rail-gap"></span>
-    <a class="rail-btn" href="#sw-setup" title="วิธีเปิดใน SOLIDWORKS"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg><span>วิธีใช้</span></a>
-    <button id="open-settings" class="rail-btn" type="button" title="ตั้งค่า"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg><span>ตั้งค่า</span></button>
+    <a id="open-help" class="rail-btn" href="#sw-setup" title="Open in SOLIDWORKS"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg><span>Help</span></a>
+    <button id="open-settings" class="rail-btn" type="button" title="Settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg><span>Settings</span></button>
   </nav>
 
-  <section class="tasks" aria-label="คำสั่ง">
+  <section class="tasks" aria-label="Command">
     <div class="col-head">
       <h1 class="brandname">AUTO DESIGN <b>3D</b></h1>
       <p class="muted small">STEP and SOLIDWORKS files from a command or a drawing</p>
@@ -78,30 +78,30 @@
     <article id="task" class="task" hidden aria-live="polite">
       <header class="task-head">
         <h2 id="task-title"></h2>
-        <span id="task-pill" class="pill run"><i class="spin" aria-hidden="true"></i><span>กำลังทำงาน</span></span>
+        <span id="task-pill" class="pill run"><i class="spin" aria-hidden="true"></i><span>In progress</span></span>
       </header>
       <ol id="task-steps" class="checklist"></ol>
     </article>
 
     <section id="pro-flow" class="pro" hidden aria-labelledby="pro-title">
-      <h2 id="pro-title">ออกแบบด้วย Claude Pro</h2>
+      <h2 id="pro-title">Design with Claude Pro</h2>
       <p id="pro-reason" class="error" hidden></p>
-      <p class="muted small">ใช้แชตของ Claude ที่คุณสมัครไว้ ไม่ต้องใช้ API key ไม่เสียเงินเพิ่ม</p>
+      <p class="muted small">Uses your Claude chat subscription. No API key, no extra cost</p>
       <ol class="steps">
-        <li>ในแชต Claude กด <b>Ctrl+V</b> วางคำสั่งที่เว็บคัดลอกให้<span id="pro-attach" hidden> แล้วแนบไฟล์ Drawing</span> แล้วกดส่ง (ถ้าแท็บ Claude ไม่เปิดเอง กด <b>เปิด Claude</b>)</li>
-        <li>Claude ตอบเสร็จ กดปุ่ม <b>Copy</b> ใต้คำตอบ แล้วกลับมาหน้านี้ เว็บจะสร้างโมเดลให้เอง ถ้าเบราว์เซอร์ถามสิทธิ์อ่านคลิปบอร์ด ให้กดอนุญาต</li>
+        <li>In Claude, press <b>Ctrl+V</b> to paste the copied request<span id="pro-attach" hidden>, attach the drawing</span> and send</li>
+        <li>Click <b>Copy</b> under Claude's answer and come back. The model builds by itself (allow clipboard access if asked)</li>
       </ol>
       <div class="row start">
-        <button id="pro-copy" class="btn" type="button">คัดลอกคำสั่ง</button>
-        <a id="pro-open" class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">เปิด Claude</a>
+        <button id="pro-copy" class="btn" type="button">Copy request</button>
+        <a id="pro-open" class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
       </div>
-      <label for="pro-reply">คำตอบจาก Claude</label>
-      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="ถ้าเว็บไม่สร้างให้เอง วางคำตอบของ Claude ตรงนี้"></textarea>
-      <button id="pro-build" class="btn primary wide" type="button">สร้างโมเดลจากคำตอบ</button>
+      <label for="pro-reply">Claude's answer</label>
+      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="If nothing happens, paste Claude's answer here"></textarea>
+      <button id="pro-build" class="btn primary wide" type="button">Build from answer</button>
       <div id="pro-fix" hidden>
         <p id="pro-error" class="error"></p>
-        <button id="pro-copy-error" class="btn" type="button">คัดลอกข้อผิดพลาดไปให้ Claude แก้</button>
-        <p class="muted small">วางข้อความนี้ในแชตเดิมของ Claude แล้วนำคำตอบใหม่มาวางแทน</p>
+        <button id="pro-copy-error" class="btn" type="button">Copy the error for Claude</button>
+        <p class="muted small">Paste it in the same Claude chat and bring the new answer back</p>
       </div>
       <p id="pro-note" class="busy" role="status" hidden></p>
     </section>
@@ -109,17 +109,17 @@
 
     <div class="lists">
       <div id="recent-box" class="list-block" hidden>
-        <div class="list-head"><h2>งานล่าสุด</h2><a class="small" href="history.html">ดูทั้งหมด</a></div>
+        <div class="list-head"><h2>Recent</h2><a class="small" href="history.html">View all</a></div>
         <ul id="recent" class="recent"></ul>
       </div>
       <div class="list-block">
-        <div class="list-head"><h2>ชิ้นงานตัวอย่าง</h2><span class="muted small">ไม่ต้องใช้ API key</span></div>
+        <div class="list-head"><h2>Sample parts</h2><span class="muted small">No API key needed</span></div>
         <div id="examples" class="sample-list"></div>
       </div>
     </div>
   </section>
 
-  <section class="stage" aria-label="แบบงาน">
+  <section class="stage" aria-label="Drawing">
     <header class="stage-head">
       <div class="stage-status">
         <span id="st-ai" class="state">Claude</span>
@@ -132,24 +132,24 @@
     <div class="frame">
       <div class="frame-bar">
         <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <div class="seg" role="group" aria-label="มุมมอง">
-          <button type="button" data-view="quad" aria-pressed="true">4 มุมมอง</button>
-          <button type="button" data-view="iso" aria-pressed="false">ไอโซ</button>
-          <button type="button" data-view="front" aria-pressed="false">หน้า</button>
-          <button type="button" data-view="top" aria-pressed="false">บน</button>
-          <button type="button" data-view="right" aria-pressed="false">ขวา</button>
+        <div class="seg" role="group" aria-label="View">
+          <button type="button" data-view="quad" aria-pressed="true">4 views</button>
+          <button type="button" data-view="iso" aria-pressed="false">Iso</button>
+          <button type="button" data-view="front" aria-pressed="false">Front</button>
+          <button type="button" data-view="top" aria-pressed="false">Top</button>
+          <button type="button" data-view="right" aria-pressed="false">Right</button>
         </div>
-        <div class="seg" role="group" aria-label="การแสดงผล">
-          <button type="button" data-look="line" aria-pressed="true">เส้น</button>
-          <button type="button" data-look="shade" aria-pressed="false">แรเงา</button>
+        <div class="seg" role="group" aria-label="Style">
+          <button type="button" data-look="line" aria-pressed="true">Lines</button>
+          <button type="button" data-look="shade" aria-pressed="false">Shaded</button>
         </div>
       </div>
       <div class="views" id="views" data-mode="quad">
         <div id="viewport" class="viewport"></div>
-        <span class="vlabel q1">ด้านบน</span>
-        <span class="vlabel q2">ไอโซเมตริก</span>
-        <span class="vlabel q3">ด้านหน้า</span>
-        <span class="vlabel q4">ด้านขวา</span>
+        <span class="vlabel q1">Top</span>
+        <span class="vlabel q2">Isometric</span>
+        <span class="vlabel q3">Front</span>
+        <span class="vlabel q4">Right</span>
         <span id="single-label" class="vlabel single"></span>
         <div id="empty" class="empty">
           <svg class="draw-cube" viewBox="0 0 120 120" width="112" height="112" aria-hidden="true">
@@ -158,7 +158,7 @@
             <path class="e e3" d="M100 36v46l-40 23"/>
             <path class="face" d="M60 58l40-22v46l-40 23Z"/>
           </svg>
-          <p>ชิ้นงานจะปรากฏที่นี่</p>
+          <p>Your part will appear here</p>
         </div>
       </div>
     </div>
@@ -170,111 +170,111 @@
 
     <div id="title-block" class="result">
       <dl class="stats">
-        <div class="stat wide"><dt>ชื่อชิ้นงาน</dt><dd id="tb-name">-</dd></div>
-        <div class="stat"><dt>ขนาด X × Y × Z (มม.)</dt><dd id="tb-size" class="num">-</dd></div>
-        <div class="stat"><dt>ปริมาตร (ซม³)</dt><dd id="tb-vol" class="num">-</dd></div>
-        <div class="stat"><dt>น้ำหนัก (ก.)</dt><dd id="tb-mass" class="num">-</dd></div>
-        <div class="stat"><dt>ตรวจไฟล์ STEP</dt><dd><span id="tb-verify" class="pill wait">รอชิ้นงาน</span></dd></div>
+        <div class="stat wide"><dt>Part</dt><dd id="tb-name">-</dd></div>
+        <div class="stat"><dt>Size X × Y × Z (mm)</dt><dd id="tb-size" class="num">-</dd></div>
+        <div class="stat"><dt>Volume (cm³)</dt><dd id="tb-vol" class="num">-</dd></div>
+        <div class="stat"><dt>Mass (g)</dt><dd id="tb-mass" class="num">-</dd></div>
+        <div class="stat"><dt>STEP check</dt><dd><span id="tb-verify" class="pill wait">Waiting</span></dd></div>
       </dl>
       <div class="files-grid">
         <div class="file-card main">
           <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
-          <div><h3>STEP AP203</h3><p>เปิดใน SOLIDWORKS 2018 ขึ้นไป</p></div>
-          <button id="dl-step" disabled class="btn primary" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
-        </div>
-        <div class="file-card">
-          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
-          <div><h3>.SLDPRT <small>ไม่ต้องรันมาโคร</small></h3><p id="sw-local-state">ใช้ SOLIDWORKS ในเครื่องนี้</p></div>
-          <button id="dl-sldprt" disabled class="btn" type="button">สร้างไฟล์</button>
+          <div><h3>STEP AP203</h3><p>Opens in SOLIDWORKS 2018+</p></div>
+          <button id="dl-step" disabled class="btn primary" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> Download</button>
         </div>
         <div class="file-card">
           <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/></svg></span>
-          <div><h3>มาโคร .swb <small>ไม่ต้องติดตั้งอะไร</small></h3><p>รันใน 2018 ขึ้นไป ได้ .SLDPRT</p></div>
-          <button id="dl-sw" disabled class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
+          <div><h3>SOLIDWORKS macro <small>.swb, nothing to install</small></h3><p>Builds the feature tree in 2018+</p></div>
+          <button id="dl-sw" disabled class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> Download</button>
+        </div>
+        <div class="file-card">
+          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
+          <div><h3>.SLDPRT <small>via the desktop app</small></h3><p id="sw-local-state">Uses SOLIDWORKS on this PC</p></div>
+          <button id="dl-sldprt" disabled class="btn" type="button">Create</button>
         </div>
       </div>
     </div>
   </section>
 
-  <aside class="inspector" aria-label="รายละเอียด">
-    <div id="no-model" class="muted">ตารางขนาดจะแสดงที่นี่ แก้ตัวเลขแล้วอัปเดตโมเดลได้โดยไม่ต้องเรียก AI</div>
+  <aside class="inspector" aria-label="Details">
+    <div id="no-model" class="muted">Dimensions appear here once a part is built. Edit any value to update the model without AI</div>
 
     <div id="details" hidden>
       <div id="questions-box" class="callout" hidden>
-        <h2>ต้องยืนยันก่อนใช้</h2>
+        <h2>Please confirm</h2>
         <ul id="questions"></ul>
       </div>
 
-      <h2>ขนาด</h2>
+      <h2>Dimensions</h2>
       <table class="dims">
-        <thead><tr><th scope="col">รายการ</th><th scope="col">ค่า (มม.)</th></tr></thead>
+        <thead><tr><th scope="col">Parameter</th><th scope="col">mm</th></tr></thead>
         <tbody id="dims"></tbody>
       </table>
-      <button id="rebuild" class="btn primary wide" type="button" hidden>อัปเดตโมเดล</button>
+      <button id="rebuild" class="btn primary wide" type="button" hidden>Update model</button>
 
       <div id="assume-box" hidden>
-        <h2>สมมติฐาน</h2>
+        <h2>Assumptions</h2>
         <ul id="assumptions"></ul>
       </div>
 
-      <h2>ลำดับการสร้าง</h2>
+      <h2>Feature tree</h2>
       <ol id="features" class="features"></ol>
 
       <div id="sw-local-help" class="callout" hidden>
-        <h2>สร้าง .SLDPRT ด้วย SOLIDWORKS ในเครื่อง</h2>
+        <h2>Create .SLDPRT with SOLIDWORKS on this PC</h2>
         <p id="sw-local-msg"></p>
         <ol class="steps">
-          <li>ครั้งแรกครั้งเดียว: <a href="https://github.com/Jittrakan-K/auto3d/archive/refs/heads/main.zip">ดาวน์โหลดแอปบนเครื่อง (.zip)</a> แตกไฟล์ แล้วดับเบิลคลิก <b>install.bat</b> ถ้าเคยติดตั้งแล้ว ดับเบิลคลิก <b>update.bat</b> แทน</li>
-          <li>กดปุ่ม <b>สร้างไฟล์</b> อีกครั้ง เบราว์เซอร์จะถามว่าเปิด AUTO DESIGN 3D ไหม ติ๊ก "อนุญาตเสมอ" แล้วกดเปิด ครั้งต่อไปจะเปิดเองโดยไม่ถาม</li>
-          <li>ถ้าเบราว์เซอร์ถามว่าให้เว็บเข้าถึงอุปกรณ์ในเครื่องหรือเครือข่าย ให้กดอนุญาต</li>
+          <li>Once: <a href="https://github.com/Jittrakan-K/auto3d/archive/refs/heads/main.zip">download the desktop app (.zip)</a>, extract it and run <b>install.bat</b> (or <b>update.bat</b> if installed)</li>
+          <li>Click <b>Create</b> again. When the browser asks to open AUTO DESIGN 3D, tick "Always allow" and open it</li>
+          <li>Allow local network access if the browser asks</li>
         </ol>
-        <p class="small">ยังใช้ไม่ได้ ดับเบิลคลิก <b>start.bat</b> เปิดทิ้งไว้แทนได้ แอปที่เว็บเปิดให้จะทำงานเงียบ ๆ ไม่มีหน้าต่าง ปิดด้วย <b>stop.bat</b> หรือรีสตาร์ทเครื่อง</p>
+        <p class="small">Still stuck? Keep <b>start.bat</b> running instead. Stop the background app with <b>stop.bat</b></p>
       </div>
 
       <details class="raw">
-        <summary>แก้แผนงาน JSON</summary>
+        <summary>Edit JSON plan</summary>
         <textarea id="plan-json" rows="12" spellcheck="false"></textarea>
-        <button id="build-json" class="btn" type="button">สร้างจาก JSON</button>
+        <button id="build-json" class="btn" type="button">Build from JSON</button>
       </details>
     </div>
 
-    <div id="sw-setup" class="sw-setup">
-      <h2>เปิดใน SOLIDWORKS พร้อม Feature Tree</h2>
-      <p class="muted small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรมเพิ่ม</p>
+    <details id="sw-setup" class="sw-setup" open>
+      <summary><h2>Open in SOLIDWORKS with feature tree</h2></summary>
+      <p class="muted small">Works on locked-down PCs, nothing to install</p>
 
-      <h3>ตั้งปุ่มลัด <span>ครั้งเดียว</span></h3>
+      <h3>Set up the button <span>once</span></h3>
       <ol class="steps">
-        <li><button id="copy-launcher" class="cell-btn inline" type="button">คัดลอกโค้ดปุ่มลัด</button></li>
-        <li>Tools › Macro › New ตั้งชื่อ <b>AUTO_DESIGN_3D.swp</b></li>
-        <li>วางโค้ดทับทั้งหมด (Ctrl+A, Ctrl+V) แล้ว Ctrl+S</li>
-        <li>Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปที่แถบเครื่องมือ เลือกไฟล์ .swp</li>
+        <li><button id="copy-launcher" class="cell-btn inline" type="button">Copy launcher code</button></li>
+        <li>Tools › Macro › New, name it <b>AUTO_DESIGN_3D.swp</b></li>
+        <li>Replace all the code (Ctrl+A, Ctrl+V), then Ctrl+S</li>
+        <li>Tools › Customize › Commands › Macro, drag <b>New Macro Button</b> to a toolbar and pick the .swp</li>
       </ol>
 
-      <h3>ใช้งาน <span>ทุกครั้ง</span></h3>
+      <h3>Each part</h3>
       <ol class="steps">
-        <li>ดาวน์โหลด <b>มาโคร .swb</b> จากการ์ดใต้ชิ้นงาน</li>
-        <li>กดปุ่มลัดใน SOLIDWORKS ได้ .SLDPRT ในโฟลเดอร์ Downloads</li>
+        <li>Download the <b>SOLIDWORKS macro</b> card under the part</li>
+        <li>Click your button in SOLIDWORKS. The .SLDPRT lands in Downloads</li>
       </ol>
 
-      <p class="note small">ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่ใช้รัน ไม่ตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แทน</p>
-    </div>
+      <p class="note small">The .SLDPRT is saved in the SOLIDWORKS version that runs it. No button? Use Tools › Macro › Run</p>
+    </details>
   </aside>
 </div>
 
 <dialog id="settings">
   <form method="dialog" id="settings-form">
-    <h2>ตั้งค่า</h2>
+    <h2>Settings</h2>
     <label for="api-key">Claude API key</label>
     <input id="api-key" type="password" autocomplete="off" placeholder="sk-ant-...">
-    <label class="check"><input id="remember" type="checkbox"> จำคีย์ไว้ในเบราว์เซอร์นี้</label>
-    <p class="muted small">ไม่จำเป็นถ้าใช้ Claude Pro ผ่านแชต คีย์ API คิดเงินแยกจาก Claude Pro คีย์ส่งตรงจากเบราว์เซอร์ไปที่ Claude เท่านั้น ไม่ผ่านเซิร์ฟเวอร์อื่น ถ้าไม่ติ๊กจำไว้ คีย์จะหายเมื่อปิดแท็บ ค่าใช้จ่ายคิดกับบัญชีของคีย์นี้</p>
-    <label for="model">โมเดล AI</label>
+    <label class="check"><input id="remember" type="checkbox"> Remember the key in this browser</label>
+    <p class="muted small">Optional. Without a key the site uses your Claude Pro chat. API usage is billed separately from Claude Pro to the key's account. The key goes straight from this browser to Claude and is forgotten when the tab closes unless you tick remember</p>
+    <label for="model">Model</label>
     <select id="model"></select>
-    <p class="muted small">claude-opus-5-5 อ่าน Drawing ได้ละเอียดกว่า claude-sonnet-5-5 ถูกและเร็วกว่า</p>
+    <p class="muted small">claude-opus-5-5 reads drawings in more detail. claude-sonnet-5-5 is cheaper and faster</p>
     <p id="settings-error" class="error" hidden></p>
     <div class="row">
-      <button class="btn" type="button" id="close-settings">ปิด</button>
-      <button class="btn primary" type="submit" id="save-settings">บันทึก</button>
+      <button class="btn" type="button" id="close-settings">Close</button>
+      <button class="btn primary" type="submit" id="save-settings">Save</button>
     </div>
   </form>
 </dialog>

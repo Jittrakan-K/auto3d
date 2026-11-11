@@ -1,27 +1,27 @@
 {
  "name": "Control_Box_Cover",
- "description": "ฝาครอบกล่องคอนโทรล อลูมิเนียม",
+ "description": "Aluminium control box cover",
  "density_g_cm3": 2.7,
  "parameters": [
   {
    "name": "L",
    "value": 160,
-   "label": "ความยาว"
+   "label": "Length"
   },
   {
    "name": "W",
    "value": 100,
-   "label": "ความกว้าง"
+   "label": "Width"
   },
   {
    "name": "H",
    "value": 24,
-   "label": "ความสูง"
+   "label": "Height"
   },
   {
    "name": "WALL",
    "value": 4,
-   "label": "ความหนาผนัง"
+   "label": "Wall thickness"
   }
  ],
  "features": [

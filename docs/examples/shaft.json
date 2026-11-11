@@ -1,27 +1,27 @@
 {
  "name": "Stepped_Shaft",
- "description": "เพลาขั้นมีร่องลิ่ม",
+ "description": "Stepped shaft with keyway",
  "density_g_cm3": 7.85,
  "parameters": [
   {
    "name": "D1",
    "value": 30,
-   "label": "Ø ช่วงกลาง"
+   "label": "Middle Ø"
   },
   {
    "name": "D2",
    "value": 20,
-   "label": "Ø ปลาย"
+   "label": "End Ø"
   },
   {
    "name": "L1",
    "value": 40,
-   "label": "ความยาวปลาย"
+   "label": "End length"
   },
   {
    "name": "L2",
    "value": 80,
-   "label": "ความยาวกลาง"
+   "label": "Middle length"
   }
  ],
  "features": [

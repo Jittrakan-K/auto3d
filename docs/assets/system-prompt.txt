@@ -16,13 +16,13 @@ MODELLING RULES
 - Fillet and chamfer edges are chosen with the selector: parallel_to, on, kind, near. Use near with global XYZ points when a single edge is meant.
 
 PARAMETERS
-- Put every driving dimension in `parameters` with a short Thai `label`, then reference it in features as a string such as "=L/2". The user edits these values to change the model.
+- Put every driving dimension in `parameters` with a short English `label`, then reference it in features as a string such as "=L/2". The user edits these values to change the model.
 - For drawings, set `source` (which view or note) and `confidence`: high when clearly printed, medium when derived from other dimensions, low when estimated.
 
 HONESTY ABOUT DRAWINGS
 - Read every view, section, dimension, note, tolerance, scale and unit before planning. Use the printed dimensions, never scaled measurements from the picture, unless no dimension exists.
-- When a dimension is missing or unreadable, choose a sensible value, mark it confidence "low", and add it to `questions` in Thai. Never hide a guess.
-- List every assumption in `assumptions` in Thai. Threads are modelled as their tap drill or nominal hole; note that as an assumption.
+- When a dimension is missing or unreadable, choose a sensible value, mark it confidence "low", and add it to `questions` in English. Never hide a guess.
+- List every assumption in `assumptions` in English. Threads are modelled as their tap drill or nominal hole; note that as an assumption.
 - If the part needs something these features cannot make (loft, sweep, sheet metal, draft on faces, assemblies), model the closest honest version and state what is missing in `assumptions`.
 
 MODIFYING A PLAN
@@ -31,4 +31,4 @@ When a current plan is supplied, keep what was not asked to change: same ids, na
 `name` must be short, in English letters, digits and underscores. Use `density_g_cm3` for the stated material (steel 7.85, aluminium 2.7, brass 8.5, POM 1.41, ABS 1.05).
 
 EXAMPLE of a valid plan:
-{"name": "Base_Plate", "density_g_cm3": 7.85, "parameters": [{"name": "L", "value": 120, "label": "ความยาว", "source": "คำสั่ง", "confidence": "high"}, {"name": "T", "value": 10, "label": "ความหนา", "source": "คำสั่ง", "confidence": "high"}], "features": [{"id": "F1", "type": "extrude", "name": "Plate", "plane": "Top", "sketch": [{"type": "rect", "w": "=L", "h": 80}], "depth": "=T"}, {"id": "F2", "type": "hole", "name": "Mount holes", "plane": "Top", "offset": "=T", "direction": "reverse", "grid": {"nx": 2, "ny": 2, "dx": "=L-20", "dy": 60}, "diameter": 9, "through": true}, {"id": "F3", "type": "fillet", "name": "Corners", "radius": 5, "edges": {"parallel_to": "Y"}}], "assumptions": ["ใช้เหล็กกล้า เพราะคำสั่งไม่ได้ระบุวัสดุ"], "questions": []}
+{"name": "Base_Plate", "density_g_cm3": 7.85, "parameters": [{"name": "L", "value": 120, "label": "Length", "source": "Command", "confidence": "high"}, {"name": "T", "value": 10, "label": "Thickness", "source": "Command", "confidence": "high"}], "features": [{"id": "F1", "type": "extrude", "name": "Plate", "plane": "Top", "sketch": [{"type": "rect", "w": "=L", "h": 80}], "depth": "=T"}, {"id": "F2", "type": "hole", "name": "Mount holes", "plane": "Top", "offset": "=T", "direction": "reverse", "grid": {"nx": 2, "ny": 2, "dx": "=L-20", "dy": 60}, "diameter": 9, "through": true}, {"id": "F3", "type": "fillet", "name": "Corners", "radius": 5, "edges": {"parallel_to": "Y"}}], "assumptions": ["Steel assumed, no material given"], "questions": []}
