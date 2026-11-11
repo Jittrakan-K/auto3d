@@ -3,6 +3,8 @@ import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js";
 import { useHelpers, render as renderMacro } from "./js/macro.js";
 import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
 import { quickPlan } from "./js/quick.js";
+import { addEntry, getEntry } from "./js/history.js";
+import { zipBlob } from "./js/zip.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
@@ -92,10 +94,12 @@ for (const ev of ["dragleave", "drop"]) drop.addEventListener(ev, (e) => { e.pre
 drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
 
 // ---------- result ----------
-async function showJob(raw, plan, result) {
+// source: what this build came from (the command, a sample, an edit). Builds without one,
+// such as reopening an entry, are not added to the history again.
+async function showJob(raw, plan, result, source) {
   const step = stepBlob(result, plan.name);
   const verify = await verifyStep(step, result.volume_mm3);
-  state.job = { raw, plan, result, step, macro: renderMacro(result.steps, plan.name) };
+  state.job = { raw, plan, result, step, macro: renderMacro(result.steps, plan.name), source: source || state.job?.source || "" };
   document.body.classList.add("has-model");
   show($("rebuild"), false);
   show($("empty"), false);
@@ -120,6 +124,13 @@ async function showJob(raw, plan, result) {
   list($("features"), plan.features.map((f) => f.name || f.id));
   $("plan-json").value = JSON.stringify(raw, null, 2);
   viewer.load(meshOf(result));
+  if (source) {
+    addEntry({
+      at: new Date().toISOString(), name: plan.name, source, raw,
+      size: result.size.map((v) => +v.toFixed(2)), volume_cm3: +(result.volume_mm3 / 1000).toFixed(2),
+      mass_g: +result.mass_g.toFixed(2), features: plan.features.length, thumb: viewer.thumbnail(),
+    });
+  }
 }
 
 function renderDims(raw, plan) {
@@ -158,13 +169,13 @@ function renderDims(raw, plan) {
   $("dims").replaceChildren(...rows);
 }
 
-async function buildRaw(raw) {
+async function buildRaw(raw, source) {
   fail(""); busy("กำลังสร้างโมเดล");
   await nextFrame();
   try {
     const built = tryBuild(raw);
     if (built.error) throw new Error(built.error);
-    await showJob(raw, built.plan, built.result);
+    await showJob(raw, built.plan, built.result, source);
   } catch (e) { fail(e.message); }
   finally { busy(""); }
 }
@@ -192,7 +203,7 @@ $("brief-form").onsubmit = async (e) => {
       const built = tryBuild(quick.plan);
       if (built.error) { openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`); return; }
       show($("pro-flow"), false);
-      await showJob(quick.plan, built.plan, built.result);
+      await showJob(quick.plan, built.plan, built.result, prompt.trim());
     } catch (err) { fail(`เกิดข้อผิดพลาด: ${err.message}`); }
     finally { busy(""); }
     return;
@@ -206,7 +217,7 @@ $("brief-form").onsubmit = async (e) => {
       prompt, blocks, currentPlan: state.job && $("modify").checked ? state.job.raw : null,
       onStatus: (t) => busy(t),
     });
-    await showJob(r.raw, r.plan, r.result);
+    await showJob(r.raw, r.plan, r.result, prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
     state.files = []; renderFiles();
   } catch (err) { fail(err instanceof AiError ? err.message : `เกิดข้อผิดพลาด: ${err.message}`); }
   finally { busy(""); }
@@ -289,7 +300,8 @@ $("pro-build").onclick = async () => {
   try {
     const built = tryBuild(raw);
     if (built.error) { $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
-    await showJob(raw, built.plan, built.result);
+    await showJob(raw, built.plan, built.result,
+      $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
     $("pro-reply").value = "";
     state.files = []; renderFiles();
     $("pro-note").textContent = "สร้างโมเดลแล้ว"; show($("pro-note"), true);
@@ -300,14 +312,39 @@ $("pro-copy-error").onclick = () => copyText(
   "คัดลอกข้อผิดพลาดแล้ว วางในแชตเดิมของ Claude"
 );
 
-$("rebuild").onclick = () => buildRaw(state.job.raw);
+$("rebuild").onclick = () => buildRaw(state.job.raw, `${(state.job.source || state.job.plan.name).replace(/ \(แก้ขนาด\)$/, "")} (แก้ขนาด)`);
 $("build-json").onclick = () => {
   let raw;
   try { raw = JSON.parse($("plan-json").value); } catch (e) { fail(`JSON ไม่ถูกต้อง: ${e.message}`); return; }
-  buildRaw(raw);
+  buildRaw(raw, "แก้จาก JSON");
 };
 $("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan.name)}.step`);
-$("dl-macro").onclick = () => download(new Blob([state.job.macro], { type: "text/plain" }), `${safeName(state.job.plan.name)}.swb`);
+$("dl-sw").onclick = async () => {
+  const name = safeName(state.job.plan.name);
+  const readme = [
+    `${state.job.plan.name} - เปิดใน SOLIDWORKS พร้อม Feature Tree`,
+    "",
+    "1. แตกไฟล์ zip นี้ก่อน (คลิกขวา > Extract All) อย่ารันจากใน zip",
+    "2. เปิด SOLIDWORKS รุ่นที่ต้องการ (2018 ขึ้นไป)",
+    `3. ไปที่ Tools > Macro > Run แล้วเลือก ${name}.swb`,
+    `4. มาโครจะสร้างชิ้นงานทีละฟีเจอร์ แล้วบันทึกไฟล์ .SLDPRT ไว้ในโฟลเดอร์นี้`,
+    "",
+    "ไฟล์ SLDPRT จะเป็นรุ่นเดียวกับ SOLIDWORKS ที่รันมาโคร",
+    "SOLIDWORKS รุ่นเก่าเปิดไฟล์ที่บันทึกจากรุ่นใหม่ไม่ได้ ถ้าต้องการไฟล์ที่เปิดได้ตั้งแต่ 2018",
+    "ให้รันมาโครใน SOLIDWORKS 2018 แล้วรุ่นใหม่กว่าจะเปิดไฟล์นั้นได้ทั้งหมด",
+    "",
+    `มาโครเทียบปริมาตรทุกฟีเจอร์กับค่าจากไฟล์ ${name}.step ถ้าไม่ตรงจะแจ้งชื่อฟีเจอร์ให้ตรวจ`,
+    `ถ้ามาโครรันไม่ได้ ใช้ ${name}.step (AP203) เปิดแทนได้ แต่จะไม่มี Feature Tree`,
+    "",
+  ].join("\r\n");
+  const step = new Uint8Array(await state.job.step.arrayBuffer());
+  const zip = await zipBlob([
+    { name: `${name}.swb`, data: state.job.macro.replace(/\r?\n/g, "\r\n") },
+    { name: `${name}.step`, data: step },
+    { name: "README_SOLIDWORKS.txt", data: "\ufeff" + readme },
+  ]);
+  download(zip, `${name}_SOLIDWORKS.zip`);
+};
 
 function press(selector, chosen) {
   document.querySelectorAll(selector).forEach((b) => b.setAttribute("aria-pressed", String(b === chosen)));
@@ -350,6 +387,17 @@ $("settings-form").onsubmit = (e) => {
   $("settings").close();
 };
 
+// history.html links here with ?open=<id>
+function openFromHistory() {
+  const id = new URLSearchParams(location.search).get("open");
+  if (!id) return;
+  history.replaceState(null, "", location.pathname);
+  const entry = getEntry(id);
+  if (!entry) { fail("ไม่พบงานนี้ในประวัติแล้ว"); return; }
+  state.job = { source: entry.source };
+  buildRaw(structuredClone(entry.raw));
+}
+
 (async () => {
   state.key = store.get(KEY_STORE);
   state.model = MODELS.includes(store.get(MODEL_STORE)) ? store.get(MODEL_STORE) : MODELS[0];
@@ -361,10 +409,11 @@ $("settings-form").onsubmit = (e) => {
     $("examples").replaceChildren(...examples.map((x) => {
       const b = document.createElement("button");
       b.type = "button"; b.textContent = x.description || x.name;
-      b.onclick = () => { if (state.kernel) buildRaw(structuredClone(x)); };
+      b.onclick = () => { if (state.kernel) buildRaw(structuredClone(x), `ตัวอย่าง: ${x.description || x.name}`); };
       return b;
     }));
     await loadKernel();
+    openFromHistory();
   } catch (e) {
     state.kernelError = true;
     fail(`โหลดตัวสร้างโมเดลไม่ได้: ${e.message}`);

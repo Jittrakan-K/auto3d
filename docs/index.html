@@ -34,6 +34,7 @@
   <div class="status">
     <span id="st-ai" class="state">Claude</span>
     <span id="st-cad" class="state">ตัวสร้างโมเดลกำลังโหลด</span>
+    <a class="btn" href="history.html">ประวัติ</a>
     <button id="open-settings" class="btn" type="button">ตั้งค่า</button>
   </div>
 </header>
@@ -157,7 +158,7 @@
             <thead><tr><th scope="col">ไฟล์</th><th scope="col">เปิดใน SOLIDWORKS</th><th><span class="sr">คำสั่ง</span></th></tr></thead>
             <tbody>
               <tr><th scope="row">STEP AP203</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
-              <tr><th scope="row">มาโคร .swb</th><td>รันใน 2018 ขึ้นไป ได้ SLDPRT รุ่นนั้น</td><td><button id="dl-macro" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
+              <tr><th scope="row">SOLIDWORKS<small>Feature Tree</small></th><td>2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -191,13 +192,13 @@
       <h2>ลำดับการสร้าง</h2>
       <ol id="features" class="features"></ol>
 
-      <h2>ได้ไฟล์ SLDPRT รุ่น 2018</h2>
+      <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
       <ol class="steps">
-        <li>ดาวน์โหลดมาโคร .swb</li>
-        <li>เปิด SOLIDWORKS 2018 ไปที่ Tools › Macro › Run แล้วเลือกไฟล์</li>
-        <li>ได้ไฟล์ SLDPRT รุ่น 2018 พร้อม Feature Tree ในโฟลเดอร์เดียวกับมาโคร</li>
+        <li>กดดาวน์โหลดแถว SOLIDWORKS ได้ไฟล์ zip แล้วแตกไฟล์ก่อน</li>
+        <li>เปิด SOLIDWORKS ไปที่ Tools › Macro › Run แล้วเลือกไฟล์ .swb</li>
+        <li>ได้ไฟล์ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์เดียวกัน แก้ขนาดต่อได้ทุกฟีเจอร์</li>
       </ol>
-      <p class="muted small">มาโครตรวจปริมาตรทุกฟีเจอร์กับไฟล์ STEP ถ้าไม่ตรงจะแจ้งชื่อฟีเจอร์ให้ตรวจ</p>
+      <p class="muted small">ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รันมาโคร รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้ ถ้าต้องส่งให้คนที่ใช้ 2018 ให้รันมาโครใน 2018 มาโครตรวจปริมาตรทุกฟีเจอร์ ถ้าไม่ตรงจะแจ้งชื่อฟีเจอร์</p>
 
       <details class="raw">
         <summary>แก้แผนงาน JSON</summary>

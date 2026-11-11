@@ -160,4 +160,27 @@ export class Viewer {
     }
     r.setScissorTest(false);
   }
+
+  // Small isometric picture of the current part for the history list.
+  thumbnail(px = 160) {
+    const { clientWidth: w, clientHeight: h } = this.host;
+    if (!w || !h || !this.mesh) return "";
+    const r = this.renderer, cam = this.cams.iso;
+    const halfH = this.radius * (w >= h ? 0.95 : 0.95 * (h / w));
+    Object.assign(cam, { left: -halfH * (w / h), right: halfH * (w / h), top: halfH, bottom: -halfH });
+    cam.updateProjectionMatrix();
+    r.setScissorTest(false);
+    r.setViewport(0, 0, w, h);
+    r.clear();
+    r.render(this.scene, cam);
+    const src = r.domElement, s = Math.min(src.width, src.height);
+    const out = document.createElement("canvas");
+    out.width = out.height = px;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, px, px);
+    ctx.drawImage(src, (src.width - s) / 2, (src.height - s) / 2, s, s, 0, 0, px, px);
+    this.frame();
+    return out.toDataURL("image/png");
+  }
 }

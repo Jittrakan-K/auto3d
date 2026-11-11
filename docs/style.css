@@ -312,3 +312,40 @@ dialog{box-shadow:8px 8px 0 var(--ink)}
 }
 .empty{background:var(--sheet);border:3px solid var(--ink);box-shadow:var(--shadow);padding:24px 16px;z-index:2}
 #tb-size{font-family:"Plex Num",monospace;font-size:14px;white-space:nowrap}
+
+/* files table: second line under the file type */
+.tb-files tbody th small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}
+a.brand{text-decoration:none;color:inherit}
+.btn.danger{background:var(--bad);color:#fff}
+
+/* ===================== history page ===================== */
+.log{max-width:1040px;margin:0 auto;padding:32px 16px 64px}
+.log-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.log-head h1{font-size:24px;margin:0;display:flex;align-items:center;gap:12px}
+.log-head h1::before{content:"";width:12px;height:12px;background:var(--yellow);box-shadow:3px 3px 0 var(--ink)}
+.log-head p{margin:4px 0 0}
+.log-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.log-tools input[type=search]{min-height:40px;padding:0 12px;border:2px solid var(--ink);border-radius:0;font:inherit;background:var(--sheet);width:220px}
+.log-list{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:16px}
+.log-item{display:grid;grid-template-columns:120px 1fr auto;gap:20px;align-items:center;padding:16px;background:var(--sheet);border:3px solid var(--ink);box-shadow:var(--shadow)}
+.log-thumb{width:120px;height:120px;border:2px solid var(--ink);background:#fff;display:grid;place-items:center;
+  background-image:linear-gradient(rgba(26,29,28,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(26,29,28,.06) 1px,transparent 1px);background-size:8px 8px}
+.log-thumb img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.log-name{font-family:"Pixel","Plex Num",monospace;font-size:13px;font-weight:400;line-height:1.7;margin:0;word-break:break-all}
+.log-name::before{display:none}
+.log-source{margin:4px 0 8px;color:var(--text-2)}
+.log-facts{display:flex;flex-wrap:wrap;gap:4px 24px;margin:0}
+.log-facts dt{font-size:12px;color:var(--muted)}
+.log-facts dd{margin:0;font-family:"Plex Num",monospace;font-size:14px}
+.log-acts{display:flex;flex-direction:column;gap:12px;min-width:160px}
+.log-empty{margin-top:24px;padding:40px 16px;text-align:center;background:var(--sheet);border:3px dashed var(--ink)}
+.history-page .note{margin:12px 0 0;padding:8px 12px;border:2px solid var(--ink);background:var(--flag)}
+@media (max-width:760px){
+  .log-item{grid-template-columns:88px 1fr}
+  .log-thumb{width:88px;height:88px}
+  .log-acts{grid-column:1/-1;flex-direction:row}
+  .log-acts .btn{flex:1}
+  .log-tools{width:100%}
+  .log-tools input[type=search]{flex:1 1 100%;width:auto}
+}
