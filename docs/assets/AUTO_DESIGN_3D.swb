@@ -1,4 +1,4 @@
-' AUTO DESIGN 3D launcher
+' AUTO DESIGN 3D launcher (paste into a new .swp macro: Tools > Macro > New)
 ' Put this macro on a toolbar button once (Tools > Customize > Commands > Macro).
 ' Each click builds the newest part macro (*_AD3D.swb) downloaded from the website,
 ' and the .SLDPRT with its Feature Tree is saved next to that file.

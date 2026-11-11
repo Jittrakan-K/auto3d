@@ -206,10 +206,12 @@
 
       <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
       <p class="small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรม ใช้แค่ SOLIDWORKS ที่มีอยู่</p>
-      <p class="small"><b>ตั้งครั้งเดียว</b></p>
+      <p class="small"><b>ตั้งครั้งเดียว</b> (ปุ่มลัดของ SOLIDWORKS รับเฉพาะไฟล์ .swp จึงให้ SOLIDWORKS สร้างไฟล์เอง)</p>
       <ol class="steps">
-        <li><a href="assets/AUTO_DESIGN_3D.swb" download>ดาวน์โหลดมาโครปุ่มลัด AUTO_DESIGN_3D.swb</a> เก็บไว้ในโฟลเดอร์ที่จะไม่ลบ</li>
-        <li>ใน SOLIDWORKS ไปที่ Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปวางบนแถบเครื่องมือ แล้วเลือกไฟล์นั้น</li>
+        <li>กด <button id="copy-launcher" class="cell-btn inline" type="button">คัดลอกโค้ดปุ่มลัด</button></li>
+        <li>ใน SOLIDWORKS ไปที่ Tools › Macro › New ตั้งชื่อ <b>AUTO_DESIGN_3D.swp</b> เก็บในโฟลเดอร์ที่จะไม่ลบ แล้วกด Save</li>
+        <li>หน้าต่าง VBA เปิดขึ้น กด Ctrl+A แล้ว Ctrl+V วางโค้ดทับทั้งหมด กด Ctrl+S แล้วปิดหน้าต่าง</li>
+        <li>เปิดชิ้นงานเปล่าหนึ่งชิ้น ไปที่ Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปวางบนแถบเครื่องมือ แล้วเลือก AUTO_DESIGN_3D.swp</li>
       </ol>
       <p class="small"><b>ทุกครั้ง</b></p>
       <ol class="steps">

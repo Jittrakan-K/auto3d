@@ -349,3 +349,5 @@ a.brand{text-decoration:none;color:inherit}
   .log-tools{width:100%}
   .log-tools input[type=search]{flex:1 1 100%;width:auto}
 }
+
+.cell-btn.inline{display:inline-flex;min-height:28px;padding:0 10px;border:2px solid var(--ink);background:var(--yellow);font:inherit;font-weight:600;cursor:pointer}

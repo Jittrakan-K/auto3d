@@ -364,6 +364,20 @@ $("dl-sldprt").onclick = async () => {
   } finally { busy(""); $("dl-sldprt").disabled = false; }
 };
 
+$("copy-launcher").onclick = async () => {
+  const b = $("copy-launcher");
+  try {
+    const code = await fetch("assets/AUTO_DESIGN_3D.swb").then((r) => r.text());
+    try { await navigator.clipboard.writeText(code); }
+    catch {
+      const t = document.createElement("textarea");
+      t.value = code; document.body.append(t); t.select(); document.execCommand("copy"); t.remove();
+    }
+    b.textContent = "คัดลอกแล้ว";
+  } catch { b.textContent = "คัดลอกไม่ได้ ลองอีกครั้ง"; }
+  setTimeout(() => { b.textContent = "คัดลอกโค้ดปุ่มลัด"; }, 2500);
+};
+
 $("dl-sw").onclick = () => {
   const name = safeName(state.job.plan.name);
   // The _AD3D suffix lets the AUTO_DESIGN_3D.swb toolbar macro find the newest download.
