@@ -125,7 +125,6 @@ async function showJob(raw, plan, result, source) {
   list($("features"), plan.features.map((f) => f.name || f.id));
   $("plan-json").value = JSON.stringify(raw, null, 2);
   viewer.load(meshOf(result));
-  refreshLocal();
   if (source) {
     addEntry({
       at: new Date().toISOString(), name: plan.name, source, raw,
@@ -330,7 +329,8 @@ function localHelp(text) {
 async function refreshLocal() {
   const st = await localStatus();
   const cell = $("sw-local-state");
-  if (!st.running) cell.textContent = "กดสร้างไฟล์ เว็บจะเปิดแอปบนเครื่องให้";
+  if (st.blocked) cell.textContent = "เบราว์เซอร์บล็อกการเชื่อมต่อกับเครื่อง";
+  else if (!st.running) cell.textContent = "ยังไม่พบแอปบนเครื่อง";
   else if (!st.sw.available) cell.textContent = st.sw.reason;
   else cell.textContent = `SOLIDWORKS ${st.sw.version} ในเครื่องนี้` + (st.sw.version > 2018 ? " (เปิดได้ใน " + st.sw.version + " ขึ้นไป)" : " เปิดได้ 2018 ขึ้นไป");
   return st;
@@ -338,13 +338,19 @@ async function refreshLocal() {
 $("dl-sldprt").onclick = async () => {
   localHelp(""); fail("");
   let st = await refreshLocal();
+  if (st.blocked) { localHelp("เบราว์เซอร์บล็อกไม่ให้เว็บนี้เชื่อมต่อกับเครื่อง กดไอคอนหน้า URL > การตั้งค่าเว็บไซต์ แล้วอนุญาต \"อุปกรณ์ในเครือข่าย\" จากนั้นกดสร้างไฟล์อีกครั้ง"); return; }
   if (!st.running) {
     $("dl-sldprt").disabled = true;
     busy("กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด");
     try { st = await launchLocal(45000, (s) => busy(`กำลังเปิดแอปบนเครื่อง ถ้าเบราว์เซอร์ถาม ให้กดเปิด (รออีก ${s} วินาที)`)); }
     finally { busy(""); $("dl-sldprt").disabled = false; }
     await refreshLocal();
-    if (!st.running) { localHelp("เปิดแอปบนเครื่องให้อัตโนมัติไม่ได้"); return; }
+    if (!st.running) {
+      localHelp(st.blocked
+        ? "เบราว์เซอร์บล็อกไม่ให้เว็บนี้เชื่อมต่อกับเครื่อง กดไอคอนหน้า URL > การตั้งค่าเว็บไซต์ แล้วอนุญาต \"อุปกรณ์ในเครือข่าย\" จากนั้นกดสร้างไฟล์อีกครั้ง"
+        : "เปิดแอปบนเครื่องไม่สำเร็จ ถ้าไม่มีหน้าต่างถามให้เปิด AUTO DESIGN 3D แปลว่ายังไม่ได้ลงทะเบียนลิงก์ ทำตามข้อ 1 ด้านล่าง ถ้ามีหน้าต่างถามและกดเปิดแล้ว ให้ลองเปิด start.bat แทนแล้วกดสร้างไฟล์อีกครั้ง");
+      return;
+    }
   }
   if (!st.sw.available) { localHelp(st.sw.reason); return; }
   busy(`SOLIDWORKS ${st.sw.version} กำลังสร้างทีละฟีเจอร์ อาจใช้เวลา 1 ถึง 2 นาที`);

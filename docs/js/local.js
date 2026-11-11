@@ -4,33 +4,40 @@ export const LOCAL = "http://127.0.0.1:8765";
 
 export class LocalError extends Error {}
 
-export async function localStatus(timeoutMs = 1500) {
+// A long timeout on purpose: the first request can wait on the browser's
+// "allow this site to reach devices on this computer" question. A refused
+// connection (app not running) still fails at once.
+export async function localStatus(timeoutMs = 30000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const r = await fetch(`${LOCAL}/api/status`, { signal: ctrl.signal });
+    const r = await fetch(`${LOCAL}/api/status`, { signal: ctrl.signal, cache: "no-store" });
     if (!r.ok) return { running: true, sw: { available: false, reason: "แอปบนเครื่องไม่อนุญาตให้เว็บนี้เชื่อมต่อ อัปเดตแอปเป็นรุ่นล่าสุด" } };
     const data = await r.json();
     return { running: true, sw: data.solidworks || { available: false, reason: "แอปบนเครื่องเป็นรุ่นเก่า" } };
   } catch {
-    return { running: false };
+    return { running: false, blocked: await accessDenied() };
   } finally { clearTimeout(t); }
+}
+
+// True when the user (or a policy) has blocked this site from reaching the computer.
+async function accessDenied() {
+  for (const name of ["local-network-access", "loopback-network", "local-network"]) {
+    try { if ((await navigator.permissions.query({ name })).state === "denied") return true; } catch { /* not supported */ }
+  }
+  return false;
 }
 
 // Ask Windows to start the app through the autodesign3d:// link (registered by
 // install.bat or setup_web_link.bat), then wait until it answers.
 export async function launchLocal(waitMs = 45000, onTick = () => {}) {
-  const frame = document.createElement("iframe");
-  frame.hidden = true;
-  frame.src = "autodesign3d://start";
-  document.body.append(frame);
-  setTimeout(() => frame.remove(), 3000);
+  window.location.href = "autodesign3d://start";
   const until = Date.now() + waitMs;
   while (Date.now() < until) {
     await new Promise((r) => setTimeout(r, 1500));
-    onTick(Math.ceil((until - Date.now()) / 1000));
-    const st = await localStatus(1200);
-    if (st.running) return st;
+    onTick(Math.max(0, Math.ceil((until - Date.now()) / 1000)));
+    const st = await localStatus(10000);
+    if (st.running || st.blocked) return st;
   }
   return { running: false };
 }
