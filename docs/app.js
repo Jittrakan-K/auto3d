@@ -4,7 +4,6 @@ import { useHelpers, render as renderMacro } from "./js/macro.js";
 import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
 import { quickPlan } from "./js/quick.js";
 import { addEntry, getEntry } from "./js/history.js";
-import { zipBlob } from "./js/zip.js";
 import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js";
 
 const $ = (id) => document.getElementById(id);
@@ -365,31 +364,10 @@ $("dl-sldprt").onclick = async () => {
   } finally { busy(""); $("dl-sldprt").disabled = false; }
 };
 
-$("dl-sw").onclick = async () => {
+$("dl-sw").onclick = () => {
   const name = safeName(state.job.plan.name);
-  const readme = [
-    `${state.job.plan.name} - เปิดใน SOLIDWORKS พร้อม Feature Tree`,
-    "",
-    "1. แตกไฟล์ zip นี้ก่อน (คลิกขวา > Extract All) อย่ารันจากใน zip",
-    "2. เปิด SOLIDWORKS รุ่นที่ต้องการ (2018 ขึ้นไป)",
-    `3. ไปที่ Tools > Macro > Run แล้วเลือก ${name}.swb`,
-    `4. มาโครจะสร้างชิ้นงานทีละฟีเจอร์ แล้วบันทึกไฟล์ .SLDPRT ไว้ในโฟลเดอร์นี้`,
-    "",
-    "ไฟล์ SLDPRT จะเป็นรุ่นเดียวกับ SOLIDWORKS ที่รันมาโคร",
-    "SOLIDWORKS รุ่นเก่าเปิดไฟล์ที่บันทึกจากรุ่นใหม่ไม่ได้ ถ้าต้องการไฟล์ที่เปิดได้ตั้งแต่ 2018",
-    "ให้รันมาโครใน SOLIDWORKS 2018 แล้วรุ่นใหม่กว่าจะเปิดไฟล์นั้นได้ทั้งหมด",
-    "",
-    `มาโครเทียบปริมาตรทุกฟีเจอร์กับค่าจากไฟล์ ${name}.step ถ้าไม่ตรงจะแจ้งชื่อฟีเจอร์ให้ตรวจ`,
-    `ถ้ามาโครรันไม่ได้ ใช้ ${name}.step (AP203) เปิดแทนได้ แต่จะไม่มี Feature Tree`,
-    "",
-  ].join("\r\n");
-  const step = new Uint8Array(await state.job.step.arrayBuffer());
-  const zip = await zipBlob([
-    { name: `${name}.swb`, data: state.job.macro.replace(/\r?\n/g, "\r\n") },
-    { name: `${name}.step`, data: step },
-    { name: "README_SOLIDWORKS.txt", data: "\ufeff" + readme },
-  ]);
-  download(zip, `${name}_SOLIDWORKS.zip`);
+  // The _AD3D suffix lets the AUTO_DESIGN_3D.swb toolbar macro find the newest download.
+  download(new Blob([state.job.macro], { type: "text/plain" }), `${name}_AD3D.swb`);
 };
 
 function press(selector, chosen) {

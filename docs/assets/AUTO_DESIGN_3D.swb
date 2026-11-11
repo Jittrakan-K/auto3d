@@ -1,0 +1,39 @@
+' AUTO DESIGN 3D launcher
+' Put this macro on a toolbar button once (Tools > Customize > Commands > Macro).
+' Each click builds the newest part macro (*_AD3D.swb) downloaded from the website,
+' and the .SLDPRT with its Feature Tree is saved next to that file.
+Option Explicit
+
+Sub main()
+    Dim swApp As Object
+    Dim folder As String, f As String, best As String
+    Dim t As Date, bestT As Date
+    Dim cfg As String, disp As String
+    Dim errCode As Long
+    Set swApp = Application.SldWorks
+
+    On Error Resume Next
+    folder = CreateObject("Shell.Application").Namespace("shell:Downloads").Self.Path
+    On Error GoTo 0
+    If folder = "" Then folder = Environ("USERPROFILE") & "\Downloads"
+
+    f = Dir(folder & "\*_AD3D*.swb")
+    Do While f <> ""
+        t = FileDateTime(folder & "\" & f)
+        If best = "" Or t > bestT Then
+            best = folder & "\" & f
+            bestT = t
+        End If
+        f = Dir()
+    Loop
+
+    If best = "" Then
+        best = swApp.GetOpenFileName("Choose the macro downloaded from AUTO DESIGN 3D", folder & "\", _
+            "AUTO DESIGN 3D macro (*.swb)|*.swb|", 0, cfg, disp)
+        If best = "" Then Exit Sub
+    End If
+
+    If Not swApp.RunMacro2(best, "", "main", 1, errCode) Then
+        MsgBox "Could not run " & best & " (error " & errCode & ")"
+    End If
+End Sub

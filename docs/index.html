@@ -159,7 +159,7 @@
             <tbody>
               <tr><th scope="row">STEP AP203</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
               <tr><th scope="row">.SLDPRT<small>ไม่ต้องรันมาโคร</small></th><td id="sw-local-state">ใช้ SOLIDWORKS ในเครื่องนี้</td><td><button id="dl-sldprt" class="cell-btn" type="button">สร้างไฟล์</button></td></tr>
-              <tr><th scope="row">มาโคร<small>Feature Tree</small></th><td>รันใน 2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
+              <tr><th scope="row">มาโคร .swb<small>ไม่ต้องติดตั้งอะไร</small></th><td>รันใน 2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -205,12 +205,19 @@
       </div>
 
       <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
+      <p class="small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรม ใช้แค่ SOLIDWORKS ที่มีอยู่</p>
+      <p class="small"><b>ตั้งครั้งเดียว</b></p>
       <ol class="steps">
-        <li>กดดาวน์โหลดแถว SOLIDWORKS ได้ไฟล์ zip แล้วแตกไฟล์ก่อน</li>
-        <li>เปิด SOLIDWORKS ไปที่ Tools › Macro › Run แล้วเลือกไฟล์ .swb</li>
-        <li>ได้ไฟล์ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์เดียวกัน แก้ขนาดต่อได้ทุกฟีเจอร์</li>
+        <li><a href="assets/AUTO_DESIGN_3D.swb" download>ดาวน์โหลดมาโครปุ่มลัด AUTO_DESIGN_3D.swb</a> เก็บไว้ในโฟลเดอร์ที่จะไม่ลบ</li>
+        <li>ใน SOLIDWORKS ไปที่ Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปวางบนแถบเครื่องมือ แล้วเลือกไฟล์นั้น</li>
       </ol>
-      <p class="muted small">ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รันมาโคร รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้ ถ้าต้องส่งให้คนที่ใช้ 2018 ให้รันมาโครใน 2018 มาโครตรวจปริมาตรทุกฟีเจอร์ ถ้าไม่ตรงจะแจ้งชื่อฟีเจอร์</p>
+      <p class="small"><b>ทุกครั้ง</b></p>
+      <ol class="steps">
+        <li>กดดาวน์โหลดแถว <b>มาโคร .swb</b> ในตารางท้ายแบบ</li>
+        <li>กดปุ่มลัดใน SOLIDWORKS ระบบหาไฟล์ล่าสุดในโฟลเดอร์ Downloads แล้วสร้างทีละฟีเจอร์</li>
+        <li>ได้ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์ Downloads</li>
+      </ol>
+      <p class="muted small">ไม่อยากตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แล้วเลือกไฟล์ที่ดาวน์โหลดแทน ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รัน รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้</p>
 
       <details class="raw">
         <summary>แก้แผนงาน JSON</summary>
