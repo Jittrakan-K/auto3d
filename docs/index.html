@@ -79,15 +79,15 @@
       <p id="pro-reason" class="error" hidden></p>
       <p class="muted small">ใช้แชตของ Claude ที่คุณสมัครไว้ ไม่ต้องใช้ API key ไม่เสียเงินเพิ่ม</p>
       <ol class="steps">
-        <li>กด <b>คัดลอกคำสั่ง</b> แล้วกด <b>เปิด Claude</b> วางในแชตใหม่แล้วส่ง<span id="pro-attach" hidden> แนบไฟล์ Drawing ในแชตของ Claude ด้วย</span></li>
-        <li>คัดลอกคำตอบของ Claude ทั้งหมด มาวางในช่องด้านล่าง</li>
+        <li>ในแชต Claude กด <b>Ctrl+V</b> วางคำสั่งที่เว็บคัดลอกให้<span id="pro-attach" hidden> แล้วแนบไฟล์ Drawing</span> แล้วกดส่ง (ถ้าแท็บ Claude ไม่เปิดเอง กด <b>เปิด Claude</b>)</li>
+        <li>Claude ตอบเสร็จ กดปุ่ม <b>Copy</b> ใต้คำตอบ แล้วกลับมาหน้านี้ เว็บจะสร้างโมเดลให้เอง ถ้าเบราว์เซอร์ถามสิทธิ์อ่านคลิปบอร์ด ให้กดอนุญาต</li>
       </ol>
       <div class="row start">
         <button id="pro-copy" class="btn" type="button">คัดลอกคำสั่ง</button>
-        <a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">เปิด Claude</a>
+        <a id="pro-open" class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">เปิด Claude</a>
       </div>
       <label for="pro-reply">คำตอบจาก Claude</label>
-      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="วางคำตอบที่มีโค้ด JSON ตรงนี้"></textarea>
+      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="ถ้าเว็บไม่สร้างให้เอง วางคำตอบของ Claude ตรงนี้"></textarea>
       <button id="pro-build" class="btn primary wide" type="button">สร้างโมเดลจากคำตอบ</button>
       <div id="pro-fix" hidden>
         <p id="pro-error" class="error"></p>

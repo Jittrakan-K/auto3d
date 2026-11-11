@@ -188,7 +188,8 @@ $("brief-form").onsubmit = async (e) => {
   if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
   if (!state.key) {
     if (state.files.length) {
-      openPro("การอ่าน Drawing ต้องใช้ Claude คัดลอกคำสั่งให้แล้ว");
+      await openPro("การอ่าน Drawing ต้องใช้ Claude เว็บคัดลอกคำสั่งและเปิด Claude ให้แล้ว");
+      openClaude();
       return;
     }
     // Plain parts: read the command here, build, and hand over the STEP file in one click.
@@ -254,6 +255,32 @@ async function copyText(text, note) {
   n.textContent = note; show(n, true);
 }
 
+// Opens a new Claude chat and waits for the answer to come back on the clipboard.
+function openClaude() {
+  state.awaitingReply = true;
+  const w = window.open("https://claude.ai/new", "_blank");
+  if (!w) { $("pro-note").textContent = "เบราว์เซอร์บล็อกการเปิดแท็บใหม่ กดปุ่มเปิด Claude แทน"; show($("pro-note"), true); }
+}
+
+// When the user comes back from Claude with the answer copied, build it straight away.
+async function pickUpReply() {
+  if (!state.awaitingReply || document.visibilityState !== "visible" || $("pro-flow").hidden) return;
+  let text = "";
+  try { text = await navigator.clipboard.readText(); } catch { return; } // not allowed: the user pastes instead
+  if (!text || text === state.lastPicked || text.includes("ANSWER FORMAT:")) return;
+  try { extractPlan(text); } catch { return; }
+  state.lastPicked = text;
+  $("pro-reply").value = text;
+  $("pro-build").click();
+}
+window.addEventListener("focus", () => setTimeout(pickUpReply, 150));
+document.addEventListener("visibilitychange", () => setTimeout(pickUpReply, 150));
+$("pro-reply").addEventListener("paste", () => setTimeout(() => {
+  try { extractPlan($("pro-reply").value); } catch { return; }
+  $("pro-build").click();
+}, 0));
+$("pro-open").onclick = () => { state.awaitingReply = true; };
+
 function openPro(reason = "") {
   show($("pro-flow"), true);
   $("pro-reason").textContent = reason;
@@ -261,7 +288,9 @@ function openPro(reason = "") {
   show($("pro-attach"), state.files.length > 0);
   show($("pro-fix"), false);
   $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });
-  copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
+  return copyText(chatPrompt(), state.files.length
+    ? "คัดลอกคำสั่งแล้ว ในแชต Claude กด Ctrl+V แนบไฟล์ Drawing แล้วส่ง"
+    : "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
 }
 
 function extractPlan(text) {
@@ -303,6 +332,7 @@ $("pro-build").onclick = async () => {
     await showJob(raw, built.plan, built.result,
       $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
     $("pro-reply").value = "";
+    state.awaitingReply = false;
     state.files = []; renderFiles();
     $("pro-note").textContent = "สร้างโมเดลแล้ว"; show($("pro-note"), true);
   } finally { busy(""); }
