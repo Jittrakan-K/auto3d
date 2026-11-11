@@ -115,6 +115,7 @@ async function showJob(raw, plan, result, source) {
   show($("no-model"), false);
   show($("details"), true);
   show($("title-block"), true);
+  for (const id of ["dl-step", "dl-sldprt", "dl-sw"]) $(id).disabled = false;
   show($("modify-row"), true);
 
   $("tb-name").textContent = plan.name;
@@ -123,7 +124,7 @@ async function showJob(raw, plan, result, source) {
   $("tb-mass").textContent = fmt(result.mass_g);
   const v = $("tb-verify");
   v.textContent = verify.ok ? "ผ่าน ปริมาตรตรงกัน" : `ค่าต่างกัน ${verify.diff_percent}%`;
-  v.classList.toggle("bad", !verify.ok);
+  v.className = `pill ${verify.ok ? "ok" : "bad"}`;
 
   show($("questions-box"), plan.questions.length > 0);
   list($("questions"), plan.questions);

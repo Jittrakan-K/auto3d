@@ -402,3 +402,10 @@ dialog label{font-weight:500;font-size:14px}
   body{padding:16px}
   .app{height:560px}
 }
+
+/* before the first model: same layout, quiet placeholders */
+.pill.wait{background:var(--panel);color:var(--muted)}
+body:not(.has-model) .stat dd{color:var(--muted)}
+body:not(.has-model) .file-card{animation:none}
+body:not(.has-model) .result{opacity:.75}
+.file-card .btn:disabled{opacity:.5}

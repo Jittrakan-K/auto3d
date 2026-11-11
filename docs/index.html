@@ -168,29 +168,29 @@
       <div class="bar"><i id="progress-bar"></i></div>
     </div>
 
-    <div id="title-block" class="result" hidden>
+    <div id="title-block" class="result">
       <dl class="stats">
-        <div class="stat wide"><dt>ชื่อชิ้นงาน</dt><dd id="tb-name"></dd></div>
-        <div class="stat"><dt>ขนาด X × Y × Z (มม.)</dt><dd id="tb-size" class="num"></dd></div>
-        <div class="stat"><dt>ปริมาตร (ซม³)</dt><dd id="tb-vol" class="num"></dd></div>
-        <div class="stat"><dt>น้ำหนัก (ก.)</dt><dd id="tb-mass" class="num"></dd></div>
-        <div class="stat"><dt>ตรวจไฟล์ STEP</dt><dd><span id="tb-verify" class="pill ok"></span></dd></div>
+        <div class="stat wide"><dt>ชื่อชิ้นงาน</dt><dd id="tb-name">-</dd></div>
+        <div class="stat"><dt>ขนาด X × Y × Z (มม.)</dt><dd id="tb-size" class="num">-</dd></div>
+        <div class="stat"><dt>ปริมาตร (ซม³)</dt><dd id="tb-vol" class="num">-</dd></div>
+        <div class="stat"><dt>น้ำหนัก (ก.)</dt><dd id="tb-mass" class="num">-</dd></div>
+        <div class="stat"><dt>ตรวจไฟล์ STEP</dt><dd><span id="tb-verify" class="pill wait">รอชิ้นงาน</span></dd></div>
       </dl>
       <div class="files-grid">
         <div class="file-card main">
           <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
           <div><h3>STEP AP203</h3><p>เปิดใน SOLIDWORKS 2018 ขึ้นไป</p></div>
-          <button id="dl-step" class="btn primary" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
+          <button id="dl-step" disabled class="btn primary" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
         </div>
         <div class="file-card">
           <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
           <div><h3>.SLDPRT <small>ไม่ต้องรันมาโคร</small></h3><p id="sw-local-state">ใช้ SOLIDWORKS ในเครื่องนี้</p></div>
-          <button id="dl-sldprt" class="btn" type="button">สร้างไฟล์</button>
+          <button id="dl-sldprt" disabled class="btn" type="button">สร้างไฟล์</button>
         </div>
         <div class="file-card">
           <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/></svg></span>
           <div><h3>มาโคร .swb <small>ไม่ต้องติดตั้งอะไร</small></h3><p>รันใน 2018 ขึ้นไป ได้ .SLDPRT</p></div>
-          <button id="dl-sw" class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
+          <button id="dl-sw" disabled class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
         </div>
       </div>
     </div>
