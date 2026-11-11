@@ -5,6 +5,7 @@ import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
 import { quickPlan } from "./js/quick.js";
 import { addEntry, getEntry } from "./js/history.js";
 import { zipBlob } from "./js/zip.js";
+import { localStatus, localSldprt, LocalError } from "./js/local.js";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "ไอโซเมตริก", front: "ด้านหน้า", top: "ด้านบน", right: "ด้านขวา" };
@@ -124,6 +125,7 @@ async function showJob(raw, plan, result, source) {
   list($("features"), plan.features.map((f) => f.name || f.id));
   $("plan-json").value = JSON.stringify(raw, null, 2);
   viewer.load(meshOf(result));
+  refreshLocal();
   if (source) {
     addEntry({
       at: new Date().toISOString(), name: plan.name, source, raw,
@@ -319,6 +321,37 @@ $("build-json").onclick = () => {
   buildRaw(raw, "แก้จาก JSON");
 };
 $("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan.name)}.step`);
+// ---------- .SLDPRT through SOLIDWORKS on this computer ----------
+function localHelp(text) {
+  $("sw-local-msg").textContent = text || "";
+  show($("sw-local-help"), !!text);
+  if (text) $("sw-local-help").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+async function refreshLocal() {
+  const st = await localStatus();
+  const cell = $("sw-local-state");
+  if (!st.running) cell.textContent = "ต้องเปิด start.bat บนเครื่อง";
+  else if (!st.sw.available) cell.textContent = st.sw.reason;
+  else cell.textContent = `SOLIDWORKS ${st.sw.version} ในเครื่องนี้` + (st.sw.version > 2018 ? " (เปิดได้ใน " + st.sw.version + " ขึ้นไป)" : " เปิดได้ 2018 ขึ้นไป");
+  return st;
+}
+$("dl-sldprt").onclick = async () => {
+  localHelp(""); fail("");
+  const st = await refreshLocal();
+  if (!st.running) { localHelp("ยังไม่พบแอป AUTO DESIGN 3D ที่รันบนเครื่องนี้"); return; }
+  if (!st.sw.available) { localHelp(st.sw.reason); return; }
+  busy(`SOLIDWORKS ${st.sw.version} กำลังสร้างทีละฟีเจอร์ อาจใช้เวลา 1 ถึง 2 นาที`);
+  $("dl-sldprt").disabled = true;
+  try {
+    const r = await localSldprt(state.job.raw);
+    download(r.blob, r.name);
+    $("sw-local-state").textContent = r.ok ? `ได้ ${r.name} แล้ว` : r.message;
+    if (!r.ok) fail(r.message);
+  } catch (e) {
+    if (e instanceof LocalError) localHelp(e.message); else fail(`เกิดข้อผิดพลาด: ${e.message}`);
+  } finally { busy(""); $("dl-sldprt").disabled = false; }
+};
+
 $("dl-sw").onclick = async () => {
   const name = safeName(state.job.plan.name);
   const readme = [

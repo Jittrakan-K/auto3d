@@ -158,7 +158,8 @@
             <thead><tr><th scope="col">ไฟล์</th><th scope="col">เปิดใน SOLIDWORKS</th><th><span class="sr">คำสั่ง</span></th></tr></thead>
             <tbody>
               <tr><th scope="row">STEP AP203</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
-              <tr><th scope="row">SOLIDWORKS<small>Feature Tree</small></th><td>2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
+              <tr><th scope="row">.SLDPRT<small>ไม่ต้องรันมาโคร</small></th><td id="sw-local-state">SOLIDWORKS ในเครื่องนี้</td><td><button id="dl-sldprt" class="cell-btn" type="button">สร้างไฟล์</button></td></tr>
+              <tr><th scope="row">มาโคร<small>Feature Tree</small></th><td>รันใน 2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
             </tbody>
           </table>
         </div>
@@ -191,6 +192,16 @@
 
       <h2>ลำดับการสร้าง</h2>
       <ol id="features" class="features"></ol>
+
+      <div id="sw-local-help" class="callout" hidden>
+        <h2>สร้าง .SLDPRT ด้วย SOLIDWORKS ในเครื่อง</h2>
+        <p id="sw-local-msg"></p>
+        <ol class="steps">
+          <li>เปิดโฟลเดอร์โปรเจกต์ AUTO DESIGN 3D บนเครื่อง แล้วดับเบิลคลิก <b>start.bat</b> เปิดหน้าต่างนั้นทิ้งไว้</li>
+          <li>ถ้าเบราว์เซอร์ถามว่าให้เว็บนี้เข้าถึงอุปกรณ์ในเครื่องหรือเครือข่าย ให้กดอนุญาต</li>
+          <li>กดปุ่ม <b>สร้างไฟล์</b> อีกครั้ง</li>
+        </ol>
+      </div>
 
       <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
       <ol class="steps">

@@ -8,11 +8,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from dotenv import load_dotenv, set_key
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -26,6 +26,13 @@ EXAMPLES = ROOT / "examples"
 MAX_UPLOAD = 40_000_000
 JOB_ID = re.compile(r"^[0-9]{8}_[0-9]{6}_[0-9a-f]{4}$")
 LOCAL_HOSTS = {"127.0.0.1", "localhost"}
+# Web pages on these sites may ask this app to build a .SLDPRT, nothing else.
+WEB_ORIGINS = {
+    o.strip().rstrip("/")
+    for o in os.environ.get("AUTODESIGN_WEB_ORIGINS", "https://jittrakan-k.github.io").split(",")
+    if o.strip()
+}
+WEB_PATHS = {"/api/status", "/api/web/sldprt"}
 
 load_dotenv(ENV_FILE)
 app = FastAPI(title="AUTO DESIGN 3D", docs_url=None, redoc_url=None)
@@ -33,11 +40,32 @@ app = FastAPI(title="AUTO DESIGN 3D", docs_url=None, redoc_url=None)
 
 @app.middleware("http")
 async def local_only(request: Request, call_next):
-    """Blocks other websites from reaching this server through the user's browser."""
+    """Blocks other websites from reaching this server through the user's browser.
+
+    The GitHub Pages site is the one exception, and only for the status check and
+    the SLDPRT build, so the online page can use the SOLIDWORKS on this computer.
+    """
     host = (request.headers.get("host") or "").split(":")[0]
-    origin = request.headers.get("origin")
-    if host not in LOCAL_HOSTS or (origin and urlparse(origin).hostname not in LOCAL_HOSTS):
+    origin = (request.headers.get("origin") or "").rstrip("/")
+    if host not in LOCAL_HOSTS:
         return JSONResponse({"error": "local access only"}, status_code=403)
+    if origin and urlparse(origin).hostname not in LOCAL_HOSTS:
+        if origin not in WEB_ORIGINS or request.url.path not in WEB_PATHS:
+            return JSONResponse({"error": "local access only"}, status_code=403)
+        cors = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST",
+            "Access-Control-Allow-Headers": "content-type",
+            "Access-Control-Allow-Private-Network": "true",
+            "Access-Control-Expose-Headers": "content-disposition, x-sw-ok, x-sw-year, x-sw-message",
+            "Access-Control-Max-Age": "600",
+            "Vary": "Origin",
+        }
+        if request.method == "OPTIONS":
+            return Response(status_code=204, headers=cors)
+        response = await call_next(request)
+        response.headers.update(cors)
+        return response
     return await call_next(request)
 
 
@@ -206,6 +234,35 @@ def make_sldprt(job: str) -> dict[str, Any]:
         "steps": report.steps,
         "message": report.message,
     }
+
+
+@app.post("/api/web/sldprt")
+def web_sldprt(body: BuildRequest) -> Response:
+    """Build the plan from the online page in SOLIDWORKS and send the .SLDPRT back."""
+    plan, result = build_or_400(body.plan)
+    job, folder = new_job_folder()
+    stem = safe_stem(plan.name)
+    (folder / "plan.json").write_text(json.dumps(body.plan, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        report = sw_backend.build_sldprt(result.steps, folder, stem)
+    except sw_backend.SolidworksError as e:
+        raise HTTPException(409, str(e)) from e
+    except Exception as e:  # noqa: BLE001 - COM errors reach the page as readable text
+        raise HTTPException(500, f"SOLIDWORKS ขัดข้อง: {e}") from e
+    path = Path(report.path)
+    if not path.is_file():
+        raise HTTPException(500, "SOLIDWORKS ไม่ได้บันทึกไฟล์")
+    year = int(report.revision.split(".")[0]) + sw_backend.YEAR_OFFSET
+    return Response(
+        path.read_bytes(),
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(path.name)}",
+            "X-SW-Ok": "1" if report.ok else "0",
+            "X-SW-Year": str(year),
+            "X-SW-Message": quote(report.message),
+        },
+    )
 
 
 @app.post("/api/jobs/{job}/open")
