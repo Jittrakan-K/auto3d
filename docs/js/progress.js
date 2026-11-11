@@ -100,7 +100,7 @@ export const task = {
     setPill("ok", "เสร็จแล้ว");
     setPercent(100, `สร้าง ${name} เสร็จแล้ว`);
     document.querySelector(".progress").classList.add("done");
-    setStage("สร้างเสร็จแล้ว!", "ตรวจขนาดทางขวา แล้วดาวน์โหลดไฟล์ด้านล่าง", false);
+    setStage("สร้างเสร็จแล้ว", "ตรวจขนาดทางขวา แล้วดาวน์โหลดไฟล์ด้านล่าง", false);
   },
 
   fail(message) {
