@@ -351,3 +351,6 @@ a.brand{text-decoration:none;color:inherit}
 }
 
 .cell-btn.inline{display:inline-flex;min-height:28px;padding:0 10px;border:2px solid var(--ink);background:var(--yellow);font:inherit;font-weight:600;cursor:pointer}
+.sw-setup{margin-top:24px;padding-top:16px;border-top:3px solid var(--ink)}
+#no-model + #details[hidden] + .sw-setup{margin-top:16px}
+.sw-setup .cell-btn.inline{display:inline-flex;width:auto;height:auto;min-height:30px;padding:2px 12px;background:var(--yellow);color:var(--ink);vertical-align:middle;box-shadow:2px 2px 0 var(--ink)}

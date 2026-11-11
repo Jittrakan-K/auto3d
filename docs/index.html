@@ -204,6 +204,14 @@
         <p class="small">ยังใช้ไม่ได้ ดับเบิลคลิก <b>start.bat</b> เปิดทิ้งไว้แทนได้ แอปที่เว็บเปิดให้จะทำงานเงียบ ๆ ไม่มีหน้าต่าง ปิดด้วย <b>stop.bat</b> หรือรีสตาร์ทเครื่อง</p>
       </div>
 
+      <details class="raw">
+        <summary>แก้แผนงาน JSON</summary>
+        <textarea id="plan-json" rows="12" spellcheck="false"></textarea>
+        <button id="build-json" class="btn" type="button">สร้างจาก JSON</button>
+      </details>
+    </div>
+
+    <div id="sw-setup" class="sw-setup">
       <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
       <p class="small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรม ใช้แค่ SOLIDWORKS ที่มีอยู่</p>
       <p class="small"><b>ตั้งครั้งเดียว</b> (ปุ่มลัดของ SOLIDWORKS รับเฉพาะไฟล์ .swp จึงให้ SOLIDWORKS สร้างไฟล์เอง)</p>
@@ -220,12 +228,6 @@
         <li>ได้ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์ Downloads</li>
       </ol>
       <p class="muted small">ไม่อยากตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แล้วเลือกไฟล์ที่ดาวน์โหลดแทน ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รัน รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้</p>
-
-      <details class="raw">
-        <summary>แก้แผนงาน JSON</summary>
-        <textarea id="plan-json" rows="12" spellcheck="false"></textarea>
-        <button id="build-json" class="btn" type="button">สร้างจาก JSON</button>
-      </details>
     </div>
   </section>
 </main>
