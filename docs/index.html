@@ -8,7 +8,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1a1d1c">
+<meta name="theme-color" content="#8f86ea">
 <meta name="description" content="สร้างไฟล์ STEP และมาโคร SOLIDWORKS 2018 ขึ้นไป จากคำสั่งหรือ Drawing">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
@@ -26,23 +26,38 @@
     });
   }
 </script>
-<header class="bar">
-  <div class="brand">
-    <img class="logo" src="favicon.svg" width="32" height="32" alt="">
-    <h1 class="wordmark">AUTO DESIGN <span>3D</span></h1>
-  </div>
-  <div class="status">
-    <span id="st-ai" class="state">Claude</span>
-    <span id="st-cad" class="state">ตัวสร้างโมเดลกำลังโหลด</span>
-    <a class="btn" href="history.html">ประวัติ</a>
-    <button id="open-settings" class="btn" type="button">ตั้งค่า</button>
-  </div>
-</header>
+<div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="app">
+  <nav class="rail" aria-label="เมนูหลัก">
+    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D หน้าหลัก"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-btn active" href="./" aria-current="page" title="งานใหม่"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>งานใหม่</span></a>
+    <a class="rail-btn" href="history.html" title="ประวัติ"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>ประวัติ</span></a>
+    <span class="rail-gap"></span>
+    <a class="rail-btn" href="#sw-setup" title="วิธีเปิดใน SOLIDWORKS"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg><span>วิธีใช้</span></a>
+    <button id="open-settings" class="rail-btn" type="button" title="ตั้งค่า"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg><span>ตั้งค่า</span></button>
+  </nav>
 
-<main class="desk">
-  <section class="brief" aria-label="คำสั่ง">
-    <form id="brief-form">
+  <section class="tasks" aria-label="คำสั่ง">
+    <div class="col-head">
+      <h1 class="brandname">AUTO DESIGN <b>3D</b></h1>
+      <p class="muted small">สร้างไฟล์ STEP และ SOLIDWORKS จากคำสั่งหรือ Drawing</p>
+    </div>
+
+    <form id="brief-form" class="composer">
       <label for="prompt">อธิบายชิ้นงาน</label>
+      <textarea id="prompt" rows="4" placeholder="เช่น แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5"></textarea>
+      <div class="composer-row">
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="แนบ Drawing">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11.5l-7.4 7.4a4.6 4.6 0 0 1-6.5-6.5l7.7-7.7a3 3 0 0 1 4.3 4.3l-7.6 7.6a1.5 1.5 0 0 1-2.1-2.1l6.9-6.9"/></svg>
+          <span><strong>แนบ Drawing</strong><small>PDF รูปภาพ หรือ DXF</small></span>
+          <input id="file" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.dxf">
+        </div>
+        <button id="generate" class="btn primary" type="submit">สร้างโมเดล <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <ul id="file-list" class="files"></ul>
+      <label id="modify-row" class="check" hidden>
+        <input id="modify" type="checkbox" checked> แก้จากชิ้นงานปัจจุบัน
+      </label>
       <details class="hint">
         <summary>คำสั่งที่สร้างได้ทันทีโดยไม่ใช้ AI</summary>
         <ul>
@@ -56,23 +71,17 @@
         </ul>
         <p>ตำแหน่ง x,y วัดจากมุมชิ้นงาน ชิ้นงานที่ซับซ้อนกว่านี้หรือมี Drawing ระบบจะส่งต่อให้ Claude</p>
       </details>
-      <textarea id="prompt" rows="6" placeholder="เช่น แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5"></textarea>
-
-      <div id="drop" class="drop" tabindex="0" role="button" aria-label="แนบ Drawing">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M15 8.5l-6.2 6.2a4 4 0 0 1-5.7-5.7L9.6 2.5a2.7 2.7 0 0 1 3.8 3.8L7 12.6a1.3 1.3 0 0 1-1.9-1.9l5.8-5.8"/></svg>
-        <span><strong>แนบ Drawing</strong><small>PDF, รูปภาพ หรือ DXF</small></span>
-        <input id="file" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.dxf">
-      </div>
-      <ul id="file-list" class="files"></ul>
-
-      <label id="modify-row" class="check" hidden>
-        <input id="modify" type="checkbox" checked> แก้จากชิ้นงานปัจจุบัน
-      </label>
-
-      <button id="generate" class="btn primary wide" type="submit">สร้างโมเดล</button>
-      <p id="busy" class="busy" hidden role="status"></p>
+      <p id="busy" class="sr" hidden role="status"></p>
       <p id="error" class="error" hidden role="alert"></p>
     </form>
+
+    <article id="task" class="task" hidden aria-live="polite">
+      <header class="task-head">
+        <h2 id="task-title"></h2>
+        <span id="task-pill" class="pill run"><i class="spin" aria-hidden="true"></i><span>กำลังทำงาน</span></span>
+      </header>
+      <ol id="task-steps" class="checklist"></ol>
+    </article>
 
     <section id="pro-flow" class="pro" hidden aria-labelledby="pro-title">
       <h2 id="pro-title">ออกแบบด้วย Claude Pro</h2>
@@ -97,79 +106,97 @@
       <p id="pro-note" class="busy" role="status" hidden></p>
     </section>
 
-    <div class="samples">
-      <h2>ชิ้นงานตัวอย่าง</h2>
-      <p class="muted">สร้างได้ทันที ไม่ต้องใช้ API key</p>
-      <div id="examples" class="sample-list"></div>
+
+    <div class="lists">
+      <div id="recent-box" class="list-block" hidden>
+        <div class="list-head"><h2>งานล่าสุด</h2><a class="small" href="history.html">ดูทั้งหมด</a></div>
+        <ul id="recent" class="recent"></ul>
+      </div>
+      <div class="list-block">
+        <div class="list-head"><h2>ชิ้นงานตัวอย่าง</h2><span class="muted small">ไม่ต้องใช้ API key</span></div>
+        <div id="examples" class="sample-list"></div>
+      </div>
     </div>
   </section>
 
-  <section class="table" aria-label="แบบงาน">
-    <div class="tools">
-      <div class="seg" role="group" aria-label="มุมมอง">
-        <button type="button" data-view="quad" aria-pressed="true">4 มุมมอง</button>
-        <button type="button" data-view="iso" aria-pressed="false">ไอโซ</button>
-        <button type="button" data-view="front" aria-pressed="false">หน้า</button>
-        <button type="button" data-view="top" aria-pressed="false">บน</button>
-        <button type="button" data-view="right" aria-pressed="false">ขวา</button>
+  <section class="stage" aria-label="แบบงาน">
+    <header class="stage-head">
+      <div class="stage-status">
+        <span id="st-ai" class="state">Claude</span>
+        <span id="st-cad" class="state">ตัวสร้างโมเดลกำลังโหลด</span>
       </div>
-      <div class="seg" role="group" aria-label="การแสดงผล">
-        <button type="button" data-look="line" aria-pressed="true">เส้น</button>
-        <button type="button" data-look="shade" aria-pressed="false">แรเงา</button>
-      </div>
-    </div>
+      <h2 id="stage-title" class="stage-title">พร้อมออกแบบ</h2>
+      <p id="stage-sub" class="stage-sub">พิมพ์คำสั่งหรือแนบ Drawing ระบบจะสร้างทีละฟีเจอร์และตรวจไฟล์ให้</p>
+    </header>
 
-    <div class="sheet-wrap">
-      <div class="zones top" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
-      <div class="zones side left" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div>
-      <div class="sheet">
-        <div class="views" id="views" data-mode="quad">
-          <div id="viewport" class="viewport"></div>
-          <span class="vlabel q1">ด้านบน</span>
-          <span class="vlabel q2">ไอโซเมตริก</span>
-          <span class="vlabel q3">ด้านหน้า</span>
-          <span class="vlabel q4">ด้านขวา</span>
-          <span id="single-label" class="vlabel single"></span>
-          <div id="empty" class="empty">
-          <svg class="build-anim" viewBox="0 0 16 16" width="128" height="128" shape-rendering="crispEdges" aria-hidden="true">
-            <g class="f1"><rect x="7" y="0" width="2" height="1" fill="#1f4fa3"/><rect x="5" y="1" width="2" height="1" fill="#1f4fa3"/><rect x="9" y="1" width="2" height="1" fill="#1f4fa3"/><rect x="3" y="2" width="2" height="1" fill="#1f4fa3"/><rect x="11" y="2" width="2" height="1" fill="#1f4fa3"/><rect x="1" y="3" width="2" height="1" fill="#1f4fa3"/><rect x="13" y="3" width="2" height="1" fill="#1f4fa3"/><rect x="0" y="4" width="1" height="1" fill="#1f4fa3"/><rect x="15" y="4" width="1" height="1" fill="#1f4fa3"/><rect x="0" y="5" width="3" height="1" fill="#1f4fa3"/><rect x="13" y="5" width="3" height="1" fill="#1f4fa3"/><rect x="3" y="6" width="2" height="1" fill="#1f4fa3"/><rect x="11" y="6" width="2" height="1" fill="#1f4fa3"/><rect x="5" y="7" width="2" height="1" fill="#1f4fa3"/><rect x="9" y="7" width="2" height="1" fill="#1f4fa3"/><rect x="7" y="8" width="2" height="1" fill="#1f4fa3"/></g>
-            <g class="f2"><rect x="7" y="0" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="1" width="2" height="1" fill="#1a1d1c"/><rect x="9" y="1" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="2" width="2" height="1" fill="#1a1d1c"/><rect x="11" y="2" width="2" height="1" fill="#1a1d1c"/><rect x="1" y="3" width="2" height="1" fill="#1a1d1c"/><rect x="13" y="3" width="2" height="1" fill="#1a1d1c"/><rect x="0" y="4" width="1" height="1" fill="#1a1d1c"/><rect x="15" y="4" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="5" width="3" height="1" fill="#1a1d1c"/><rect x="13" y="5" width="3" height="1" fill="#1a1d1c"/><rect x="0" y="6" width="1" height="1" fill="#1a1d1c"/><rect x="3" y="6" width="2" height="1" fill="#1a1d1c"/><rect x="11" y="6" width="2" height="1" fill="#1a1d1c"/><rect x="15" y="6" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="7" width="1" height="1" fill="#1a1d1c"/><rect x="5" y="7" width="2" height="1" fill="#1a1d1c"/><rect x="9" y="7" width="2" height="1" fill="#1a1d1c"/><rect x="15" y="7" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="8" width="1" height="1" fill="#1a1d1c"/><rect x="7" y="8" width="2" height="1" fill="#1a1d1c"/><rect x="15" y="8" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="9" width="1" height="1" fill="#1a1d1c"/><rect x="15" y="9" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="10" width="1" height="1" fill="#1a1d1c"/><rect x="15" y="10" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="11" width="1" height="1" fill="#1a1d1c"/><rect x="15" y="11" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="12" width="2" height="1" fill="#1a1d1c"/><rect x="13" y="12" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="13" width="2" height="1" fill="#1a1d1c"/><rect x="11" y="13" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="14" width="2" height="1" fill="#1a1d1c"/><rect x="9" y="14" width="2" height="1" fill="#1a1d1c"/><rect x="7" y="15" width="2" height="1" fill="#1a1d1c"/></g>
-            <g class="f3"><rect x="7" y="0" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="1" width="2" height="1" fill="#1a1d1c"/><rect x="7" y="1" width="2" height="1" fill="#8fb3ee"/><rect x="9" y="1" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="2" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="2" width="1" height="1" fill="#8fb3ee"/><rect x="6" y="2" width="2" height="1" fill="#ffffff"/><rect x="8" y="2" width="3" height="1" fill="#8fb3ee"/><rect x="11" y="2" width="2" height="1" fill="#1a1d1c"/><rect x="1" y="3" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="3" width="2" height="1" fill="#8fb3ee"/><rect x="5" y="3" width="1" height="1" fill="#ffffff"/><rect x="6" y="3" width="7" height="1" fill="#8fb3ee"/><rect x="13" y="3" width="2" height="1" fill="#1a1d1c"/><rect x="0" y="4" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="4" width="14" height="1" fill="#8fb3ee"/><rect x="15" y="4" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="5" width="3" height="1" fill="#1a1d1c"/><rect x="3" y="5" width="10" height="1" fill="#8fb3ee"/><rect x="13" y="5" width="3" height="1" fill="#1a1d1c"/><rect x="0" y="6" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="6" width="2" height="1" fill="#1f4fa3"/><rect x="3" y="6" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="6" width="6" height="1" fill="#8fb3ee"/><rect x="11" y="6" width="2" height="1" fill="#1a1d1c"/><rect x="13" y="6" width="2" height="1" fill="#122e67"/><rect x="15" y="6" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="7" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="7" width="4" height="1" fill="#1f4fa3"/><rect x="5" y="7" width="2" height="1" fill="#1a1d1c"/><rect x="7" y="7" width="2" height="1" fill="#8fb3ee"/><rect x="9" y="7" width="2" height="1" fill="#1a1d1c"/><rect x="11" y="7" width="4" height="1" fill="#122e67"/><rect x="15" y="7" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="8" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="8" width="6" height="1" fill="#1f4fa3"/><rect x="7" y="8" width="2" height="1" fill="#1a1d1c"/><rect x="9" y="8" width="6" height="1" fill="#122e67"/><rect x="15" y="8" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="9" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="9" width="7" height="1" fill="#1f4fa3"/><rect x="8" y="9" width="7" height="1" fill="#122e67"/><rect x="15" y="9" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="10" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="10" width="7" height="1" fill="#1f4fa3"/><rect x="8" y="10" width="7" height="1" fill="#122e67"/><rect x="15" y="10" width="1" height="1" fill="#1a1d1c"/><rect x="0" y="11" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="11" width="7" height="1" fill="#1f4fa3"/><rect x="8" y="11" width="7" height="1" fill="#122e67"/><rect x="15" y="11" width="1" height="1" fill="#1a1d1c"/><rect x="1" y="12" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="12" width="5" height="1" fill="#1f4fa3"/><rect x="8" y="12" width="5" height="1" fill="#122e67"/><rect x="13" y="12" width="2" height="1" fill="#1a1d1c"/><rect x="3" y="13" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="13" width="3" height="1" fill="#1f4fa3"/><rect x="8" y="13" width="3" height="1" fill="#122e67"/><rect x="11" y="13" width="2" height="1" fill="#1a1d1c"/><rect x="5" y="14" width="2" height="1" fill="#1a1d1c"/><rect x="7" y="14" width="1" height="1" fill="#1f4fa3"/><rect x="8" y="14" width="1" height="1" fill="#122e67"/><rect x="9" y="14" width="2" height="1" fill="#1a1d1c"/><rect x="7" y="15" width="2" height="1" fill="#1a1d1c"/></g>
+    <div class="frame">
+      <div class="frame-bar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div class="seg" role="group" aria-label="มุมมอง">
+          <button type="button" data-view="quad" aria-pressed="true">4 มุมมอง</button>
+          <button type="button" data-view="iso" aria-pressed="false">ไอโซ</button>
+          <button type="button" data-view="front" aria-pressed="false">หน้า</button>
+          <button type="button" data-view="top" aria-pressed="false">บน</button>
+          <button type="button" data-view="right" aria-pressed="false">ขวา</button>
+        </div>
+        <div class="seg" role="group" aria-label="การแสดงผล">
+          <button type="button" data-look="line" aria-pressed="true">เส้น</button>
+          <button type="button" data-look="shade" aria-pressed="false">แรเงา</button>
+        </div>
+      </div>
+      <div class="views" id="views" data-mode="quad">
+        <div id="viewport" class="viewport"></div>
+        <span class="vlabel q1">ด้านบน</span>
+        <span class="vlabel q2">ไอโซเมตริก</span>
+        <span class="vlabel q3">ด้านหน้า</span>
+        <span class="vlabel q4">ด้านขวา</span>
+        <span id="single-label" class="vlabel single"></span>
+        <div id="empty" class="empty">
+          <svg class="draw-cube" viewBox="0 0 120 120" width="112" height="112" aria-hidden="true">
+            <path class="e e1" d="M60 14L100 36 60 58 20 36Z"/>
+            <path class="e e2" d="M20 36v46l40 23V58"/>
+            <path class="e e3" d="M100 36v46l-40 23"/>
+            <path class="face" d="M60 58l40-22v46l-40 23Z"/>
           </svg>
-            <ol class="build-steps" aria-label="ขั้นตอนที่ระบบทำให้">
-              <li class="s1">สเก็ตช์</li>
-              <li class="s2">ขึ้นรูป</li>
-              <li class="s3">ไฟล์ STEP</li>
-            </ol>
-            <p>พิมพ์คำสั่งทางซ้าย แล้วชิ้นงานจะถูกเขียนลงแผ่นนี้<span class="caret" aria-hidden="true"></span></p>
-          </div>
-        </div>
-
-        <div id="title-block" class="title-block" hidden>
-          <dl class="tb-info">
-            <div class="tb-name"><dt>ชื่อชิ้นงาน</dt><dd id="tb-name"></dd></div>
-            <div><dt>ขนาด X × Y × Z (มม.)</dt><dd id="tb-size" class="num"></dd></div>
-            <div><dt>มุมมอง</dt><dd>Third angle</dd></div>
-            <div><dt>ปริมาตร (ซม³)</dt><dd id="tb-vol" class="num"></dd></div>
-            <div><dt>น้ำหนัก (ก.)</dt><dd id="tb-mass" class="num"></dd></div>
-            <div class="tb-wide"><dt>ตรวจไฟล์ STEP</dt><dd id="tb-verify"></dd></div>
-          </dl>
-          <table class="tb-files">
-            <thead><tr><th scope="col">ไฟล์</th><th scope="col">เปิดใน SOLIDWORKS</th><th><span class="sr">คำสั่ง</span></th></tr></thead>
-            <tbody>
-              <tr><th scope="row">STEP AP203</th><td>2018 ขึ้นไป</td><td><button id="dl-step" class="cell-btn primary" type="button">ดาวน์โหลด</button></td></tr>
-              <tr><th scope="row">.SLDPRT<small>ไม่ต้องรันมาโคร</small></th><td id="sw-local-state">ใช้ SOLIDWORKS ในเครื่องนี้</td><td><button id="dl-sldprt" class="cell-btn" type="button">สร้างไฟล์</button></td></tr>
-              <tr><th scope="row">มาโคร .swb<small>ไม่ต้องติดตั้งอะไร</small></th><td>รันใน 2018 ขึ้นไป ได้ .SLDPRT</td><td><button id="dl-sw" class="cell-btn" type="button">ดาวน์โหลด</button></td></tr>
-            </tbody>
-          </table>
+          <p>ชิ้นงานจะปรากฏที่นี่</p>
         </div>
       </div>
-      <div class="zones side right" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div>
-      <div class="zones bottom" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
+    </div>
+
+    <div class="progress" aria-hidden="true">
+      <p class="progress-label"><span id="progress-label">รอคำสั่ง</span><b id="progress-pct">0</b><span>%</span></p>
+      <div class="bar"><i id="progress-bar"></i></div>
+    </div>
+
+    <div id="title-block" class="result" hidden>
+      <dl class="stats">
+        <div class="stat wide"><dt>ชื่อชิ้นงาน</dt><dd id="tb-name"></dd></div>
+        <div class="stat"><dt>ขนาด X × Y × Z (มม.)</dt><dd id="tb-size" class="num"></dd></div>
+        <div class="stat"><dt>ปริมาตร (ซม³)</dt><dd id="tb-vol" class="num"></dd></div>
+        <div class="stat"><dt>น้ำหนัก (ก.)</dt><dd id="tb-mass" class="num"></dd></div>
+        <div class="stat"><dt>ตรวจไฟล์ STEP</dt><dd><span id="tb-verify" class="pill ok"></span></dd></div>
+      </dl>
+      <div class="files-grid">
+        <div class="file-card main">
+          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
+          <div><h3>STEP AP203</h3><p>เปิดใน SOLIDWORKS 2018 ขึ้นไป</p></div>
+          <button id="dl-step" class="btn primary" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
+        </div>
+        <div class="file-card">
+          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
+          <div><h3>.SLDPRT <small>ไม่ต้องรันมาโคร</small></h3><p id="sw-local-state">ใช้ SOLIDWORKS ในเครื่องนี้</p></div>
+          <button id="dl-sldprt" class="btn" type="button">สร้างไฟล์</button>
+        </div>
+        <div class="file-card">
+          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/></svg></span>
+          <div><h3>มาโคร .swb <small>ไม่ต้องติดตั้งอะไร</small></h3><p>รันใน 2018 ขึ้นไป ได้ .SLDPRT</p></div>
+          <button id="dl-sw" class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> ดาวน์โหลด</button>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="notes" aria-label="รายละเอียด">
+  <aside class="inspector" aria-label="รายละเอียด">
     <div id="no-model" class="muted">ตารางขนาดจะแสดงที่นี่ แก้ตัวเลขแล้วอัปเดตโมเดลได้โดยไม่ต้องเรียก AI</div>
 
     <div id="details" hidden>
@@ -223,14 +250,14 @@
       </ol>
       <p class="small"><b>ทุกครั้ง</b></p>
       <ol class="steps">
-        <li>กดดาวน์โหลดแถว <b>มาโคร .swb</b> ในตารางท้ายแบบ</li>
+        <li>กดดาวน์โหลดการ์ด <b>มาโคร .swb</b> ใต้ชิ้นงาน</li>
         <li>กดปุ่มลัดใน SOLIDWORKS ระบบหาไฟล์ล่าสุดในโฟลเดอร์ Downloads แล้วสร้างทีละฟีเจอร์</li>
         <li>ได้ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์ Downloads</li>
       </ol>
       <p class="muted small">ไม่อยากตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แล้วเลือกไฟล์ที่ดาวน์โหลดแทน ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รัน รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้</p>
     </div>
-  </section>
-</main>
+  </aside>
+</div>
 
 <dialog id="settings">
   <form method="dialog" id="settings-form">

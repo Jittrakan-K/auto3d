@@ -3,7 +3,8 @@ import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js";
 import { useHelpers, render as renderMacro } from "./js/macro.js";
 import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js";
 import { quickPlan } from "./js/quick.js";
-import { addEntry, getEntry } from "./js/history.js";
+import { addEntry, getEntry, loadHistory } from "./js/history.js";
+import { task } from "./js/progress.js";
 import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js";
 
 const $ = (id) => document.getElementById(id);
@@ -20,7 +21,10 @@ const store = {
 };
 
 function show(el, on) { el.hidden = !on; }
-function fail(message) { $("error").textContent = message; show($("error"), !!message); }
+function fail(message) {
+  $("error").textContent = message; show($("error"), !!message);
+  if (message && task.running) task.fail(message);
+}
 function busy(text) {
   $("busy").textContent = text || "";
   show($("busy"), !!text);
@@ -97,8 +101,13 @@ drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
 // source: what this build came from (the command, a sample, an edit). Builds without one,
 // such as reopening an entry, are not added to the history again.
 async function showJob(raw, plan, result, source) {
+  if (!task.running) task.start(source || plan.name);
+  await task.ticks(plan.features.map((f) => f.name || f.id), 30, 70);
+  await task.step("เขียนไฟล์ STEP AP203", 76);
   const step = stepBlob(result, plan.name);
+  await task.step("ตรวจปริมาตรไฟล์ STEP เทียบกับโมเดล", 86);
   const verify = await verifyStep(step, result.volume_mm3);
+  await task.step("เตรียมมาโคร SOLIDWORKS", 94);
   state.job = { raw, plan, result, step, macro: renderMacro(result.steps, plan.name), source: source || state.job?.source || "" };
   document.body.classList.add("has-model");
   show($("rebuild"), false);
@@ -130,7 +139,26 @@ async function showJob(raw, plan, result, source) {
       size: result.size.map((v) => +v.toFixed(2)), volume_cm3: +(result.volume_mm3 / 1000).toFixed(2),
       mass_g: +result.mass_g.toFixed(2), features: plan.features.length, thumb: viewer.thumbnail(),
     });
+    renderRecent(true);
   }
+  await task.done(plan.name);
+  if (matchMedia("(max-width: 860px)").matches) document.querySelector(".stage").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// The last few builds, newest first, under the composer.
+function renderRecent(fresh = false) {
+  const items = loadHistory().slice(0, 3);
+  show($("recent-box"), items.length > 0);
+  $("recent").replaceChildren(...items.map((e, i) => {
+    const li = document.createElement("li");
+    if (fresh && i === 0) li.className = "fresh";
+    const name = document.createElement("span"); name.className = "r-name"; name.textContent = e.source || e.name; name.title = e.source || e.name;
+    const pill = document.createElement("span"); pill.className = "pill ok"; pill.textContent = "เสร็จแล้ว";
+    const a = document.createElement("a"); a.href = `./?open=${encodeURIComponent(e.id)}`; a.textContent = "ดูรายละเอียด";
+    a.onclick = (ev) => { ev.preventDefault(); state.job = { source: e.source }; buildRaw(structuredClone(e.raw), null, e.source || e.name); };
+    li.append(name, pill, a);
+    return li;
+  }));
 }
 
 function renderDims(raw, plan) {
@@ -169,9 +197,11 @@ function renderDims(raw, plan) {
   $("dims").replaceChildren(...rows);
 }
 
-async function buildRaw(raw, source) {
+async function buildRaw(raw, source, title) {
   fail(""); busy("กำลังสร้างโมเดล");
-  await nextFrame();
+  task.start(title || source || raw.name || "ชิ้นงาน");
+  await task.step("ตรวจแผนงาน", 12);
+  await task.step("ขึ้นรูปโมเดล 3D", 25);
   try {
     const built = tryBuild(raw);
     if (built.error) throw new Error(built.error);
@@ -188,21 +218,32 @@ $("brief-form").onsubmit = async (e) => {
   if (!prompt.trim() && !state.files.length) { fail("พิมพ์คำสั่งหรือแนบ Drawing ก่อน"); return; }
   if (!state.key) {
     if (state.files.length) {
+      task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
+      await task.step("คัดลอกคำสั่งและเปิด Claude", 8, 0);
       await openPro("การอ่าน Drawing ต้องใช้ Claude เว็บคัดลอกคำสั่งและเปิด Claude ให้แล้ว");
       openClaude();
+      task.pause("รอคำตอบจาก Claude", "ในแชต Claude วางคำสั่ง แนบ Drawing แล้วส่ง เสร็จแล้วกด Copy ใต้คำตอบและกลับมาหน้านี้");
       return;
     }
     // Plain parts: read the command here, build, and hand over the STEP file in one click.
+    task.start(prompt.trim());
+    await task.step("อ่านคำสั่ง (ไม่ใช้ AI)", 8, 0);
     const quick = quickPlan(prompt);
     if (quick.error) {
       openPro(`ระบบอ่านคำสั่งนี้เองไม่ได้: ${quick.error} หรือให้ Claude ออกแบบ คัดลอกคำสั่งให้แล้ว`);
+      task.pause("ส่งต่อให้ Claude", "คำสั่งนี้ต้องให้ Claude ออกแบบ วางคำสั่งที่คัดลอกให้ในแชต Claude");
       return;
     }
+    await task.step(`วางแผน ${quick.plan.features.length} ฟีเจอร์`, 16);
+    await task.step("ขึ้นรูปโมเดล 3D", 25);
     busy("กำลังสร้างโมเดล");
-    await nextFrame();
     try {
       const built = tryBuild(quick.plan);
-      if (built.error) { openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`); return; }
+      if (built.error) {
+        openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`);
+        task.pause("ส่งต่อให้ Claude", "ระบบสร้างคำสั่งนี้เองไม่ได้ วางคำสั่งที่คัดลอกให้ในแชต Claude");
+        return;
+      }
       show($("pro-flow"), false);
       await showJob(quick.plan, built.plan, built.result, prompt.trim());
     } catch (err) { fail(`เกิดข้อผิดพลาด: ${err.message}`); }
@@ -210,13 +251,16 @@ $("brief-form").onsubmit = async (e) => {
     return;
   }
   busy(state.files.length ? "กำลังอ่าน Drawing และออกแบบ อาจใช้เวลา 1 ถึง 3 นาที" : "กำลังออกแบบ อาจใช้เวลาประมาณ 1 นาที");
+  task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
+  await task.step(state.files.length ? "เตรียม Drawing ส่งให้ Claude" : "ส่งคำสั่งให้ Claude", 6, 0);
+  let aiPct = 8;
   try {
     const blocks = [];
     for (const f of state.files) blocks.push(...(await toBlocks(f, state.DxfParser)));
     const r = await makePlan({
       key: state.key, model: state.model, system: state.system, schema: state.schema,
       prompt, blocks, currentPlan: state.job && $("modify").checked ? state.job.raw : null,
-      onStatus: (t) => busy(t),
+      onStatus: (t) => { busy(t); aiPct = Math.min(26, aiPct + 4); task.step(t, aiPct, 0); },
     });
     await showJob(r.raw, r.plan, r.result, prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
     state.files = []; renderFiles();
@@ -316,19 +360,22 @@ function extractPlan(text) {
 $("pro-copy").onclick = () => copyText(chatPrompt(), "คัดลอกคำสั่งแล้ว เปิด Claude แล้ววางในแชตใหม่ได้เลย");
 $("pro-build").onclick = async () => {
   show($("pro-fix"), false); show($("pro-note"), false);
+  task.start($("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
+  await task.step("อ่านคำตอบจาก Claude", 10, 0);
   let raw;
   try { raw = extractPlan($("pro-reply").value); }
   catch (e) {
+    task.fail(e.message);
     $("pro-error").textContent = e.message;
     show($("pro-fix"), true);
     show($("pro-copy-error"), !e.message.startsWith("ข้อความที่วาง") && !e.message.startsWith("ยังไม่ได้"));
     return;
   }
+  await task.step("ขึ้นรูปโมเดล 3D", 25);
   busy("กำลังสร้างโมเดล");
-  await nextFrame();
   try {
     const built = tryBuild(raw);
-    if (built.error) { $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
+    if (built.error) { task.fail(built.error); $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
     await showJob(raw, built.plan, built.result,
       $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "แผนจาก Claude Pro"));
     $("pro-reply").value = "";
@@ -463,7 +510,7 @@ function openFromHistory() {
   const entry = getEntry(id);
   if (!entry) { fail("ไม่พบงานนี้ในประวัติแล้ว"); return; }
   state.job = { source: entry.source };
-  buildRaw(structuredClone(entry.raw));
+  buildRaw(structuredClone(entry.raw), null, entry.source || entry.name);
 }
 
 (async () => {
@@ -471,6 +518,7 @@ function openFromHistory() {
   state.model = MODELS.includes(store.get(MODEL_STORE)) ? store.get(MODEL_STORE) : MODELS[0];
   $("model").replaceChildren(...MODELS.map((m) => new Option(m, m, false, m === state.model)));
   refreshStatus();
+  renderRecent();
   try {
     const names = await fetch("examples/index.json").then((r) => r.json());
     const examples = await Promise.all(names.map((n) => fetch(`examples/${n}`).then((r) => r.json())));

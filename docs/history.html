@@ -8,21 +8,19 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1a1d1c">
+<meta name="theme-color" content="#8f86ea">
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="history-page">
-<header class="bar">
-  <a class="brand" href="./">
-    <img class="logo" src="favicon.svg" width="32" height="32" alt="">
-    <span class="wordmark">AUTO DESIGN <span>3D</span></span>
-  </a>
-  <div class="status">
-    <a class="btn primary" href="./">สร้างงานใหม่</a>
-  </div>
-</header>
-
-<main class="log">
+<div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="app app-2">
+  <nav class="rail" aria-label="เมนูหลัก">
+    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D หน้าหลัก"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-btn" href="./" title="งานใหม่"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>งานใหม่</span></a>
+    <a class="rail-btn active" href="history.html" aria-current="page" title="ประวัติ"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>ประวัติ</span></a>
+    <span class="rail-gap"></span>
+  </nav>
+<main class="log stage">
   <div class="log-head">
     <div>
       <h1>ประวัติการสร้างงาน</h1>
@@ -44,6 +42,7 @@
   </div>
   <ol id="log-list" class="log-list"></ol>
 </main>
+</div>
 <script type="module" src="history-page.js"></script>
 </body>
 </html>

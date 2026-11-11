@@ -3,8 +3,8 @@
   "short_name": "AUTO DESIGN 3D",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f7f5",
-  "theme_color": "#1a1d1c",
+  "background_color": "#8f86ea",
+  "theme_color": "#8f86ea",
   "icons": [
     {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png"},
     {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png"},
