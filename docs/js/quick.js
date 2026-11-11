@@ -63,7 +63,7 @@ function points(t) {
 
 // One command part such as "เจาะรู m8 ที่มุมทั้ง 4 ห่างขอบ 10"
 function splitClauses(t) {
-  return t.split(/(?=เจาะ|(?<!เจาะ)(?:(?<!\d\s*)รู|รู(?=[ก-๙]))(?!ใน|กลาง\s*(?:ø|ขนาด)?\s*\d)|\d+\s*holes?\b|(?<!\d\s*)holes?\b|ร่อง|สล็อต|slot|ช่อง|pocket|ลบมุม|ลบคม|มุมมน|มุมโค้ง|fillet|chamfer|round)/);
+  return t.split(/(?=เจาะ|(?<!เจาะ)(?:(?<!\d\s*)รู|รู(?=[ก-๙]))(?!ใน|กลาง\s*(?:ø|ขนาด)?\s*\d)|\d+\s*holes?\b|(?<!\d\s*)holes?\b|ร่อง|สล็อต|slot|ช่อง|pocket|ลบมุม|ลบคม|มุมมน|มุมโค้ง|fillet|chamfer|round|(?<![a-z0-9ø])r(?=\s*\d))/);
 }
 
 export function quickPlan(text) {

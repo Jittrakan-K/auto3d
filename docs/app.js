@@ -52,11 +52,11 @@ function download(blob, name) {
 function refreshStatus() {
   const ai = $("st-ai");
   ai.className = "state on";
-  ai.textContent = state.key ? "Claude API พร้อมใช้" : "Claude Pro ผ่านแชต";
+  ai.textContent = state.key ? "Claude API ready" : "Claude Pro via chat";
   ai.title = state.key ? `ใช้ ${state.model}` : "ไม่มี API key ใช้แชตของ Claude Pro แทน";
   const cad = $("st-cad");
   cad.className = "state " + (state.kernel ? "on" : state.kernelError ? "off" : "wait");
-  cad.textContent = state.kernel ? "ตัวสร้างโมเดลพร้อม" : state.kernelError ? "โหลดตัวสร้างโมเดลไม่ได้" : "ตัวสร้างโมเดลกำลังโหลด";
+  cad.textContent = state.kernel ? "CAD engine ready" : state.kernelError ? "CAD engine failed to load" : "Loading CAD engine";
   $("generate").disabled = !state.kernel;
 }
 
@@ -223,7 +223,7 @@ $("brief-form").onsubmit = async (e) => {
       await task.step("คัดลอกคำสั่งและเปิด Claude", 8, 0);
       await openPro("การอ่าน Drawing ต้องใช้ Claude เว็บคัดลอกคำสั่งและเปิด Claude ให้แล้ว");
       openClaude();
-      task.pause("รอคำตอบจาก Claude", "ในแชต Claude วางคำสั่ง แนบ Drawing แล้วส่ง เสร็จแล้วกด Copy ใต้คำตอบและกลับมาหน้านี้");
+      task.pause("Waiting for Claude", "Paste the request in Claude, attach the drawing and send. Copy the answer and come back here");
       return;
     }
     // Plain parts: read the command here, build, and hand over the STEP file in one click.
@@ -232,7 +232,7 @@ $("brief-form").onsubmit = async (e) => {
     const quick = quickPlan(prompt);
     if (quick.error) {
       openPro(`ระบบอ่านคำสั่งนี้เองไม่ได้: ${quick.error} หรือให้ Claude ออกแบบ คัดลอกคำสั่งให้แล้ว`);
-      task.pause("ส่งต่อให้ Claude", "คำสั่งนี้ต้องให้ Claude ออกแบบ วางคำสั่งที่คัดลอกให้ในแชต Claude");
+      task.pause("Handed to Claude", "This part needs Claude. Paste the copied request in a Claude chat");
       return;
     }
     await task.step(`วางแผน ${quick.plan.features.length} ฟีเจอร์`, 16);
@@ -242,7 +242,7 @@ $("brief-form").onsubmit = async (e) => {
       const built = tryBuild(quick.plan);
       if (built.error) {
         openPro(`ระบบสร้างจากคำสั่งนี้ไม่ได้: ${built.error} ให้ Claude ออกแบบแทน คัดลอกคำสั่งให้แล้ว`);
-        task.pause("ส่งต่อให้ Claude", "ระบบสร้างคำสั่งนี้เองไม่ได้ วางคำสั่งที่คัดลอกให้ในแชต Claude");
+        task.pause("Handed to Claude", "This command could not be built here. Paste the copied request in a Claude chat");
         return;
       }
       show($("pro-flow"), false);

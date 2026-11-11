@@ -65,7 +65,7 @@ export const task = {
     document.querySelector(".progress").classList.remove("done", "fail");
     $("progress-bar").style.width = "0%";
     $("progress-pct").textContent = "0";
-    setStage("กำลังสร้างชิ้นงาน", "ระบบกำลังสร้างทีละขั้น เสร็จแล้วตรวจไฟล์ให้อัตโนมัติ", true);
+    setStage("Building your part", "Each feature is built in order, then the files are checked", true);
     setPercent(2, title);
   },
 
@@ -98,9 +98,9 @@ export const task = {
     current = null;
     running = false;
     setPill("ok", "เสร็จแล้ว");
-    setPercent(100, `สร้าง ${name} เสร็จแล้ว`);
+    setPercent(100, `${name} is ready`);
     document.querySelector(".progress").classList.add("done");
-    setStage("สร้างเสร็จแล้ว", "ตรวจขนาดทางขวา แล้วดาวน์โหลดไฟล์ด้านล่าง", false);
+    setStage("Part ready", "Check the dimensions on the right, then download the files below", false);
   },
 
   fail(message) {
@@ -111,8 +111,8 @@ export const task = {
     current = null;
     setPill("bad", "ไม่สำเร็จ");
     document.querySelector(".progress").classList.add("fail");
-    $("progress-label").textContent = "สร้างไม่สำเร็จ";
-    setStage("ยังสร้างไม่ได้", message.length > 140 ? message.slice(0, 140) + "…" : message, false);
+    $("progress-label").textContent = "Build failed";
+    setStage("Could not build", message.length > 140 ? message.slice(0, 140) + "…" : message, false);
   },
 
   // Waiting on the user (e.g. answering in Claude), not on the computer.

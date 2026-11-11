@@ -40,36 +40,36 @@
   <section class="tasks" aria-label="คำสั่ง">
     <div class="col-head">
       <h1 class="brandname">AUTO DESIGN <b>3D</b></h1>
-      <p class="muted small">สร้างไฟล์ STEP และ SOLIDWORKS จากคำสั่งหรือ Drawing</p>
+      <p class="muted small">STEP and SOLIDWORKS files from a command or a drawing</p>
     </div>
 
     <form id="brief-form" class="composer">
-      <label for="prompt">อธิบายชิ้นงาน</label>
-      <textarea id="prompt" rows="4" placeholder="เช่น แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5"></textarea>
+      <label for="prompt">Describe the part</label>
+      <textarea id="prompt" rows="4" placeholder="e.g. Steel plate 120x80x10, M8 holes at 4 corners 10 from edge, R5 corners"></textarea>
       <div class="composer-row">
-        <div id="drop" class="drop" tabindex="0" role="button" aria-label="แนบ Drawing">
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="Attach drawing">
           <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11.5l-7.4 7.4a4.6 4.6 0 0 1-6.5-6.5l7.7-7.7a3 3 0 0 1 4.3 4.3l-7.6 7.6a1.5 1.5 0 0 1-2.1-2.1l6.9-6.9"/></svg>
-          <span><strong>แนบ Drawing</strong><small>PDF รูปภาพ หรือ DXF</small></span>
+          <span><strong>Attach drawing</strong><small>PDF, image or DXF</small></span>
           <input id="file" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,.dxf">
         </div>
-        <button id="generate" class="btn primary" type="submit">สร้างโมเดล <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <button id="generate" class="btn primary" type="submit">Build model <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </div>
       <ul id="file-list" class="files"></ul>
       <label id="modify-row" class="check" hidden>
-        <input id="modify" type="checkbox" checked> แก้จากชิ้นงานปัจจุบัน
+        <input id="modify" type="checkbox" checked> Edit the current part
       </label>
       <details class="hint">
-        <summary>คำสั่งที่สร้างได้ทันทีโดยไม่ใช้ AI</summary>
+        <summary>Commands that build instantly, no AI</summary>
         <ul>
-          <li>แผ่นอะคริลิค 30x60x5 เจาะรู Ø5 ที่ 15,15 และ 45,15</li>
-          <li>แผ่นเหล็ก 120x80x10 เจาะรู M8 ที่มุมทั้ง 4 ห่างขอบ 10 ลบมุม R5</li>
-          <li>บล็อกอลูมิเนียม กว้าง 50 ยาว 80 สูง 30 รูกลาง Ø10 ลึก 15</li>
-          <li>เพลา Ø20 ยาว 100 ลบคม C1</li>
-          <li>ท่อ OD 30 ID 20 ยาว 50</li>
-          <li>หน้าแปลน Ø120 หนา 12 รูกลาง Ø50 รูน็อต 6 รู PCD 95 Ø11</li>
-          <li>กล่อง 40x40x20 ร่อง 30x6 หรือ ช่อง 40x20 ลึก 3</li>
+          <li>Acrylic plate 30x60x5, Ø5 holes at 15,15 and 45,15</li>
+          <li>Steel plate 120x80x10, M8 holes at 4 corners 10 from edge, R5 corners</li>
+          <li>Aluminium block 50x80x30, center hole Ø10 depth 15</li>
+          <li>Shaft Ø20 length 100, chamfer C1</li>
+          <li>Tube OD 30 ID 20 length 50</li>
+          <li>Flange Ø120 thick 12, center hole Ø50, 6 bolt holes PCD 95 Ø11</li>
+          <li>Box 40x40x20, slot 30x6</li>
         </ul>
-        <p>ตำแหน่ง x,y วัดจากมุมชิ้นงาน ชิ้นงานที่ซับซ้อนกว่านี้หรือมี Drawing ระบบจะส่งต่อให้ Claude</p>
+        <p>x,y positions are measured from the part corner. Thai commands work too. Anything more complex, or a drawing, goes to Claude</p>
       </details>
       <p id="busy" class="sr" hidden role="status"></p>
       <p id="error" class="error" hidden role="alert"></p>
@@ -123,10 +123,10 @@
     <header class="stage-head">
       <div class="stage-status">
         <span id="st-ai" class="state">Claude</span>
-        <span id="st-cad" class="state">ตัวสร้างโมเดลกำลังโหลด</span>
+        <span id="st-cad" class="state">Loading CAD engine</span>
       </div>
-      <h2 id="stage-title" class="stage-title">พร้อมออกแบบ</h2>
-      <p id="stage-sub" class="stage-sub">พิมพ์คำสั่งหรือแนบ Drawing ระบบจะสร้างทีละฟีเจอร์และตรวจไฟล์ให้</p>
+      <h2 id="stage-title" class="stage-title">Ready to design</h2>
+      <p id="stage-sub" class="stage-sub">Type a command or attach a drawing. Each feature is built and the files are checked for you</p>
     </header>
 
     <div class="frame">
@@ -164,7 +164,7 @@
     </div>
 
     <div class="progress" aria-hidden="true">
-      <p class="progress-label"><span id="progress-label">รอคำสั่ง</span><b id="progress-pct">0</b><span>%</span></p>
+      <p class="progress-label"><span id="progress-label">Waiting for a command</span><b id="progress-pct">0</b><span>%</span></p>
       <div class="bar"><i id="progress-bar"></i></div>
     </div>
 
@@ -239,22 +239,24 @@
     </div>
 
     <div id="sw-setup" class="sw-setup">
-      <h2>ไฟล์ SOLIDWORKS พร้อม Feature Tree</h2>
-      <p class="small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรม ใช้แค่ SOLIDWORKS ที่มีอยู่</p>
-      <p class="small"><b>ตั้งครั้งเดียว</b> (ปุ่มลัดของ SOLIDWORKS รับเฉพาะไฟล์ .swp จึงให้ SOLIDWORKS สร้างไฟล์เอง)</p>
+      <h2>เปิดใน SOLIDWORKS พร้อม Feature Tree</h2>
+      <p class="muted small">ใช้ได้กับคอมบริษัท ไม่ต้องติดตั้งโปรแกรมเพิ่ม</p>
+
+      <h3>ตั้งปุ่มลัด <span>ครั้งเดียว</span></h3>
       <ol class="steps">
-        <li>กด <button id="copy-launcher" class="cell-btn inline" type="button">คัดลอกโค้ดปุ่มลัด</button></li>
-        <li>ใน SOLIDWORKS ไปที่ Tools › Macro › New ตั้งชื่อ <b>AUTO_DESIGN_3D.swp</b> เก็บในโฟลเดอร์ที่จะไม่ลบ แล้วกด Save</li>
-        <li>หน้าต่าง VBA เปิดขึ้น กด Ctrl+A แล้ว Ctrl+V วางโค้ดทับทั้งหมด กด Ctrl+S แล้วปิดหน้าต่าง</li>
-        <li>เปิดชิ้นงานเปล่าหนึ่งชิ้น ไปที่ Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปวางบนแถบเครื่องมือ แล้วเลือก AUTO_DESIGN_3D.swp</li>
+        <li><button id="copy-launcher" class="cell-btn inline" type="button">คัดลอกโค้ดปุ่มลัด</button></li>
+        <li>Tools › Macro › New ตั้งชื่อ <b>AUTO_DESIGN_3D.swp</b></li>
+        <li>วางโค้ดทับทั้งหมด (Ctrl+A, Ctrl+V) แล้ว Ctrl+S</li>
+        <li>Tools › Customize › Commands › Macro ลาก <b>New Macro Button</b> ไปที่แถบเครื่องมือ เลือกไฟล์ .swp</li>
       </ol>
-      <p class="small"><b>ทุกครั้ง</b></p>
+
+      <h3>ใช้งาน <span>ทุกครั้ง</span></h3>
       <ol class="steps">
-        <li>กดดาวน์โหลดการ์ด <b>มาโคร .swb</b> ใต้ชิ้นงาน</li>
-        <li>กดปุ่มลัดใน SOLIDWORKS ระบบหาไฟล์ล่าสุดในโฟลเดอร์ Downloads แล้วสร้างทีละฟีเจอร์</li>
-        <li>ได้ .SLDPRT พร้อม Feature Tree ในโฟลเดอร์ Downloads</li>
+        <li>ดาวน์โหลด <b>มาโคร .swb</b> จากการ์ดใต้ชิ้นงาน</li>
+        <li>กดปุ่มลัดใน SOLIDWORKS ได้ .SLDPRT ในโฟลเดอร์ Downloads</li>
       </ol>
-      <p class="muted small">ไม่อยากตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แล้วเลือกไฟล์ที่ดาวน์โหลดแทน ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่รัน รุ่นเก่าเปิดไฟล์จากรุ่นใหม่ไม่ได้</p>
+
+      <p class="note small">ไฟล์ .SLDPRT เป็นรุ่นเดียวกับ SOLIDWORKS ที่ใช้รัน ไม่ตั้งปุ่มก็ได้ ใช้ Tools › Macro › Run แทน</p>
     </div>
   </aside>
 </div>
