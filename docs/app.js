@@ -1,11 +1,11 @@
-import { Viewer } from "./js/viewer.js?v=202611120832";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611120832";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611120832";
-import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611120832";
-import { quickPlan } from "./js/quick.js?v=202611120832";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611120832";
-import { task } from "./js/progress.js?v=202611120832";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611120832";
+import { Viewer } from "./js/viewer.js?v=202611120929";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611120929";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611120929";
+import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611120929";
+import { quickPlan } from "./js/quick.js?v=202611120929";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611120929";
+import { task } from "./js/progress.js?v=202611120929";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611120929";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -62,7 +62,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611120832"),
+    import("./vendor/kernel/cad-kernel.js?v=202611120929"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -458,8 +458,8 @@ $("copy-launcher").onclick = async () => {
       t.value = code; document.body.append(t); t.select(); document.execCommand("copy"); t.remove();
     }
     b.textContent = "Copied";
-  } catch { b.textContent = "Copy failed, try again"; }
-  setTimeout(() => { b.textContent = "Copy launcher code"; }, 2500);
+  } catch { b.textContent = "Try again"; }
+  setTimeout(() => { b.textContent = "Copy"; }, 2500);
 };
 
 $("dl-sw").onclick = () => {

@@ -453,3 +453,21 @@ textarea::placeholder{color:var(--muted);opacity:1}
 .sw-setup .cell-btn.inline{min-height:28px;font-size:var(--fs-sm);padding:0 10px;border-radius:8px}
 .sw-setup .note{margin-top:6px;padding-top:8px;line-height:1.55}
 .hint summary{font-size:var(--fs-sm)}
+
+/* ---------- SOLIDWORKS help, final layout ---------- */
+details.sw-setup{display:block;padding:16px;margin-top:16px;font-size:var(--fs)}
+details.sw-setup>summary{align-items:flex-start}
+details.sw-setup>summary::after{margin-top:6px}
+details.sw-setup[open]>summary::after{margin-top:10px}
+.sw-title{display:flex;flex-direction:column;gap:2px}
+.sw-title h2{font-size:14px;font-weight:600;margin:0!important;line-height:1.4}
+.sw-title small{font-size:var(--fs-sm);color:var(--muted);line-height:1.4}
+.sw-group{margin-top:14px;padding-top:14px;border-top:1px dashed var(--dash)}
+.sw-group h3{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;font-size:var(--fs-sm);font-weight:600;color:var(--text-2)}
+.sw-group h3 span{font-size:11px;font-weight:500;color:var(--violet-strong);background:var(--tint);padding:1px 8px;border-radius:999px}
+.sw-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:sw}
+.sw-steps li{counter-increment:sw;display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:0 10px;align-items:start;line-height:1.5;color:var(--text-2)}
+.sw-steps li::before{content:counter(sw);width:20px;height:20px;margin-top:1px;border-radius:50%;background:#fff;border:1px solid var(--edge);color:var(--violet-strong);font-size:11px;font-weight:600;display:grid;place-items:center}
+.sw-steps li b{font-weight:600;color:var(--ink)}
+.sw-steps li .cell-btn.inline{align-self:start;margin-top:-2px;min-height:26px;padding:0 12px;font-size:var(--fs-sm);border-radius:8px}
+.sw-note{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--dash);font-size:var(--fs-sm);color:var(--muted);line-height:1.5}

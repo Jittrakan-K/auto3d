@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611120832">
+<link rel="stylesheet" href="style.css?v=202611120929">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -239,24 +239,29 @@
     </div>
 
     <details id="sw-setup" class="sw-setup" open>
-      <summary><h2>Open in SOLIDWORKS with feature tree</h2></summary>
-      <p class="muted small">Works on locked-down PCs, nothing to install</p>
+      <summary>
+        <span class="sw-title"><h2>Open in SOLIDWORKS</h2><small>With feature tree, nothing to install</small></span>
+      </summary>
 
-      <h3>Set up the button <span>once</span></h3>
-      <ol class="steps">
-        <li><button id="copy-launcher" class="cell-btn inline" type="button">Copy launcher code</button></li>
-        <li>Tools › Macro › New, name it <b>AUTO_DESIGN_3D.swp</b></li>
-        <li>Replace all the code (Ctrl+A, Ctrl+V), then Ctrl+S</li>
-        <li>Tools › Customize › Commands › Macro, drag <b>New Macro Button</b> to a toolbar and pick the .swp</li>
-      </ol>
+      <section class="sw-group">
+        <h3>Set up the button <span>Once</span></h3>
+        <ol class="sw-steps">
+          <li><span>Copy the launcher code</span><button id="copy-launcher" class="cell-btn inline" type="button">Copy</button></li>
+          <li><span>Tools › Macro › New, save as <b>AUTO_DESIGN_3D.swp</b></span></li>
+          <li><span>Paste over all the code, then press Ctrl+S</span></li>
+          <li><span>Tools › Customize › Commands › Macro, drag <b>New Macro Button</b> to a toolbar and pick the .swp</span></li>
+        </ol>
+      </section>
 
-      <h3>Each part</h3>
-      <ol class="steps">
-        <li>Download the <b>SOLIDWORKS macro</b> card under the part</li>
-        <li>Click your button in SOLIDWORKS. The .SLDPRT lands in Downloads</li>
-      </ol>
+      <section class="sw-group">
+        <h3>For each part</h3>
+        <ol class="sw-steps">
+          <li><span>Download the <b>SOLIDWORKS macro</b> from the file cards</span></li>
+          <li><span>Click your button. The .SLDPRT is saved to Downloads</span></li>
+        </ol>
+      </section>
 
-      <p class="note small">The .SLDPRT is saved in the SOLIDWORKS version that runs it. No button? Use Tools › Macro › Run</p>
+      <p class="sw-note">Saved in the SOLIDWORKS version that runs it. No button? Use Tools › Macro › Run</p>
     </details>
   </aside>
 </div>
@@ -278,6 +283,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611120832"></script>
+<script type="module" src="app.js?v=202611120929"></script>
 </body>
 </html>
