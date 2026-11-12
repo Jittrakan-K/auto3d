@@ -277,6 +277,30 @@ export function makeDrawing(K, shape, opts = {}) {
     }
   }
 
+  // A chamfer or fillet on a round edge shows as a second circle a hair away from the
+  // real one. Keep the real edge: the largest for the outside, the smallest for a bore.
+  for (const name of ["front", "top", "right"]) {
+    const keep = [];
+    const byCentre = new Map();
+    for (const c of circles[name]) {
+      const k = `${c.c[0].toFixed(2)},${c.c[1].toFixed(2)}`;
+      if (!byCentre.has(k)) byCentre.set(k, []);
+      byCentre.get(k).push(c);
+    }
+    for (const list of byCentre.values()) {
+      list.sort((a, b) => a.r - b.r);
+      const rMax = list[list.length - 1].r;
+      let cluster = [list[0]];
+      const flush = () => { keep.push(cluster.some((c) => c.r === rMax) ? cluster[cluster.length - 1] : cluster[0]); };
+      for (let i = 1; i < list.length; i++) {
+        if (list[i].r - list[i - 1].r < 1.2) cluster.push(list[i]);
+        else { flush(); cluster = [list[i]]; }
+      }
+      flush();
+    }
+    circles[name] = keep;
+  }
+
   // Centre marks on every hole and boss seen end-on.
   for (const name of ["front", "top", "right"]) {
     const marked = [];
@@ -393,5 +417,5 @@ function frame(add, W, H, o) {
   add({ t: "circle", c: [sx + 14, sy + 3], r: 1.6, layer: "border" });
   T(bx + 2, by + 18.2, o.title || "Part", 5, "start");
   T(bx + bw - 2, by + 18.6, "AUTO3D", 2.2, "end", "label");
-  T(MARGIN + 3, MARGIN + 3, "DIMENSIONS IN MM  /  THIRD ANGLE PROJECTION  /  DO NOT SCALE", 2, "start", "label");
+  T(MARGIN + 3, H - MARGIN - 5, "DIMENSIONS IN MM  /  THIRD ANGLE PROJECTION  /  DO NOT SCALE", 2, "start", "label");
 }
