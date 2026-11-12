@@ -482,3 +482,11 @@ body:not(.has-model) .views::before,body:not(.has-model) .views::after{display:n
 .title-ic{flex:none;margin-top:-2px}
 @media (min-width:861px){.stage-heading{margin-top:20px}}
 @media (min-width:861px) and (max-width:1500px){.stage-heading{margin-top:0}}
+
+/* heading block sits in the middle of the space above the frame; icon centred on the text */
+@media (min-width:861px){
+  .stage-head{padding:4px 0 10px}
+  .stage-heading,.stage-heading{margin-top:0!important}
+}
+.stage-heading{line-height:1.2;gap:12px}
+.title-ic{width:34px;height:34px;margin:0;transform:translateY(-4px)}
