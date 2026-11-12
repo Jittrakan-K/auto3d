@@ -1,7 +1,7 @@
 // Asks Claude for a plan straight from the browser with the user's own API key,
 // builds it, and sends any failure back so Claude can correct it (same loop as app/ai_planner.py).
-import { parsePlan, PlanError } from "./plan.js?v=202611120814";
-import { build, BuildError } from "./cad.js?v=202611120814";
+import { parsePlan, PlanError } from "./plan.js?v=202611120832";
+import { build, BuildError } from "./cad.js?v=202611120832";
 
 export const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"];
 const TOOL = "submit_cad_plan";

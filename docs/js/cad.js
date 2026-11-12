@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611120814";
+import { holePoints } from "./plan.js?v=202611120832";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
