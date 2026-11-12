@@ -334,11 +334,11 @@ dialog label{font-weight:500;font-size:14px}
 .log-thumb{grid-row:1/3;width:110px;height:110px;border-radius:14px;background:var(--panel);display:grid;place-items:center;overflow:hidden}
 .log-thumb img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
 .log-name{font-size:15px;font-weight:600;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.log-name::after{content:"เสร็จแล้ว";font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--ok-bg);color:var(--ok)}
+.log-name::after{content:"Completed";font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--ok-bg);color:var(--ok)}
 .log-source{margin:2px 0 8px;color:var(--text-2);font-size:13.5px}
 .log-facts{display:flex;flex-wrap:wrap;gap:4px 20px;margin:0}
 .log-facts dt{font-size:11.5px;color:var(--muted)}
-.log-facts dd{margin:0;font-size:13.5px;font-family:"Plex Num",monospace}
+.log-facts dd{margin:0;font-size:13.5px;font-variant-numeric:tabular-nums}
 .log-acts{grid-column:2;display:flex;gap:8px}
 .log-acts .btn{min-height:36px;font-size:13.5px}
 .log-empty{margin-top:24px;padding:48px 16px;text-align:center;border:1.5px dashed var(--dash);border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted)}

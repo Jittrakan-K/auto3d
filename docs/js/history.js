@@ -12,6 +12,9 @@ export function loadHistory() {
 
 function write(list) {
   // When the browser runs out of room, drop the oldest entries until it fits.
+  if (!list.length) {
+    try { localStorage.removeItem(KEY); return true; } catch { return false; }
+  }
   for (let n = list.length; n > 0; n = Math.floor(n * 0.8)) {
     try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, n))); return true; }
     catch { if (n === 1) break; }
