@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2D drawing · AUTO3D</title>
+<meta name="application-name" content="AUTO3D">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#8f86ea">
+<meta name="description" content="Turn a STEP file into a 2D drawing with views, dimensions and a title block">
+<link rel="stylesheet" href="style.css?v=202611121821">
+</head>
+<body class="drawing-page">
+<div class="app">
+  <nav class="rail" aria-label="Main menu">
+    <a class="rail-logo" href="./" aria-label="AUTO3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-btn" href="./" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
+    <a class="rail-btn active" href="drawing.html" aria-current="page" title="2D drawing"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 15.5h17M13 15.5v4M7 8h5v5H7z"/></svg><span>Drawing</span></a>
+    <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
+    <span class="rail-gap"></span>
+  </nav>
+
+  <section class="tasks" aria-label="Source">
+    <div class="col-head">
+      <h1 class="brandname">AUTO<b>3D</b></h1>
+      <p class="muted small">STEP to 2D drawing with views, dimensions and a title block</p>
+    </div>
+
+    <form id="dw-form" class="composer">
+      <label>Part</label>
+      <div id="dw-drop" class="drop big" tabindex="0" role="button" aria-label="Choose a STEP file">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>
+        <span><strong id="dw-file-name">Choose a STEP file</strong><small>.step or .stp, drop it here</small></span>
+        <input id="dw-file" type="file" accept=".step,.stp,.STEP,.STP" hidden>
+      </div>
+      <button id="dw-use-current" class="btn" type="button" hidden>Use the part from the builder</button>
+
+      <div class="fields">
+        <label>Title<input id="dw-title" type="text" placeholder="Part name"></label>
+        <label>Part no.<input id="dw-part" type="text" placeholder="-"></label>
+        <label>Material<input id="dw-material" type="text" placeholder="-"></label>
+        <label>Drawn by<input id="dw-drawn" type="text" placeholder="AUTO3D"></label>
+        <label>Sheet<select id="dw-sheet"><option value="auto">Auto</option><option>A4</option><option>A3</option><option>A2</option><option>A1</option><option>A0</option></select></label>
+        <label>Scale<select id="dw-scale"><option value="auto">Auto</option><option value="5">5:1</option><option value="2">2:1</option><option value="1">1:1</option><option value="0.5">1:2</option><option value="0.2">1:5</option><option value="0.1">1:10</option><option value="0.05">1:20</option></select></label>
+      </div>
+      <label class="check"><input id="dw-hidden" type="checkbox" checked> Hidden lines</label>
+      <label class="check"><input id="dw-iso" type="checkbox" checked> Isometric view</label>
+      <button id="dw-make" class="btn primary" type="submit" disabled>Make drawing</button>
+      <p id="dw-error" class="error" hidden role="alert"></p>
+    </form>
+  </section>
+
+  <section class="stage" aria-label="Drawing preview">
+    <header class="stage-head">
+      <div class="stage-status"><span id="dw-status" class="state wait">Loading engine</span></div>
+      <h2 class="stage-heading"><span id="dw-heading" class="stage-title">Drawing preview</span></h2>
+      <p id="dw-sub" class="stage-sub">Choose a STEP file to lay out its front, top, right and isometric views</p>
+    </header>
+    <div class="frame sheet-frame">
+      <div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="dw-sheet-label" class="muted small"></span></div>
+      <div id="dw-preview" class="sheet-preview">
+        <div class="empty"><svg class="draw-cube" viewBox="0 0 120 120" width="112" height="112" aria-hidden="true"><path class="e e1" d="M60 14L100 36 60 58 20 36Z"/><path class="e e2" d="M20 36v46l40 23V58"/><path class="e e3" d="M100 36v46l-40 23"/><path class="face" d="M60 58l40-22v46l-40 23Z"/></svg><p>Your drawing will appear here</p></div>
+      </div>
+    </div>
+    <div class="files-grid">
+      <div class="file-card main">
+        <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/></svg></span>
+        <div><h3>PDF</h3><p>Print or send</p></div>
+        <button id="dw-pdf" class="btn primary" type="button" disabled>Download</button>
+      </div>
+      <div class="file-card">
+        <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20L20 4M4 4h6M4 4v6M20 20h-6M20 20v-6"/></svg></span>
+        <div><h3>DXF <small>R12, layered</small></h3><p>SOLIDWORKS, AutoCAD</p></div>
+        <button id="dw-dxf" class="btn" type="button" disabled>Download</button>
+      </div>
+      <div class="file-card">
+        <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4"/></svg></span>
+        <div><h3>SVG</h3><p>Web and docs</p></div>
+        <button id="dw-svg" class="btn" type="button" disabled>Download</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="inspector" aria-label="Details">
+    <h2>On the sheet</h2>
+    <dl id="dw-facts" class="facts">
+      <div><dt>Sheet</dt><dd id="dw-f-sheet">-</dd></div>
+      <div><dt>Scale</dt><dd id="dw-f-scale">-</dd></div>
+      <div><dt>Size X × Y × Z</dt><dd id="dw-f-size">-</dd></div>
+      <div><dt>Holes</dt><dd id="dw-f-holes">-</dd></div>
+    </dl>
+    <ul class="ticks">
+      <li>Front, top and right views, third angle</li>
+      <li>Isometric view</li>
+      <li>Hidden lines and centre marks</li>
+      <li>Overall sizes and hole callouts</li>
+      <li>Title block and border</li>
+    </ul>
+    <p class="note small">Add tolerances, hole positions and finishes in your CAD before release</p>
+
+    <div class="sw-setup">
+      <h2>SOLIDWORKS files</h2>
+      <p class="muted small">SLDPRT and SLDDRW can only be opened by SOLIDWORKS</p>
+      <ol class="sw-steps">
+        <li><span>Part: File › Save As › <b>STEP AP203</b>, then open it here</span></li>
+        <li><span>Drawing: an SLDDRW already is one. File › Save As › <b>PDF</b> or <b>DXF</b></span></li>
+      </ol>
+    </div>
+  </aside>
+</div>
+<script type="module" src="drawing-page.js?v=202611121821"></script>
+</body>
+</html>

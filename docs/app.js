@@ -1,11 +1,11 @@
-import { Viewer } from "./js/viewer.js?v=202611121803";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121803";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121803";
-import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121803";
-import { quickPlan } from "./js/quick.js?v=202611121803";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121803";
-import { task } from "./js/progress.js?v=202611121803";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121803";
+import { Viewer } from "./js/viewer.js?v=202611121821";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121821";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121821";
+import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121821";
+import { quickPlan } from "./js/quick.js?v=202611121821";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121821";
+import { task } from "./js/progress.js?v=202611121821";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121821";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -65,7 +65,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611121803"),
+    import("./vendor/kernel/cad-kernel.js?v=202611121821"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -119,6 +119,7 @@ async function showJob(raw, plan, result, source) {
   show($("details"), true);
   show($("title-block"), true);
   for (const id of ["dl-step", "dl-sldprt", "dl-sw"]) $(id).disabled = false;
+  show($("to-drawing"), true);
   if (!document.body.classList.contains("seen-model")) { $("sw-setup").open = false; document.body.classList.add("seen-model"); }
   show($("modify-row"), true);
 
@@ -446,6 +447,13 @@ $("dl-sldprt").onclick = async () => {
   } finally { busy(""); $("dl-sldprt").disabled = false; }
 };
 
+$("to-drawing").onclick = async (e) => {
+  e.preventDefault();
+  try {
+    sessionStorage.setItem("auto3d.drawing", JSON.stringify({ name: safeName(state.job.plan.name), step: await state.job.step.text() }));
+  } catch { /* too large for this browser: the drawing page still accepts the downloaded STEP */ }
+  location.href = "drawing.html?from=builder";
+};
 $("open-help").onclick = (e) => {
   e.preventDefault();
   $("sw-setup").open = true;
