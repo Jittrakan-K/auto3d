@@ -1,11 +1,11 @@
-import { Viewer } from "./js/viewer.js?v=202611121023";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121023";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121023";
-import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121023";
-import { quickPlan } from "./js/quick.js?v=202611121023";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121023";
-import { task } from "./js/progress.js?v=202611121023";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121023";
+import { Viewer } from "./js/viewer.js?v=202611121753";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121753";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121753";
+import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121753";
+import { quickPlan } from "./js/quick.js?v=202611121753";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121753";
+import { task } from "./js/progress.js?v=202611121753";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121753";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -65,7 +65,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611121023"),
+    import("./vendor/kernel/cad-kernel.js?v=202611121753"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -429,7 +429,7 @@ $("dl-sldprt").onclick = async () => {
     if (!st.running) {
       localHelp(st.blocked
         ? "The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"
-        : "The desktop app did not start. If the browser never asked to open AUTO DESIGN 3D, do step 1 below. If it did, run start.bat and try again");
+        : "The desktop app did not start. If the browser never asked to open the app, do step 1 below. If it did, run start.bat and try again");
       return;
     }
   }

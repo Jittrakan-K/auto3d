@@ -1,6 +1,6 @@
 {
-  "name": "AUTO DESIGN 3D",
-  "short_name": "AUTO DESIGN 3D",
+  "name": "AUTO3D",
+  "short_name": "AUTO3D",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#8f86ea",

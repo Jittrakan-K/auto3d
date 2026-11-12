@@ -3,14 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AUTO DESIGN 3D</title>
+<title>AUTO3D</title>
+<meta name="application-name" content="AUTO3D">
+<meta name="apple-mobile-web-app-title" content="AUTO3D">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611121023">
+<link rel="stylesheet" href="style.css?v=202611121753">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -29,7 +31,7 @@
 <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
 <div class="app">
   <nav class="rail" aria-label="Main menu">
-    <a class="rail-logo" href="./" aria-label="AUTO DESIGN 3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
+    <a class="rail-logo" href="./" aria-label="AUTO3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
     <a class="rail-btn active" href="./" aria-current="page" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
     <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <span class="rail-gap"></span>
@@ -39,7 +41,7 @@
 
   <section class="tasks" aria-label="Command">
     <div class="col-head">
-      <h1 class="brandname">AUTO DESIGN <b>3D</b></h1>
+      <h1 class="brandname">AUTO<b>3D</b></h1>
       <p class="muted small">STEP and SOLIDWORKS files from a command or a drawing</p>
     </div>
 
@@ -225,7 +227,7 @@
         <p id="sw-local-msg"></p>
         <ol class="steps">
           <li>Once: <a href="https://github.com/Jittrakan-K/auto3d/archive/refs/heads/main.zip">download the desktop app (.zip)</a>, extract it and run <b>install.bat</b> (or <b>update.bat</b> if installed)</li>
-          <li>Click <b>Create</b> again. When the browser asks to open AUTO DESIGN 3D, tick "Always allow" and open it</li>
+          <li>Click <b>Create</b> again. When the browser asks to open the app, tick "Always allow" and open it</li>
           <li>Allow local network access if the browser asks</li>
         </ol>
         <p class="small">Still stuck? Keep <b>start.bat</b> running instead. Stop the background app with <b>stop.bat</b></p>
@@ -283,6 +285,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611121023"></script>
+<script type="module" src="app.js?v=202611121753"></script>
 </body>
 </html>
