@@ -475,3 +475,10 @@ details.sw-setup[open]>summary::after{margin-top:10px}
 /* quad dividers only once there is a part to divide */
 body:not(.has-model) .views::before,body:not(.has-model) .views::after{display:none}
 .stage-status:not(:has(.state:not([hidden]))){display:none}
+
+/* idle heading with its drafting icon */
+.stage-heading{display:inline-flex;align-items:center;justify-content:center;gap:10px;margin:0;font-weight:500}
+.stage-heading .stage-title{margin:0}
+.title-ic{flex:none;margin-top:-2px}
+@media (min-width:861px){.stage-heading{margin-top:20px}}
+@media (min-width:861px) and (max-width:1500px){.stage-heading{margin-top:0}}

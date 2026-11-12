@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611121753">
+<link rel="stylesheet" href="style.css?v=202611121757">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -127,7 +127,18 @@
         <span id="st-ai" class="state" hidden></span>
         <span id="st-cad" class="state wait">Loading engine</span>
       </div>
-      <h2 id="stage-title" class="stage-title">Ready to design</h2>
+      <h2 class="stage-heading"><span id="stage-title" class="stage-title">Let’s Build Something Extraordinary</span><svg id="title-ic" class="title-ic" viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+          <path d="M15 14l11 6v12l-11 6-11-6V20z" fill="#e4e0fc"/>
+          <path d="M15 14l11 6-11 6-11-6z" fill="#fff"/>
+          <path d="M15 26v12l11-6V20z" fill="#b5acf6"/>
+          <path d="M15 14l11 6v12l-11 6-11-6V20zM4 20l11 6 11-6M15 26v12" fill="none" stroke="#5b4ad8" stroke-width="1.8" stroke-linejoin="round"/>
+          <g transform="rotate(40 30 13)">
+            <rect x="27" y="1" width="6.5" height="17" rx="1.5" fill="#f6c453" stroke="#5b4ad8" stroke-width="1.8"/>
+            <path d="M27 18h6.5l-3.25 5.5z" fill="#fff" stroke="#5b4ad8" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M28.9 20.8h2.7l-1.35 2.4z" fill="#5b4ad8"/>
+            <path d="M27 5.5h6.5" stroke="#5b4ad8" stroke-width="1.8"/>
+          </g>
+        </svg></h2>
       <p id="stage-sub" class="stage-sub">Describe a part or attach a drawing. Each feature is built in order and the files are checked</p>
     </header>
 
@@ -285,6 +296,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611121753"></script>
+<script type="module" src="app.js?v=202611121757"></script>
 </body>
 </html>

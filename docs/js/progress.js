@@ -10,6 +10,7 @@ let pct = 0;
 let running = false;
 
 function setStage(title, sub, working) {
+  const ic = $("title-ic"); if (ic) ic.hidden = true;
   const t = $("stage-title");
   if (t.textContent !== title) { t.textContent = title; t.classList.remove("swap"); void t.offsetWidth; t.classList.add("swap"); }
   t.classList.toggle("working", !!working);
