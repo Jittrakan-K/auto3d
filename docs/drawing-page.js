@@ -1,5 +1,5 @@
-import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611121821";
-import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611121821";
+import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611121901";
+import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611121901";
 
 const $ = (id) => document.getElementById(id);
 const state = { K: null, shape: null, views: null, name: "", drawing: null };
@@ -17,7 +17,7 @@ function download(blob, name) {
 const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 async function loadKernel() {
-  const K = await import("./vendor/kernel/cad-kernel.js?v=202611121821");
+  const K = await import("./vendor/kernel/cad-kernel.js?v=202611121901");
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   K.setOC(await K.opencascade({ locateFile: () => wasm }));
   state.K = K;
@@ -31,7 +31,7 @@ async function loadStep(text, name) {
   await frame();
   try {
     state.shape = await state.K.importSTEP(new Blob([text]));
-    state.views = projectAll(state.K, state.shape);
+    state.views = projectAll(state.K, state.shape, $("dw-main").value);
   } catch (e) {
     state.shape = null;
     $("dw-heading").classList.remove("working");
@@ -55,7 +55,7 @@ function render() {
     material: $("dw-material").value.trim(),
     drawnBy: $("dw-drawn").value.trim(),
     sheet: $("dw-sheet").value, scale: $("dw-scale").value,
-    hidden: $("dw-hidden").checked, iso: $("dw-iso").checked,
+    hidden: $("dw-hidden").checked, iso: $("dw-iso").checked, callouts: $("dw-callouts").value === "on",
   };
   const d = makeDrawing(state.K, state.shape, opts);
   d.title = opts.title;
@@ -70,7 +70,7 @@ function render() {
   $("dw-f-sheet").textContent = `${d.sheet} landscape`;
   $("dw-f-scale").textContent = fmtScale(d.scale);
   $("dw-f-size").textContent = [0, 1, 2].map((i) => fmtLen(bb[1][i] - bb[0][i])).join(" × ");
-  const holes = d.prims.filter((p) => p.t === "text" && p.layer === "dim" && p.s.includes("%%c")).map((p) => p.s.replace("%%c", "Ø"));
+  const holes = d.prims.filter((p) => p.t === "text" && p.layer === "dim" && /%%c|(^|x )R\d/.test(p.s)).map((p) => p.s.replace("%%c", "Ø"));
   $("dw-f-holes").textContent = holes.length ? holes.join(", ") : "None";
   for (const id of ["dw-pdf", "dw-dxf", "dw-svg"]) $(id).disabled = false;
 }
@@ -90,7 +90,14 @@ async function takeFile(file) {
 drop.addEventListener("drop", (e) => takeFile(e.dataTransfer.files[0]));
 $("dw-file").onchange = (e) => { takeFile(e.target.files[0]); e.target.value = ""; };
 $("dw-form").onsubmit = (e) => { e.preventDefault(); render(); };
-for (const id of ["dw-sheet", "dw-scale", "dw-hidden", "dw-iso"]) $(id).onchange = render;
+for (const id of ["dw-sheet", "dw-scale", "dw-hidden", "dw-iso", "dw-callouts"]) $(id).onchange = render;
+$("dw-main").onchange = async () => {
+  if (!state.shape) return;
+  $("dw-heading").classList.add("working");
+  await frame();
+  state.views = projectAll(state.K, state.shape, $("dw-main").value);
+  render();
+};
 for (const id of ["dw-title", "dw-part", "dw-material", "dw-drawn"]) $(id).onchange = render;
 
 $("dw-pdf").onclick = () => download(toPDF(state.drawing), `${safeName(state.drawing.title)}.pdf`);

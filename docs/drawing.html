@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Turn a STEP file into a 2D drawing with views, dimensions and a title block">
-<link rel="stylesheet" href="style.css?v=202611121821">
+<link rel="stylesheet" href="style.css?v=202611121901">
 </head>
 <body class="drawing-page">
 <div class="app">
@@ -43,6 +43,8 @@
         <label>Part no.<input id="dw-part" type="text" placeholder="-"></label>
         <label>Material<input id="dw-material" type="text" placeholder="-"></label>
         <label>Drawn by<input id="dw-drawn" type="text" placeholder="AUTO3D"></label>
+        <label>Main view<select id="dw-main"><option value="auto">Auto</option><option value="front">Front</option><option value="top">Top</option><option value="right">Right</option></select></label>
+        <label>Holes<select id="dw-callouts"><option value="on">Callouts</option><option value="off">None</option></select></label>
         <label>Sheet<select id="dw-sheet"><option value="auto">Auto</option><option>A4</option><option>A3</option><option>A2</option><option>A1</option><option>A0</option></select></label>
         <label>Scale<select id="dw-scale"><option value="auto">Auto</option><option value="5">5:1</option><option value="2">2:1</option><option value="1">1:1</option><option value="0.5">1:2</option><option value="0.2">1:5</option><option value="0.1">1:10</option><option value="0.05">1:20</option></select></label>
       </div>
@@ -111,6 +113,6 @@
     </div>
   </aside>
 </div>
-<script type="module" src="drawing-page.js?v=202611121821"></script>
+<script type="module" src="drawing-page.js?v=202611121901"></script>
 </body>
 </html>

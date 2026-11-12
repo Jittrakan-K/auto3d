@@ -28,8 +28,8 @@ export function toSVG(d, { forScreen = false } = {}) {
       const x0 = p.c[0] + p.r * Math.cos(a0), y0 = p.c[1] + p.r * Math.sin(a0);
       const x1 = p.c[0] + p.r * Math.cos(a1), y1 = p.c[1] + p.r * Math.sin(a1);
       const large = ((p.a1 - p.a0) % 360 + 360) % 360 > 180 ? 1 : 0;
-      // Counter-clockwise with y up turns clockwise once y is flipped: sweep flag 1.
-      out.push(`<path d="M${nice(x0)} ${nice(Y(y0))}A${nice(p.r)} ${nice(p.r)} 0 ${large} 1 ${nice(x1)} ${nice(Y(y1))}" fill="none" ${stroke}/>`);
+      // Counter-clockwise with y up runs toward smaller angles once y points down: sweep flag 0.
+      out.push(`<path d="M${nice(x0)} ${nice(Y(y0))}A${nice(p.r)} ${nice(p.r)} 0 ${large} 0 ${nice(x1)} ${nice(Y(y1))}" fill="none" ${stroke}/>`);
     } else if (p.t === "solid") out.push(`<polygon points="${p.pts.map((q) => `${nice(q[0])},${nice(Y(q[1]))}`).join(" ")}" fill="${st.color}"/>`);
     else if (p.t === "text") {
       const anchor = p.anchor || "start";

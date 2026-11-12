@@ -133,27 +133,39 @@ function projectView(K, shape, view) {
 
 // Cameras in SOLIDWORKS orientation (Y up). The direction points from the part to the
 // viewer and xAxis is screen right; replicad's named views assume Z up, so they are not used.
-function camera(K, view) {
-  const t = 1 / Math.sqrt(3), s = Math.SQRT1_2;
-  const c = {
-    front: [[0, 0, 1], [1, 0, 0]],
-    top: [[0, 1, 0], [1, 0, 0]],
-    right: [[1, 0, 0], [0, 0, -1]],
-    iso: [[t, t, t], [s, 0, -s]],
-  }[view];
-  return new K.ProjectionCamera([0, 0, 0], c[0], c[1]);
+// The main (front) view can be any of the model's front, top or right; the other views
+// follow from it the way a drawing would place them.
+const MAIN = { front: [[0, 0, 1], [1, 0, 0]], top: [[0, 1, 0], [1, 0, 0]], right: [[1, 0, 0], [0, 0, -1]] };
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const unit = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l); };
+function cameras(main) {
+  const [F, X] = MAIN[main] || MAIN.front;
+  const U = cross(F, X);
+  return {
+    front: [F, X],
+    top: [U, X],
+    right: [X, F.map((x) => -x)],
+    iso: [unit(F.map((f, i) => f + U[i] + X[i])), unit(X.map((x, i) => x - F[i]))],
+  };
+}
+
+// The most descriptive view goes in front: the one with the largest projected outline.
+function pickMain(shape) {
+  const b = shape.boundingBox.bounds, d = [0, 1, 2].map((i) => b[1][i] - b[0][i]);
+  const area = { front: d[0] * d[1], top: d[0] * d[2], right: d[2] * d[1] };
+  return Object.keys(area).reduce((a, k) => (area[k] > area[a] * 1.05 ? k : a), "front");
 }
 
 // ---------- layout ----------
 // The isometric gets the top-right cell; it is scaled down to fit that cell when needed.
 function cells(v, s) {
-  const cellW = Math.max(v.right.w * s, v.front.w * s * 0.75);
-  const cellH = Math.max(v.top.h * s, v.front.h * s * 0.75);
+  const cellW = Math.max(v.right.w * s, v.front.w * s * 0.55);
+  const cellH = Math.max(v.top.h * s, v.front.h * s * 0.55);
   return { cellW, cellH, isoS: Math.min(s, cellW / Math.max(v.iso.w, EPS), cellH / Math.max(v.iso.h, EPS)) };
 }
 function needed(v, s) {
   const { cellW, cellH } = cells(v, s);
-  return { w: v.front.w * s + GAP + cellW + 2 * GAP, h: v.front.h * s + GAP + cellH + 2 * GAP };
+  return { w: v.front.w * s + GAP + cellW + 1.5 * GAP, h: v.front.h * s + GAP + cellH + 1.5 * GAP };
 }
 
 function chooseSheet(v, wantSheet, wantScale) {
@@ -186,17 +198,17 @@ function chooseSheet(v, wantSheet, wantScale) {
 
 // ---------- drawing ----------
 // The slow part (hidden-line projection); do it once per part and reuse for every layout.
-export function projectAll(K, shape) {
-  return {
-    front: projectView(K, shape, camera(K, "front")),
-    top: projectView(K, shape, camera(K, "top")),
-    right: projectView(K, shape, camera(K, "right")),
-    iso: projectView(K, shape, camera(K, "iso")),
-  };
+export function projectAll(K, shape, main = "auto") {
+  const m = main === "auto" || !MAIN[main] ? pickMain(shape) : main;
+  const cams = cameras(m);
+  const cam = (k) => new K.ProjectionCamera([0, 0, 0], cams[k][0], cams[k][1]);
+  const v = { front: projectView(K, shape, cam("front")), top: projectView(K, shape, cam("top")), right: projectView(K, shape, cam("right")), iso: projectView(K, shape, cam("iso")) };
+  v.main = m;
+  return v;
 }
 
 export function makeDrawing(K, shape, opts = {}) {
-  const views = opts.views || projectAll(K, shape);
+  const views = opts.views || projectAll(K, shape, opts.main);
   const { sheet, scale } = chooseSheet(views, opts.sheet, opts.scale);
   const [W, H] = SHEETS[sheet];
   const P = [];
@@ -207,8 +219,8 @@ export function makeDrawing(K, shape, opts = {}) {
   const s = scale;
   const { cellW, cellH, isoS } = cells(views, s);
   const n = needed(views, s);
-  const x0 = areaX + (areaW - n.w) / 2 + GAP;      // left edge of the front view
-  const y0 = areaY + (areaH - n.h) / 2 + GAP;      // bottom edge of the front view
+  const x0 = areaX + (areaW - n.w) / 2 + GAP * 0.9;  // left edge of the front view
+  const y0 = areaY + (areaH - n.h) / 2 + GAP * 0.9;  // bottom edge of the front view
   const frontW = views.front.w * s, frontH = views.front.h * s;
   const place = {
     front: { x: x0, y: y0, s },
@@ -224,6 +236,7 @@ export function makeDrawing(K, shape, opts = {}) {
 
   const hiddenOn = opts.hidden !== false;
   const circles = { front: [], top: [], right: [] };
+  const arcs = { front: [], top: [], right: [] };
   for (const name of ["front", "top", "right", "iso"]) {
     if (name === "iso" && opts.iso === false) continue;
     const v = views[name], m = map(name), k = place[name].s;
@@ -237,6 +250,7 @@ export function makeDrawing(K, shape, opts = {}) {
         const [cx, cy] = m(seg.cx, seg.cy);
         const a0 = seg.dt >= 0 ? seg.t1 : seg.t1 + seg.dt, a1 = seg.dt >= 0 ? seg.t1 + seg.dt : seg.t1;
         add({ t: "arc", c: [cx, cy], r: seg.r * k, a0: (a0 * 180) / Math.PI, a1: (a1 * 180) / Math.PI, layer });
+        if (layer === "outline" && arcs[name]) arcs[name].push({ c: [cx, cy], r: seg.r, rp: seg.r * k, a0: (a0 * 180) / Math.PI, a1: (a1 * 180) / Math.PI });
       }
     };
     if (hiddenOn && name !== "iso") v.hidden.forEach((sg) => emit(sg, "hidden"));
@@ -246,9 +260,29 @@ export function makeDrawing(K, shape, opts = {}) {
     add({ t: "text", p: [lb[0] + (v.w * place[name].s) / 2, lb[1] - (name === "front" ? 18 : name === "iso" ? 6 : 6)], h: 2.5, s: label, anchor: "middle", layer: "text" });
   }
 
+  // Arcs on one centre that cover at least half a turn (a ring broken by tabs or slots)
+  // are dimensioned as a diameter, like a full circle.
+  for (const name of ["front", "top", "right"]) {
+    const groups = new Map();
+    for (const a of arcs[name]) {
+      const key = `${a.c[0].toFixed(2)},${a.c[1].toFixed(2)},${a.r.toFixed(3)}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(a);
+    }
+    for (const list of groups.values()) {
+      const sweep = list.reduce((t, a) => t + (((a.a1 - a.a0) % 360) + 360) % 360, 0);
+      if (sweep >= 180 && !circles[name].some((c) => Math.hypot(c.c[0] - list[0].c[0], c.c[1] - list[0].c[1]) < 1e-3 && Math.abs(c.r - list[0].r) < 1e-3)) {
+        circles[name].push({ c: list[0].c, r: list[0].r, rp: list[0].rp, spans: list.map((a) => [a.a0, a.a1]), half: sweep < 200 });
+      }
+    }
+  }
+
   // Centre marks on every hole and boss seen end-on.
   for (const name of ["front", "top", "right"]) {
-    for (const c of circles[name]) {
+    const marked = [];
+    for (const c of [...circles[name]].sort((p, q) => q.rp - p.rp)) {
+      if (marked.some((m) => Math.hypot(m[0] - c.c[0], m[1] - c.c[1]) < 1e-3)) continue;
+      marked.push(c.c);
       const e = c.rp + Math.min(3, c.rp * 0.4 + 1.5);
       add({ t: "line", a: [c.c[0] - e, c.c[1]], b: [c.c[0] + e, c.c[1]], layer: "center" });
       add({ t: "line", a: [c.c[0], c.c[1] - e], b: [c.c[0], c.c[1] + e], layer: "center" });
@@ -264,41 +298,43 @@ export function makeDrawing(K, shape, opts = {}) {
   dimV(add, [tb.x, tb.y], [tb.x, tb.y + tH * s], tb.x - 9, fmtLen(tH));
 
   // Hole callouts: one leader per hole size, with the count.
-  const seen = new Set();
+  const seen = new Set(opts.callouts === false ? ["all"] : []);
   const labels = [];
   for (const name of ["front", "top", "right"]) {
     const groups = new Map();
     for (const c of circles[name]) {
-      const key = c.r.toFixed(3);
+      const key = (c.half ? "R" : "D") + c.r.toFixed(3);
       if (roundFront && name === "front" && Math.abs(2 * c.r - fW) < 0.01) continue;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(c);
     }
     for (const [key, list] of groups) {
-      if (seen.has(key) || seen.size >= 6) continue;
+      if (seen.has("all") || seen.has(key) || seen.size >= 6) continue;
       seen.add(key);
       const c = list.reduce((a, b) => (b.c[0] + b.c[1] > a.c[0] + a.c[1] ? b : a));
-      const text = `${list.length > 1 ? `${list.length}x ` : ""}%%c${fmtLen(2 * c.r)}`;
+      const text = c.half ? `${list.length > 1 ? `${list.length}x ` : ""}R${fmtLen(c.r)}` : `${list.length > 1 ? `${list.length}x ` : ""}%%c${fmtLen(2 * c.r)}`;
       const tw = text.replace("%%c", "O").length * 1.7 + 4;
       // Try a few leader angles and lengths until the label lands on free paper.
       let p0, p1;
       search: for (const len of [7, 12, 17, 22]) {
-        for (const deg of [45, 30, 60, 15, 75]) {
+        for (const deg of [45, 30, 60, 15, 75, 135, 120, 150, -45, -30]) {
+          if (c.spans && !c.spans.some(([a0, a1]) => { const t = (((deg - a0) % 360) + 360) % 360; return t <= (((a1 - a0) % 360) + 360) % 360; })) continue;
           const ang = (deg * Math.PI) / 180;
           p0 = [c.c[0] + c.rp * Math.cos(ang), c.c[1] + c.rp * Math.sin(ang)];
           p1 = [p0[0] + len * Math.cos(ang), p0[1] + len * Math.sin(ang)];
-          const box = [p1[0] - 1, p1[1] - 2.5, p1[0] + tw, p1[1] + 3];
+          const box = p1[0] < p0[0] ? [p1[0] - tw, p1[1] - 2.5, p1[0] + 1, p1[1] + 3] : [p1[0] - 1, p1[1] - 2.5, p1[0] + tw, p1[1] + 3];
           if (!labels.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) { labels.push(box); break search; }
         }
       }
+      const left = p1[0] < p0[0];
       arrow(add, p1, p0);
-      add({ t: "line", a: p1, b: [p1[0] + 3, p1[1]], layer: "dim" });
-      add({ t: "text", p: [p1[0] + 4, p1[1] - 1.2], h: 2.5, s: text, anchor: "start", layer: "dim" });
+      add({ t: "line", a: p1, b: [p1[0] + (left ? -3 : 3), p1[1]], layer: "dim" });
+      add({ t: "text", p: [p1[0] + (left ? -4 : 4), p1[1] - 1.2], h: 2.5, s: text, anchor: left ? "end" : "start", layer: "dim" });
     }
   }
 
   frame(add, W, H, { ...opts, sheet, scale });
-  return { sheet, size: [W, H], scale, prims: P, views: Object.fromEntries(Object.entries(views).map(([k, v]) => [k, { w: v.w, h: v.h }])) };
+  return { sheet, size: [W, H], scale, prims: P, main: views.main, views: Object.fromEntries(["front", "top", "right", "iso"].map((k) => [k, { w: views[k].w, h: views[k].h }])) };
 }
 
 // ---------- dimension helpers (paper mm) ----------
