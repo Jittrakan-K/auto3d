@@ -1,11 +1,11 @@
-import { Viewer } from "./js/viewer.js?v=202611120929";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611120929";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611120929";
-import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611120929";
-import { quickPlan } from "./js/quick.js?v=202611120929";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611120929";
-import { task } from "./js/progress.js?v=202611120929";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611120929";
+import { Viewer } from "./js/viewer.js?v=202611121023";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121023";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121023";
+import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121023";
+import { quickPlan } from "./js/quick.js?v=202611121023";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121023";
+import { task } from "./js/progress.js?v=202611121023";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121023";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -50,19 +50,22 @@ function download(blob, name) {
 
 // ---------- status ----------
 function refreshStatus() {
+  // The header stays quiet: a pill appears only while loading, on a failure, or when an API key is in use.
   const ai = $("st-ai");
   ai.className = "state on";
-  ai.textContent = state.key ? "Claude API ready" : "Claude Pro via chat";
-  ai.title = state.key ? `Using ${state.model}` : "No API key, Claude Pro chat is used instead";
+  ai.textContent = "API key in use";
+  ai.title = `Using ${state.model}`;
+  ai.hidden = !state.key;
   const cad = $("st-cad");
   cad.className = "state " + (state.kernel ? "on" : state.kernelError ? "off" : "wait");
-  cad.textContent = state.kernel ? "CAD engine ready" : state.kernelError ? "CAD engine failed to load" : "Loading CAD engine";
+  cad.textContent = state.kernel ? "Ready" : state.kernelError ? "Engine failed to load" : "Loading engine";
+  cad.hidden = !!state.kernel;
   $("generate").disabled = !state.kernel;
 }
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611120929"),
+    import("./vendor/kernel/cad-kernel.js?v=202611121023"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),

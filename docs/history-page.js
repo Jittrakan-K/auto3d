@@ -1,4 +1,4 @@
-import { loadHistory, saveHistory, removeEntry } from "./js/history.js?v=202611120929";
+import { loadHistory, saveHistory, removeEntry } from "./js/history.js?v=202611121023";
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("en-US", { maximumFractionDigits: d });

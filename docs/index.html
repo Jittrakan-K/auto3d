@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611120929">
+<link rel="stylesheet" href="style.css?v=202611121023">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -59,7 +59,7 @@
         <input id="modify" type="checkbox" checked> Edit the current part
       </label>
       <details class="hint">
-        <summary>Commands that build instantly, no AI</summary>
+        <summary>Command examples</summary>
         <ul>
           <li>Acrylic plate 30x60x5, Ø5 holes at 15,15 and 45,15</li>
           <li>Steel plate 120x80x10, M8 holes at 4 corners 10 from edge, R5 corners</li>
@@ -122,11 +122,11 @@
   <section class="stage" aria-label="Drawing">
     <header class="stage-head">
       <div class="stage-status">
-        <span id="st-ai" class="state">Claude</span>
-        <span id="st-cad" class="state">Loading CAD engine</span>
+        <span id="st-ai" class="state" hidden></span>
+        <span id="st-cad" class="state wait">Loading engine</span>
       </div>
       <h2 id="stage-title" class="stage-title">Ready to design</h2>
-      <p id="stage-sub" class="stage-sub">Type a command or attach a drawing. Each feature is built and the files are checked for you</p>
+      <p id="stage-sub" class="stage-sub">Describe a part or attach a drawing. Each feature is built in order and the files are checked</p>
     </header>
 
     <div class="frame">
@@ -197,7 +197,7 @@
   </section>
 
   <aside class="inspector" aria-label="Details">
-    <div id="no-model" class="muted">Dimensions appear here once a part is built. Edit any value to update the model without AI</div>
+    <div id="no-model" class="muted">Dimensions appear here once a part is built. Change any value to update the model</div>
 
     <div id="details" hidden>
       <div id="questions-box" class="callout" hidden>
@@ -283,6 +283,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611120929"></script>
+<script type="module" src="app.js?v=202611121023"></script>
 </body>
 </html>

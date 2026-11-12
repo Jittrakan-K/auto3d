@@ -471,3 +471,7 @@ details.sw-setup[open]>summary::after{margin-top:10px}
 .sw-steps li b{font-weight:600;color:var(--ink)}
 .sw-steps li .cell-btn.inline{align-self:start;margin-top:-2px;min-height:26px;padding:0 12px;font-size:var(--fs-sm);border-radius:8px}
 .sw-note{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--dash);font-size:var(--fs-sm);color:var(--muted);line-height:1.5}
+
+/* quad dividers only once there is a part to divide */
+body:not(.has-model) .views::before,body:not(.has-model) .views::after{display:none}
+.stage-status:not(:has(.state:not([hidden]))){display:none}
