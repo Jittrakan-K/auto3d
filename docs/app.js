@@ -1,12 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611141800";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141800";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141800";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611141800";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141800";
-import { quickPlan } from "./js/quick.js?v=202611141800";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141800";
-import { task } from "./js/progress.js?v=202611141800";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141800";
+import { Viewer } from "./js/viewer.js?v=202611141810";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141810";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141810";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611141810";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141810";
+import { quickPlan } from "./js/quick.js?v=202611141810";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141810";
+import { task } from "./js/progress.js?v=202611141810";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141810";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -66,7 +66,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611141800"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141810"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -495,7 +495,10 @@ $("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan
 function localHelp(text) {
   $("sw-local-msg").textContent = text || "";
   show($("sw-local-help"), !!text);
-  if (text) $("sw-local-help").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (text) {
+    $("details").hidden = false;
+    $("sw-local-help").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
 async function refreshLocal() {
   const st = await localStatus();
@@ -506,34 +509,40 @@ async function refreshLocal() {
   else cell.textContent = `SOLIDWORKS ${st.sw.version} on this PC, opens in ${st.sw.version}+`;
   return st;
 }
+function sldprtSay(text) { $("sw-local-state").textContent = text; }
+const NO_APP = "The desktop app is not on this PC. Use SOLIDWORKS macro instead, it needs nothing installed";
 $("dl-sldprt").onclick = async () => {
   localHelp(""); fail("");
-  let st = await refreshLocal();
-  if (st.blocked) { localHelp("The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"); return; }
-  if (!st.running) {
-    $("dl-sldprt").disabled = true;
-    busy("Starting the desktop app. Click Open if the browser asks");
-    try { st = await launchLocal(45000, (s) => busy(`Starting the desktop app. Click Open if the browser asks (${s} s left)`)); }
-    finally { busy(""); $("dl-sldprt").disabled = false; }
-    await refreshLocal();
-    if (!st.running) {
-      localHelp(st.blocked
-        ? "The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"
-        : "The desktop app did not start. If the browser never asked to open the app, do step 1 below. If it did, run start.bat and try again");
-      return;
-    }
-  }
-  if (!st.sw.available) { localHelp(st.sw.reason); return; }
-  busy(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
-  $("dl-sldprt").disabled = true;
+  const btn = $("dl-sldprt");
+  btn.disabled = true;
+  btn.textContent = "Checking…";
+  sldprtSay("Looking for the desktop app on this PC");
   try {
+    let st = await localStatus(8000);
+    if (st.blocked) { sldprtSay("Browser blocked local access"); localHelp("The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"); return; }
+    if (!st.running) {
+      btn.textContent = "Starting…";
+      st = await launchLocal(20000, (sec) => sldprtSay(`Starting the desktop app. Click Open if the browser asks (${sec} s)`));
+      if (!st.running) {
+        sldprtSay(st.blocked ? "Browser blocked local access" : "Desktop app not found");
+        localHelp(st.blocked
+          ? "The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"
+          : NO_APP);
+        return;
+      }
+    }
+    if (!st.sw.available) { sldprtSay(st.sw.reason); localHelp(st.sw.reason); return; }
+    btn.textContent = "Building…";
+    sldprtSay(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
+    busy(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
     const r = await localSldprt(state.job.raw);
     download(r.blob, r.name);
-    $("sw-local-state").textContent = r.ok ? `Saved ${r.name}` : r.message;
+    sldprtSay(r.ok ? `Saved ${r.name}` : r.message);
     if (!r.ok) fail(r.message);
   } catch (e) {
-    if (e instanceof LocalError) localHelp(e.message); else fail(`Something went wrong: ${e.message}`);
-  } finally { busy(""); $("dl-sldprt").disabled = false; }
+    if (e instanceof LocalError) { sldprtSay("Could not reach the desktop app"); localHelp(e.message); }
+    else fail(`Something went wrong: ${e.message}`);
+  } finally { busy(""); btn.disabled = false; btn.textContent = "Create"; }
 };
 
 $("to-drawing").onclick = async (e) => {
