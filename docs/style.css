@@ -301,7 +301,7 @@ dialog label{font-weight:500;font-size:14px}
   .rail{flex-direction:row;justify-content:space-around;padding:6px;position:sticky;top:10px;z-index:5;border:1.5px solid var(--edge)}
   .rail-logo{margin:0;width:40px;height:40px}
   .rail-gap{display:none}
-  .rail-btn{width:auto;padding:6px 10px}
+  .rail-btn{width:auto;padding:6px 4px;font-size:11px}
   .inspector{grid-column:auto}
   .tasks,.stage,.inspector{padding:16px}
   .stage-status{position:static;justify-content:center;margin-bottom:6px;flex-wrap:wrap}
@@ -525,3 +525,15 @@ dialog h3{font-size:14px;font-weight:600;margin-top:8px}
 dialog .steps.small{font-size:12.5px;gap:8px}
 .small-btn{display:inline-flex;margin-top:6px;padding:4px 10px;font-size:12px;min-height:0}
 .pro .row.start{flex-wrap:wrap}
+/* first-time guide */
+.guide{position:fixed;inset:0;z-index:1000}
+.guide.dim{background:rgba(30,27,51,.45)}
+.guide-spot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgba(30,27,51,.45);outline:2px solid var(--violet);outline-offset:2px;transition:left .3s var(--ease),top .3s var(--ease),width .3s var(--ease),height .3s var(--ease);pointer-events:none}
+.guide-card{position:fixed;width:min(320px,calc(100vw - 32px));background:#fff;border:2px solid var(--edge);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;animation:taskin .3s var(--ease)}
+.guide-top{display:flex;justify-content:space-between;align-items:center}
+.guide-count{font-size:12px;font-weight:500;color:var(--violet-strong);background:var(--tint);border-radius:999px;padding:2px 10px}
+.guide-x{border:0;background:none;color:var(--text-2);font:inherit;font-size:12.5px;cursor:pointer;padding:4px}
+.guide-x:hover{color:var(--violet-strong)}
+.guide-title{font-size:16px;font-weight:600}
+.guide-text{font-size:13.5px;line-height:1.55;color:var(--text-2)}
+.guide-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}

@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611141850">
+<link rel="stylesheet" href="style.css?v=202611141900">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -35,6 +35,7 @@
     <a class="rail-btn active" href="./" aria-current="page" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
     <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <a class="rail-btn" href="drawing.html" title="2D drawing"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 15.5h17M13 15.5v4M7 8h5v5H7z"/></svg><span>Drawing</span></a>
+    <button id="open-guide" class="rail-btn" type="button" title="First-time guide"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z"/></svg><span>Guide</span></button>
     <span class="rail-gap"></span>
     <a id="open-help" class="rail-btn" href="#sw-setup" title="Open in SOLIDWORKS"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .8-1 1.5v.4M12 16.6v.2"/></svg><span>Help</span></a>
     <button id="open-settings" class="rail-btn" type="button" title="Settings"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg><span>Settings</span></button>
@@ -311,6 +312,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611141850"></script>
+<script type="module" src="app.js?v=202611141900"></script>
 </body>
 </html>
