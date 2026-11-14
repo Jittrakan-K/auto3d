@@ -1,12 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611141700";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141700";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141700";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611141700";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141700";
-import { quickPlan } from "./js/quick.js?v=202611141700";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141700";
-import { task } from "./js/progress.js?v=202611141700";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141700";
+import { Viewer } from "./js/viewer.js?v=202611141800";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141800";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141800";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611141800";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141800";
+import { quickPlan } from "./js/quick.js?v=202611141800";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141800";
+import { task } from "./js/progress.js?v=202611141800";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141800";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -66,7 +66,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611141700"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141800"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -319,13 +319,15 @@ ${chatRules()}`;
 // ---------- where Claude opens ----------
 const PROJECT_STORE = "auto3d.claudeProject", APP_STORE = "auto3d.claudeApp";
 const RULES_VERSION = "2026-11-14";
+// Any claude.ai project link works: /project/<id> or /cowork/project/<id>.
+const PROJECT_RE = /claude\.ai\/((?:[a-z-]+\/)*project\/([0-9a-f-]{36}))/i;
 function projectId() {
-  return (store.get(PROJECT_STORE).match(/project\/([0-9a-f-]{36})/i) || [])[1] || "";
+  return (store.get(PROJECT_STORE).match(PROJECT_RE) || [])[2] || "";
 }
 function claudeUrl() {
   const desktop = store.get(APP_STORE) === "desktop";
-  const id = projectId();
-  const path = id ? `claude.ai/project/${id}` : "claude.ai/new";
+  const m = store.get(PROJECT_STORE).match(PROJECT_RE);
+  const path = m ? `claude.ai/${m[1]}` : "claude.ai/new";
   return desktop ? `claude://${path}` : `https://${path}`;
 }
 
@@ -606,7 +608,7 @@ $("settings-form").onsubmit = (e) => {
     return;
   }
   const project = $("claude-project").value.trim();
-  if (project && !/claude\.ai\/project\/[0-9a-f-]{36}/i.test(project)) {
+  if (project && !PROJECT_RE.test(project)) {
     $("settings-error").textContent = "Paste the project link from the address bar, like https://claude.ai/project/…";
     show($("settings-error"), true);
     return;
