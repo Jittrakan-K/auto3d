@@ -1,12 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611141810";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141810";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141810";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611141810";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141810";
-import { quickPlan } from "./js/quick.js?v=202611141810";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141810";
-import { task } from "./js/progress.js?v=202611141810";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141810";
+import { Viewer } from "./js/viewer.js?v=202611141850";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141850";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141850";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611141850";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141850";
+import { quickPlan } from "./js/quick.js?v=202611141850";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141850";
+import { task } from "./js/progress.js?v=202611141850";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141850";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -66,7 +66,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611141810"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141850"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),

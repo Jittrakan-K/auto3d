@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611141810";
+import { holePoints } from "./plan.js?v=202611141850";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
@@ -422,7 +422,20 @@ export function build(plan) {
         throw new BuildError(step.id, "this extrude added no material; it is fully inside the body");
       }
       const n = solidCount(body);
-      if (n > 1) throw new BuildError(step.id, `the part split into ${n} separate bodies; features must connect into one solid`);
+      if (n > 1) {
+        // Say where the pieces are, so the plan can be corrected without guessing.
+        let pieces = "";
+        try {
+          pieces = body.solids.slice(0, 4).map((p, i) => {
+            const b = bounds(p);
+            return `piece ${i + 1} X ${b[0]}..${b[3]}, Y ${b[1]}..${b[4]}, Z ${b[2]}..${b[5]}`;
+          }).join("; ");
+        } catch { /* sizes are optional */ }
+        const hint = step.kind === "cut"
+          ? "This cut goes all the way across the part. Check its depth (a V groove 90° wide w is w/2 deep), its plane and position, and whether it should really be a through cut"
+          : "This feature does not touch the rest of the part. Check its plane, offset and direction";
+        throw new BuildError(step.id, `the part split into ${n} separate bodies (${pieces}). ${hint}`);
+      }
       step.volume_after = round(volume);
       step.center_after = center.map((v) => round(v));
       step.bbox_after = bounds(body);
