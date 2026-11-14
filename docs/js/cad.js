@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611121912";
+import { holePoints } from "./plan.js?v=202611141530";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
@@ -271,14 +271,54 @@ function range(step, reach) {
   return [-half, half];
 }
 
+// One fillet or chamfer on a set of edges; returns null when the kernel rejects it.
+function finishOn(kind, body, points, size) {
+  const pick = (e) => { const p = e.pointAt(0.5); const q = [p.x, p.y, p.z]; return points.some((m) => dist3(m, q) < 1e-6) ? size : null; };
+  try {
+    const out = kind === "fillet" ? body.fillet(pick) : body.chamfer(pick);
+    if (!out || !isValid(out) || solidCount(out) > 1) return null;
+    const v = massProps(out).volume;
+    return v > 0 ? out : null;
+  } catch { return null; }
+}
+
+// Fillets and chamfers are finishing features: when the whole set fails, keep the edges
+// that work one by one instead of losing the part. Edges are re-found on the new body each time.
+function finish(step, feature, body) {
+  const points = selectEdges(body, feature.edges || {});
+  if (!points.length) return { body, done: [], skipped: 0, none: true };
+  const all = finishOn(step.kind, body, points, step.size);
+  if (all) return { body: all, done: points, skipped: 0 };
+  let cur = body;
+  const done = [];
+  // Straight edges and round edges usually fail for different reasons: try each set whole first.
+  const kinds = selectEdges(body, { kind: "line" }).map(String);
+  const sets = [points.filter((p) => kinds.includes(String(p))), points.filter((p) => !kinds.includes(String(p)))];
+  const rest = [];
+  for (const set of sets) {
+    if (!set.length) continue;
+    const near = set.map((pt) => selectEdges(cur, { near: [pt] })[0]).filter(Boolean);
+    const out = near.length === set.length ? finishOn(step.kind, cur, near, step.size) : null;
+    if (out) { cur = out; done.push(...set); } else rest.push(...set);
+  }
+  for (const pt of rest) {
+    // the edge may have moved slightly after earlier chamfers; find the nearest one on the current body
+    const near = selectEdges(cur, { near: [pt] })[0];
+    if (!near || dist3(near, pt) > Math.max(step.size * 2, 0.05)) continue;
+    const out = finishOn(step.kind, cur, [near], step.size);
+    if (out) { cur = out; done.push(pt); } // the macro picks edges on the body before this step
+  }
+  return { body: cur, done, skipped: points.length - done.length };
+}
+
 function apply(step, feature, body) {
   if (step.kind === "fillet" || step.kind === "chamfer") {
     if (!body) throw new BuildError(step.id, "nothing to fillet yet");
-    const points = selectEdges(body, feature.edges || {});
-    if (!points.length) throw new BuildError(step.id, "the edge selector matched no edges");
-    step.edge_points = points.map((p) => p.map((v) => round(v, 6)));
-    const pick = (e) => { const p = e.pointAt(0.5); const q = [p.x, p.y, p.z]; return points.some((m) => dist3(m, q) < 1e-6) ? step.size : null; };
-    return step.kind === "fillet" ? body.fillet(pick) : body.chamfer(pick);
+    const r = finish(step, feature, body);
+    step.edge_points = r.done.map((p) => p.map((v) => round(v, 6)));
+    step.skipped = r.skipped;
+    step.none = !!r.none;
+    return r.body;
   }
   const pl = makePlane(step.plane, step.offset);
   if (step.kind === "revolve") {
@@ -303,15 +343,69 @@ function apply(step, feature, body) {
   throw new BuildError(step.id, `unknown step kind ${step.kind}`);
 }
 
+// Round holes in the finished part: full concave cylinders, one per axis
+// (a counterbore and its hole share an axis and count once). Slot ends are half
+// cylinders and do not count.
+function countHoles(body) {
+  try {
+    const oc = R.getOC();
+    const groups = new Map();
+    for (const f of body.faces) {
+      if (f.geomType !== "CYLINDRE") continue;
+      const a = new oc.BRepAdaptor_Surface(f.wrapped, true);
+      const cyl = a.Cylinder(), ax = cyl.Axis(), loc = ax.Location(), dir = ax.Direction();
+      let d = [dir.X(), dir.Y(), dir.Z()];
+      const p0 = [loc.X(), loc.Y(), loc.Z()];
+      const span = Math.abs(a.LastUParameter() - a.FirstUParameter()), r = cyl.Radius();
+      const u = (a.FirstUParameter() + a.LastUParameter()) / 2, v = (a.FirstVParameter() + a.LastVParameter()) / 2;
+      const pt = new oc.gp_Pnt();
+      a.D0(u, v, pt);
+      const q = [pt.X(), pt.Y(), pt.Z()];
+      [pt, loc, dir, ax, cyl, a].forEach((o) => o.delete?.());
+      const n = f.normalAt(q);
+      const t = (q[0] - p0[0]) * d[0] + (q[1] - p0[1]) * d[1] + (q[2] - p0[2]) * d[2];
+      const toAxis = [p0[0] + t * d[0] - q[0], p0[1] + t * d[1] - q[1], p0[2] + t * d[2] - q[2]];
+      if (n.x * toAxis[0] + n.y * toAxis[1] + n.z * toAxis[2] <= 0) continue; // a boss, not a hole
+      const i = d.findIndex((c) => Math.abs(c) > 1e-6);
+      if (d[i] < 0) d = d.map((c) => -c);
+      const s0 = p0[0] * d[0] + p0[1] * d[1] + p0[2] * d[2];
+      const foot = p0.map((c, k) => c - s0 * d[k]);
+      const key = [...d, ...foot].map((c) => (Math.round(c * 100) / 100 || 0).toFixed(2)).join(",");
+      const rKey = `${key}|${r.toFixed(3)}`;
+      groups.set(rKey, (groups.get(rKey) || 0) + span);
+    }
+    const axes = new Set();
+    for (const [k, span] of groups) if (span > 2 * Math.PI - 1e-3) axes.add(k.split("|")[0]);
+    return axes.size;
+  } catch (e) { console.warn("hole count", e); return null; }
+}
+
 export function build(plan) {
   if (!R) throw new Error("CAD kernel is not loaded");
   let body = null;
   const steps = [];
+  const warnings = [];
   for (const feature of plan.features) {
     let expanded;
     try { expanded = expand(feature); } catch (e) { throw new BuildError(feature.id, e.message); }
     for (const step of expanded) {
       const before = body ? massProps(body).volume : 0;
+      if ((step.kind === "fillet" || step.kind === "chamfer") && body) {
+        let r;
+        try { r = apply(step, feature, body); } catch (e) { if (e instanceof BuildError) throw e; r = body; step.edge_points = []; step.skipped = 1; }
+        const word = step.kind === "fillet" ? `R${step.size}` : `C${step.size}`;
+        if (step.none) warnings.push(`${step.name}: no edges matched, ${word} left off`);
+        else if (!step.edge_points.length) warnings.push(`${step.name}: ${word} could not be applied, left off`);
+        else if (step.skipped) warnings.push(`${step.name}: ${word} left off ${step.skipped} of ${step.skipped + step.edge_points.length} edges the kernel could not finish`);
+        if (!step.edge_points.length) continue; // nothing changed; keep the body and leave this step out of the macro
+        body = r;
+        const { volume, center } = massProps(body);
+        step.volume_after = round(volume);
+        step.center_after = center.map((v) => round(v));
+        step.bbox_after = bounds(body);
+        steps.push(step);
+        continue;
+      }
       try {
         body = apply(step, feature, body);
       } catch (e) {
@@ -345,6 +439,8 @@ export function build(plan) {
     size: [round(b[3] - b[0], 3), round(b[4] - b[1], 3), round(b[5] - b[2], 3)],
     mass_g: round((volume * plan.density_g_cm3) / 1000, 2),
     faces: body.faces.length,
+    holes: countHoles(body),
+    warnings,
   };
 }
 

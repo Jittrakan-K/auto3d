@@ -7,8 +7,11 @@ PLAN FORMAT (JSON, lengths in mm, any number may instead be a string "=expressio
   "parameters": [{"name": "L", "value": 120, "label": "short English label", "source": "where it came from", "confidence": "high|medium|low"}],
   "features": [ ...features in build order... ],
   "assumptions": ["English text"],
-  "questions": ["English text"]
+  "questions": ["English text"],
+  "check": {"size": [X, Y, Z], "holes": 0}
 }
+
+`check` holds what the drawing or command says: overall size [X, Y, Z] in mm in this plan's orientation, and the number of round holes. The built part is measured against it.
 
 The first feature must be an extrude or a revolve with cut false. Every feature has a unique "id" (F1, F2, ...) and a "name".
 

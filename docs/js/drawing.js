@@ -125,7 +125,14 @@ function projectView(K, shape, view) {
   const grow = (x, y) => { b = [[Math.min(b[0][0], x), Math.min(b[0][1], y)], [Math.max(b[1][0], x), Math.max(b[1][1], y)]]; };
   for (const s of [...visible, ...hidden]) {
     if (s.t === "line") { grow(...s.a); grow(...s.b); }
-    else { grow(s.cx - s.r, s.cy - s.r); grow(s.cx + s.r, s.cy + s.r); }
+    else if (s.t === "circle") { grow(s.cx - s.r, s.cy - s.r); grow(s.cx + s.r, s.cy + s.r); }
+    else {
+      // an arc only reaches the quadrant points inside its sweep
+      const at = (t) => grow(s.cx + s.r * Math.cos(t), s.cy + s.r * Math.sin(t));
+      const lo = Math.min(s.t1, s.t1 + s.dt), hi = Math.max(s.t1, s.t1 + s.dt);
+      at(lo); at(hi);
+      for (let q = Math.ceil(lo / (Math.PI / 2)); q * (Math.PI / 2) <= hi; q++) at(q * (Math.PI / 2));
+    }
   }
   if (!isFinite(b[0][0])) b = [[0, 0], [0, 0]];
   return { visible, hidden, box: b, w: b[1][0] - b[0][0], h: b[1][1] - b[0][1] };
@@ -207,7 +214,24 @@ export function projectAll(K, shape, main = "auto") {
   return v;
 }
 
+// Radii of the cylindrical faces: the real hole and boss sizes, as opposed to the
+// extra circles a chamfer (cone) or fillet (torus) leaves around them.
+function cylinderRadii(K, shape) {
+  const out = [];
+  try {
+    const oc = K.getOC();
+    for (const f of shape.faces) {
+      if (f.geomType !== "CYLINDRE") continue;
+      const a = new oc.BRepAdaptor_Surface(f.wrapped, false), c = a.Cylinder();
+      out.push(c.Radius());
+      c.delete?.(); a.delete?.();
+    }
+  } catch { /* optional; the size rule below still applies */ }
+  return out;
+}
+
 export function makeDrawing(K, shape, opts = {}) {
+  const cylR = cylinderRadii(K, shape);
   const views = opts.views || projectAll(K, shape, opts.main);
   const { sheet, scale } = chooseSheet(views, opts.sheet, opts.scale);
   const [W, H] = SHEETS[sheet];
@@ -291,7 +315,11 @@ export function makeDrawing(K, shape, opts = {}) {
       list.sort((a, b) => a.r - b.r);
       const rMax = list[list.length - 1].r;
       let cluster = [list[0]];
-      const flush = () => { keep.push(cluster.some((c) => c.r === rMax) ? cluster[cluster.length - 1] : cluster[0]); };
+      const flush = () => {
+        const real = cluster.filter((c) => cylR.some((r) => Math.abs(r - c.r) < 1e-3));
+        if (real.length === 1) keep.push(real[0]);
+        else keep.push(cluster.some((c) => c.r === rMax) ? cluster[cluster.length - 1] : cluster[0]);
+      };
       for (let i = 1; i < list.length; i++) {
         if (list[i].r - list[i - 1].r < 1.2) cluster.push(list[i]);
         else { flush(); cluster = [list[i]]; }

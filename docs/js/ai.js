@@ -1,7 +1,7 @@
 // Asks Claude for a plan straight from the browser with the user's own API key,
 // builds it, and sends any failure back so Claude can correct it (same loop as app/ai_planner.py).
-import { parsePlan, PlanError } from "./plan.js?v=202611121912";
-import { build, BuildError } from "./cad.js?v=202611121912";
+import { parsePlan, PlanError } from "./plan.js?v=202611141530";
+import { build, BuildError } from "./cad.js?v=202611141530";
 
 export const MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"];
 const TOOL = "submit_cad_plan";
@@ -11,10 +11,28 @@ const MAX_PDF_BYTES = 30_000_000;
 
 export class AiError extends Error {}
 
+// The size Claude read off the drawing, against the part that was built. Orientation may
+// differ, so the three sizes are compared sorted.
+export function checkPlan(plan, result) {
+  const out = [];
+  const want = plan.check?.size;
+  if (want) {
+    const a = [...want].sort((p, q) => p - q), b = [...result.size].sort((p, q) => p - q);
+    const off = a.some((v, i) => Math.abs(v - b[i]) > Math.max(0.05, v * 0.005));
+    if (off) out.push(`The built part measures ${result.size.join(" x ")} mm but the drawing reads ${want.join(" x ")} mm (X x Y x Z). Recheck the dimensions, planes and offsets`);
+  }
+  const holes = plan.check?.holes;
+  if (holes != null && result.holes != null && holes !== result.holes) {
+    out.push(`The built part has ${result.holes} round holes but the drawing shows ${holes}. Recheck hole counts, positions and the face they start from`);
+  }
+  return out;
+}
+
 export function tryBuild(raw) {
   try {
     const plan = parsePlan(raw);
-    return { plan, result: build(plan) };
+    const result = build(plan);
+    return { plan, result, mismatch: checkPlan(plan, result) };
   } catch (e) {
     if (e instanceof PlanError) return { error: e.message };
     if (e instanceof BuildError) return { error: `Geometry failed at feature ${e.featureId}: ${e.detail}` };
@@ -126,9 +144,9 @@ export async function makePlan({ key, model, system, schema, prompt, blocks, cur
     }
     onStatus(`Checking the plan, attempt ${attempt}`);
     const built = tryBuild(use.input);
-    if (!built.error) return { raw: use.input, ...built, attempts: attempt };
-    lastError = built.error;
-    messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: use.id, is_error: true, content: built.error }] });
+    if (!built.error && (!built.mismatch.length || attempt === MAX_ATTEMPTS)) return { raw: use.input, ...built, attempts: attempt };
+    lastError = built.error || built.mismatch.join(". ");
+    messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: use.id, is_error: true, content: lastError }] });
   }
   throw new AiError(`Still could not build after ${MAX_ATTEMPTS} attempts: ${lastError}`);
 }

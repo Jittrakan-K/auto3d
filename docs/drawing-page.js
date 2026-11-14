@@ -1,5 +1,5 @@
-import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611121912";
-import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611121912";
+import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611141530";
+import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611141530";
 
 const $ = (id) => document.getElementById(id);
 const state = { K: null, shape: null, views: null, name: "", drawing: null };
@@ -17,7 +17,7 @@ function download(blob, name) {
 const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 async function loadKernel() {
-  const K = await import("./vendor/kernel/cad-kernel.js?v=202611121912");
+  const K = await import("./vendor/kernel/cad-kernel.js?v=202611141530");
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   K.setOC(await K.opencascade({ locateFile: () => wasm }));
   state.K = K;

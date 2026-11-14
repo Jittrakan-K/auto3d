@@ -294,7 +294,14 @@ export function parsePlan(raw) {
     throw new PlanError(`The plan could not be read: ${e.message}`);
   }
   const c = new Checker();
-  c.obj(data, "plan", ["name", "description", "density_g_cm3", "parameters", "features", "assumptions", "questions"]);
+  c.obj(data, "plan", ["name", "description", "density_g_cm3", "parameters", "features", "assumptions", "questions", "check"]);
+  if (data.check != null) {
+    if (c.obj(data.check, "check", ["size", "holes"])) {
+      const sz = data.check.size;
+      if (sz != null && !(Array.isArray(sz) && sz.length === 3 && sz.every((v) => typeof v === "number" && v > 0))) c.at("check.size", "must be three positive numbers [X, Y, Z]");
+      if (data.check.holes != null && !(Number.isInteger(data.check.holes) && data.check.holes >= 0)) c.at("check.holes", "must be a whole number");
+    }
+  }
   if (typeof data.name !== "string" || !data.name.length || data.name.length > 80) c.at("name", "must be 1 to 80 characters");
   c.str(data, "description", "plan");
   c.num(data, "density_g_cm3", "plan", { def: 7.85, gt: 0 });

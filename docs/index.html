@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611121912">
+<link rel="stylesheet" href="style.css?v=202611141530">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -103,7 +103,7 @@
       <button id="pro-build" class="btn primary wide" type="button">Build from answer</button>
       <div id="pro-fix" hidden>
         <p id="pro-error" class="error"></p>
-        <button id="pro-copy-error" class="btn" type="button">Copy the error for Claude</button>
+        <button id="pro-copy-error" class="btn" type="button">Copy for Claude</button>
         <p class="muted small">Paste it in the same Claude chat and bring the new answer back</p>
       </div>
       <p id="pro-note" class="busy" role="status" hidden></p>
@@ -228,7 +228,7 @@
       <button id="rebuild" class="btn primary wide" type="button" hidden>Update model</button>
 
       <div id="assume-box" hidden>
-        <h2>Assumptions</h2>
+        <h2>Notes</h2>
         <ul id="assumptions"></ul>
       </div>
 
@@ -298,6 +298,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611121912"></script>
+<script type="module" src="app.js?v=202611141530"></script>
 </body>
 </html>

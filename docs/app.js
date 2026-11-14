@@ -1,11 +1,11 @@
-import { Viewer } from "./js/viewer.js?v=202611121912";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611121912";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611121912";
-import { MODELS, makePlan, toBlocks, tryBuild, AiError } from "./js/ai.js?v=202611121912";
-import { quickPlan } from "./js/quick.js?v=202611121912";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611121912";
-import { task } from "./js/progress.js?v=202611121912";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611121912";
+import { Viewer } from "./js/viewer.js?v=202611141530";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141530";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141530";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141530";
+import { quickPlan } from "./js/quick.js?v=202611141530";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141530";
+import { task } from "./js/progress.js?v=202611141530";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141530";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -65,7 +65,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611121912"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141530"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -133,8 +133,10 @@ async function showJob(raw, plan, result, source) {
 
   show($("questions-box"), plan.questions.length > 0);
   list($("questions"), plan.questions);
-  show($("assume-box"), plan.assumptions.length > 0);
-  list($("assumptions"), plan.assumptions);
+  const notes = [...checkPlan(plan, result).map((m) => `Does not match the drawing: ${m}`),
+    ...(result.warnings || []), ...plan.assumptions];
+  show($("assume-box"), notes.length > 0);
+  list($("assumptions"), notes);
   renderDims(raw, plan);
   list($("features"), plan.features.map((f) => f.name || f.id));
   $("plan-json").value = JSON.stringify(raw, null, 2);
@@ -381,18 +383,30 @@ $("pro-build").onclick = async () => {
   busy("Building the model");
   try {
     const built = tryBuild(raw);
+    state.fixKind = "error";
     if (built.error) { task.fail(built.error); $("pro-error").textContent = built.error; show($("pro-fix"), true); show($("pro-copy-error"), true); return; }
     await showJob(raw, built.plan, built.result,
       $("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "Plan from Claude Pro"));
     $("pro-reply").value = "";
+    if (built.mismatch.length) {
+      // Built, but not what the drawing says: keep the chat open for a correction.
+      $("pro-error").textContent = built.mismatch.join(". ");
+      state.fixKind = "mismatch";
+      show($("pro-fix"), true); show($("pro-copy-error"), true);
+      $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     state.awaitingReply = false;
     state.files = []; renderFiles();
     show($("pro-flow"), false);
   } finally { busy(""); }
 };
 $("pro-copy-error").onclick = () => copyText(
-  `The plan could not be built. Fix it and reply with the complete corrected plan in one \`\`\`json block.\n\n${$("pro-error").textContent}`,
-  "Error copied. Paste it in the same Claude chat"
+  (state.fixKind === "mismatch"
+    ? "The plan built, but the part does not match your reading of the drawing. Read the drawing again, find the mistake and reply with the complete corrected plan in one ```json block, with an updated check."
+    : "The plan could not be built. Fix it and reply with the complete corrected plan in one ```json block.")
+    + `\n\n${$("pro-error").textContent}`,
+  "Copied. Paste it in the same Claude chat"
 );
 
 $("rebuild").onclick = () => buildRaw(state.job.raw, `${(state.job.source || state.job.plan.name).replace(/ \((?:แก้ขนาด|edited)\)$/, "")} (edited)`);

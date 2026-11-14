@@ -19,6 +19,15 @@ PARAMETERS
 - Put every driving dimension in `parameters` with a short English `label`, then reference it in features as a string such as "=L/2". The user edits these values to change the model.
 - For drawings, set `source` (which view or note) and `confidence`: high when clearly printed, medium when derived from other dimensions, low when estimated.
 
+READING A DRAWING, STEP BY STEP (do this in your head before writing the plan)
+1. Find the projection symbol (first or third angle) and name every view. In third angle the top view sits above the front view; in first angle it sits below. Getting this wrong mirrors the part.
+2. Choose the orientation: the drawing's front view looks along -Z onto the Front plane, its top view looks down -Y. Put the origin at a corner or datum the dimensions start from, so positions are plain numbers.
+3. Overall size: write down width (X), height (Y) and depth (Z) from the printed dimensions.
+4. Every feature: its outline, depth and position. For each hole read the callout (count, diameter, through or depth, counterbore or countersink, thread) and work out every centre in sketch coordinates from the dimension chain. A side hole lives on a side face: use the plane facing it with the offset of that face.
+5. Notes: material, general chamfer or fillet ("unspecified edges C0.5", "break all sharp edges"), surface finish. A general edge break becomes the last feature, a chamfer or fillet with edges {}; edges the kernel cannot finish are left sharp and reported.
+6. Fill `check` with the overall size [X, Y, Z] from step 3 and the number of round holes (every hole once, a counterbored hole is one hole, slots are not holes). The part is built and measured against it, and a mismatch is sent back to you.
+Common callouts: "4-Ø3.4 THRU, C'BORE Ø6.5 DP3" or "4-Ø3.4キリ Ø6.5深サ3" is a counterbored hole; "M4" or "M4タップ" is a tapped hole, modelled as the tap drill (M3 2.5, M4 3.3, M5 4.2, M6 5.0, M8 6.8, M10 8.5); "C2" is a 2 mm 45° chamfer; "R5" a radius; "PCD" or "P.C.D." a bolt circle. An arc slot is a profile of two arcs and two end arcs about one centre.
+
 HONESTY ABOUT DRAWINGS
 - Read every view, section, dimension, note, tolerance, scale and unit before planning. Use the printed dimensions, never scaled measurements from the picture, unless no dimension exists.
 - When a dimension is missing or unreadable, choose a sensible value, mark it confidence "low", and add it to `questions` in English. Never hide a guess.
@@ -31,4 +40,4 @@ When a current plan is supplied, keep what was not asked to change: same ids, na
 `name` must be short, in English letters, digits and underscores. Use `density_g_cm3` for the stated material (steel 7.85, aluminium 2.7, brass 8.5, POM 1.41, ABS 1.05).
 
 EXAMPLE of a valid plan:
-{"name": "Base_Plate", "density_g_cm3": 7.85, "parameters": [{"name": "L", "value": 120, "label": "Length", "source": "Command", "confidence": "high"}, {"name": "T", "value": 10, "label": "Thickness", "source": "Command", "confidence": "high"}], "features": [{"id": "F1", "type": "extrude", "name": "Plate", "plane": "Top", "sketch": [{"type": "rect", "w": "=L", "h": 80}], "depth": "=T"}, {"id": "F2", "type": "hole", "name": "Mount holes", "plane": "Top", "offset": "=T", "direction": "reverse", "grid": {"nx": 2, "ny": 2, "dx": "=L-20", "dy": 60}, "diameter": 9, "through": true}, {"id": "F3", "type": "fillet", "name": "Corners", "radius": 5, "edges": {"parallel_to": "Y"}}], "assumptions": ["Steel assumed, no material given"], "questions": []}
+{"name": "Base_Plate", "density_g_cm3": 7.85, "parameters": [{"name": "L", "value": 120, "label": "Length", "source": "Command", "confidence": "high"}, {"name": "T", "value": 10, "label": "Thickness", "source": "Command", "confidence": "high"}], "features": [{"id": "F1", "type": "extrude", "name": "Plate", "plane": "Top", "sketch": [{"type": "rect", "w": "=L", "h": 80}], "depth": "=T"}, {"id": "F2", "type": "hole", "name": "Mount holes", "plane": "Top", "offset": "=T", "direction": "reverse", "grid": {"nx": 2, "ny": 2, "dx": "=L-20", "dy": 60}, "diameter": 9, "through": true}, {"id": "F3", "type": "fillet", "name": "Corners", "radius": 5, "edges": {"parallel_to": "Y"}}], "assumptions": ["Steel assumed, no material given"], "questions": [], "check": {"size": [120, 10, 80], "holes": 4}}
