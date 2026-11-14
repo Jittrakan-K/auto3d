@@ -77,7 +77,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* composer */
 .composer{display:flex;flex-direction:column;gap:10px}
 .composer>label{font-weight:500;font-size:14px}
-textarea,input[type=password],input[type=search],select{width:100%;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--panel);padding:12px 14px;transition:border-color .2s,box-shadow .2s,background .2s}
+textarea,input[type=password],input[type=url],input[type=search],select{width:100%;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--panel);padding:12px 14px;transition:border-color .2s,box-shadow .2s,background .2s}
 textarea{resize:vertical;min-height:96px}
 textarea:focus,input:focus,select:focus{outline:none;border-color:var(--violet-soft);background:#fff;box-shadow:0 0 0 4px var(--tint)}
 .composer-row{display:flex;gap:10px;align-items:stretch}
@@ -518,3 +518,10 @@ input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:10px;ba
 .to-drawing:hover{background:var(--tint)}
 .to-drawing span{display:inline-block;transition:transform .2s var(--ease)}
 .to-drawing:hover span{transform:translateX(3px)}
+/* settings: Claude project */
+dialog{max-height:92vh}
+dialog form{overflow:auto;max-height:92vh}
+dialog h3{font-size:14px;font-weight:600;margin-top:8px}
+dialog .steps.small{font-size:12.5px;gap:8px}
+.small-btn{display:inline-flex;margin-top:6px;padding:4px 10px;font-size:12px;min-height:0}
+.pro .row.start{flex-wrap:wrap}

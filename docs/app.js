@@ -1,11 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611141530";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141530";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141530";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141530";
-import { quickPlan } from "./js/quick.js?v=202611141530";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141530";
-import { task } from "./js/progress.js?v=202611141530";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141530";
+import { Viewer } from "./js/viewer.js?v=202611141700";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141700";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141700";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611141700";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141700";
+import { quickPlan } from "./js/quick.js?v=202611141700";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141700";
+import { task } from "./js/progress.js?v=202611141700";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141700";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -65,7 +66,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611141530"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141700"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -226,11 +227,17 @@ $("brief-form").onsubmit = async (e) => {
   if (!prompt.trim() && !state.files.length) { fail("Type a command or attach a drawing first"); return; }
   if (!state.key) {
     if (state.files.length) {
-      task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
-      await task.step("Copy the request and open Claude", 8, 0);
-      await openPro("Reading a drawing needs Claude. The request is copied and Claude is open in a new tab");
+      const snap = oneStepDrawing();
+      // Clipboard and new tab first, while the click still counts as a user action.
+      if (snap) copyDrawing(snap, "Drawing copied. In Claude press Ctrl+V, then Enter");
+      else copyText(chatPrompt(), "Request copied. In Claude press Ctrl+V, attach the drawing and send");
       openClaude();
-      task.pause("Waiting for Claude", "Paste the request in Claude, attach the drawing and send. Copy the answer and come back here");
+      task.start(prompt.trim() || `Drawing: ${state.files.map((f) => f.name).join(", ")}`);
+      await task.step(snap ? "Copy the drawing and open your Claude project" : "Copy the request and open Claude", 8, 0);
+      openPro("", { copied: true });
+      task.pause("Waiting for Claude", snap
+        ? "In Claude press Ctrl+V and Enter. Click Copy under the answer and come back"
+        : "Paste the request in Claude, attach the drawing and send. Copy the answer and come back here");
       return;
     }
     // Plain parts: read the command here, build, and hand over the STEP file in one click.
@@ -277,13 +284,11 @@ $("brief-form").onsubmit = async (e) => {
 };
 
 // ---------- Claude Pro: copy the request into a chat, paste the answer back ----------
-function chatPrompt() {
+function chatRules() {
   const rules = state.system
     .replace(/and you always deliver it by calling the submit_cad_plan tool\. Never answer with the plan as text\./, "and you reply with the plan as one JSON code block.")
     .replace(/EXAMPLE of a valid plan:[\s\S]*$/, "");
   const example = (state.system.match(/EXAMPLE of a valid plan:\s*([\s\S]*)$/) || [])[1] || "";
-  const current = state.job && $("modify").checked ? `\n\nCURRENT PLAN (change only what the request asks):\n${JSON.stringify(state.job.raw)}` : "";
-  const drawing = state.files.length ? `\n\nThe drawing is attached to this message (${state.files.map((f) => f.name).join(", ")}).` : "";
   return `${rules.trim()}
 
 ${state.chatFormat.trim()}
@@ -291,10 +296,54 @@ ${state.chatFormat.trim()}
 EXAMPLE:
 ${example.trim()}
 
-ANSWER FORMAT: reply with exactly one \`\`\`json code block holding the complete plan, then at most three short lines in English. No other code.${current}${drawing}
+ANSWER FORMAT: reply with exactly one \`\`\`json code block holding the complete plan, then at most three short lines in English. No other code.`;
+}
+
+function chatPrompt() {
+  const current = state.job && $("modify").checked ? `\n\nCURRENT PLAN (change only what the request asks):\n${JSON.stringify(state.job.raw)}` : "";
+  const drawing = state.files.length ? `\n\nThe drawing is attached to this message (${state.files.map((f) => f.name).join(", ")}).` : "";
+  return `${chatRules()}${current}${drawing}
 
 REQUEST:
 ${$("prompt").value.trim() || "Model the part shown in the attached drawing."}`;
+}
+
+// Saved once as the instructions of a Claude project, so a chat there needs only the drawing.
+function projectInstructions() {
+  return `AUTO3D PART PLANNER (rules ${RULES_VERSION})
+Every message in this project is a part to model for the AUTO3D website. A message may be only a drawing (picture or PDF) with no text: model the part in that drawing. A message may also be a command, a correction, or hold a CURRENT PLAN to change.
+
+${chatRules()}`;
+}
+
+// ---------- where Claude opens ----------
+const PROJECT_STORE = "auto3d.claudeProject", APP_STORE = "auto3d.claudeApp";
+const RULES_VERSION = "2026-11-14";
+function projectId() {
+  return (store.get(PROJECT_STORE).match(/project\/([0-9a-f-]{36})/i) || [])[1] || "";
+}
+function claudeUrl() {
+  const desktop = store.get(APP_STORE) === "desktop";
+  const id = projectId();
+  const path = id ? `claude.ai/project/${id}` : "claude.ai/new";
+  return desktop ? `claude://${path}` : `https://${path}`;
+}
+
+// A drawing is pasted as a picture when the project already holds the rules.
+function oneStepDrawing() {
+  return projectId() && state.files.length && state.files.every(canSnap) ? state.files.find(canSnap) : null;
+}
+
+// Must run inside the click: the clipboard only takes a picture during a user action.
+function copyDrawing(file, note) {
+  const png = drawingPng(file);
+  const done = navigator.clipboard.write([new ClipboardItem({ "image/png": png })])
+    .then(() => { if (note) { $("pro-note").textContent = note; show($("pro-note"), true); } })
+    .catch((e) => {
+      $("pro-note").textContent = `The drawing could not be copied (${e.message}). Attach the file in Claude instead`;
+      show($("pro-note"), true);
+    });
+  return done;
 }
 
 async function copyText(text, note) {
@@ -307,10 +356,12 @@ async function copyText(text, note) {
   n.textContent = note; show(n, true);
 }
 
-// Opens a new Claude chat and waits for the answer to come back on the clipboard.
+// Opens Claude (a new chat, or the AUTO3D project) and waits for the answer to come back on the clipboard.
 function openClaude() {
   state.awaitingReply = true;
-  const w = window.open("https://claude.ai/new", "_blank");
+  const url = claudeUrl();
+  if (url.startsWith("claude://")) { window.location.href = url; return; }
+  const w = window.open(url, "_blank");
   if (!w) { $("pro-note").textContent = "The browser blocked the new tab. Click Open Claude instead"; show($("pro-note"), true); }
 }
 
@@ -331,15 +382,33 @@ $("pro-reply").addEventListener("paste", () => setTimeout(() => {
   try { extractPlan($("pro-reply").value); } catch { return; }
   $("pro-build").click();
 }, 0));
-$("pro-open").onclick = () => { state.awaitingReply = true; };
+$("pro-open").onclick = (e) => { e.preventDefault(); openClaude(); };
+$("pro-copy-img").onclick = () => {
+  const f = state.files.find(canSnap);
+  if (f) copyDrawing(f, "Drawing copied. Press Ctrl+V in Claude");
+};
 
-function openPro(reason = "") {
+function proSteps() {
+  const snap = !!oneStepDrawing();
+  const where = projectId() ? "your AUTO3D project" : "a new chat";
+  $("pro-steps").innerHTML = snap
+    ? `<li>Claude opens on ${where} with the drawing copied. Press <b>Ctrl+V</b>, then <b>Enter</b></li>
+       <li>Click <b>Copy</b> under the JSON and come back. The model builds by itself</li>`
+    : `<li>In Claude, press <b>Ctrl+V</b> to paste the request${state.files.length ? ", then click <b>Copy drawing</b> here and press <b>Ctrl+V</b> in Claude again" : ""}, and send</li>
+       <li>Click <b>Copy</b> under the JSON and come back. The model builds by itself</li>`;
+  show($("pro-copy-img"), state.files.some(canSnap));
+  show($("pro-tip"), state.files.length > 0 && !projectId());
+  $("pro-open").href = claudeUrl();
+}
+
+function openPro(reason = "", { copied = false } = {}) {
   show($("pro-flow"), true);
   $("pro-reason").textContent = reason;
   show($("pro-reason"), !!reason);
-  show($("pro-attach"), state.files.length > 0);
   show($("pro-fix"), false);
+  proSteps();
   $("pro-flow").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (copied) return Promise.resolve();
   return copyText(chatPrompt(), state.files.length
     ? "Request copied. In Claude press Ctrl+V, attach the drawing and send"
     : "Request copied. Paste it into a new Claude chat");
@@ -371,6 +440,10 @@ $("pro-build").onclick = async () => {
   task.start($("prompt").value.trim() || (state.files.length ? `Drawing: ${state.files.map((f) => f.name).join(", ")}` : "Plan from Claude Pro"));
   await task.step("Read Claude's answer", 10, 0);
   let raw;
+  if (!$("pro-reply").value.trim()) {
+    // Nothing pasted yet: take Claude's answer from the clipboard (this click allows it).
+    try { $("pro-reply").value = await navigator.clipboard.readText(); } catch { /* the user pastes instead */ }
+  }
   try { raw = extractPlan($("pro-reply").value); }
   catch (e) {
     task.fail(e.message);
@@ -513,10 +586,17 @@ document.querySelectorAll("[data-look]").forEach((b) => {
 function openSettings() {
   show($("settings-error"), false);
   $("remember").checked = !!store.get(KEY_STORE);
+  $("claude-project").value = store.get(PROJECT_STORE);
+  $("claude-app").value = store.get(APP_STORE) || "browser";
   $("settings").showModal();
 }
 $("open-settings").onclick = openSettings;
 $("close-settings").onclick = () => $("settings").close();
+$("copy-instructions").onclick = async () => {
+  try { await navigator.clipboard.writeText(projectInstructions()); $("copy-instructions").textContent = "Copied"; }
+  catch { $("copy-instructions").textContent = "Copy failed"; }
+  setTimeout(() => { $("copy-instructions").textContent = "Copy project instructions"; }, 2000);
+};
 $("settings-form").onsubmit = (e) => {
   e.preventDefault();
   const key = $("api-key").value.trim();
@@ -525,6 +605,14 @@ $("settings-form").onsubmit = (e) => {
     show($("settings-error"), true);
     return;
   }
+  const project = $("claude-project").value.trim();
+  if (project && !/claude\.ai\/project\/[0-9a-f-]{36}/i.test(project)) {
+    $("settings-error").textContent = "Paste the project link from the address bar, like https://claude.ai/project/…";
+    show($("settings-error"), true);
+    return;
+  }
+  store.set(PROJECT_STORE, project);
+  store.set(APP_STORE, $("claude-app").value === "desktop" ? "desktop" : "");
   if (key) state.key = key;
   state.model = $("model").value;
   store.set(MODEL_STORE, state.model);

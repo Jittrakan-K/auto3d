@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#8f86ea">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611141530">
+<link rel="stylesheet" href="style.css?v=202611141700">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -90,16 +90,15 @@
       <h2 id="pro-title">Design with Claude Pro</h2>
       <p id="pro-reason" class="error" hidden></p>
       <p class="muted small">Uses your Claude chat subscription. No API key, no extra cost</p>
-      <ol class="steps">
-        <li>In Claude, press <b>Ctrl+V</b> to paste the copied request<span id="pro-attach" hidden>, attach the drawing</span> and send</li>
-        <li>Click <b>Copy</b> under Claude's answer and come back. The model builds by itself (allow clipboard access if asked)</li>
-      </ol>
+      <ol id="pro-steps" class="steps"></ol>
       <div class="row start">
         <button id="pro-copy" class="btn" type="button">Copy request</button>
+        <button id="pro-copy-img" class="btn" type="button" hidden>Copy drawing</button>
         <a id="pro-open" class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
       </div>
+      <p id="pro-tip" class="muted small" hidden>Set up a Claude project in Settings and a drawing goes over in one paste</p>
       <label for="pro-reply">Claude's answer</label>
-      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="If nothing happens, paste Claude's answer here"></textarea>
+      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="Claude's answer lands here when you come back. Or click Build from answer"></textarea>
       <button id="pro-build" class="btn primary wide" type="button">Build from answer</button>
       <div id="pro-fix" hidden>
         <p id="pro-error" class="error"></p>
@@ -291,6 +290,19 @@
     <label for="model">Model</label>
     <select id="model"></select>
     <p class="muted small">claude-opus-5-5 reads drawings in more detail. claude-sonnet-5-5 is cheaper and faster</p>
+    <h3>Drawings in one paste</h3>
+    <ol class="steps small">
+      <li>In Claude, make a project (or open yours), choose <b>Set project instructions</b>, paste and save <button class="btn small-btn" type="button" id="copy-instructions">Copy project instructions</button></li>
+      <li>Copy the project link from the address bar and paste it below</li>
+    </ol>
+    <label for="claude-project">Claude project link</label>
+    <input id="claude-project" type="url" autocomplete="off" placeholder="https://claude.ai/project/…">
+    <label for="claude-app">Open Claude in</label>
+    <select id="claude-app">
+      <option value="browser">A browser tab</option>
+      <option value="desktop">The Claude desktop app</option>
+    </select>
+    <p class="muted small">After a site update, copy the project instructions again</p>
     <p id="settings-error" class="error" hidden></p>
     <div class="row">
       <button class="btn" type="button" id="close-settings">Close</button>
@@ -298,6 +310,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611141530"></script>
+<script type="module" src="app.js?v=202611141700"></script>
 </body>
 </html>
