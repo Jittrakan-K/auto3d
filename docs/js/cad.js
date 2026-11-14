@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611141900";
+import { holePoints } from "./plan.js?v=202611141920";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
@@ -247,7 +247,8 @@ function expand(f) {
   }
   if (f.type === "hole") {
     const pts = holePoints(f);
-    const out = [{ ...base, kind: "cut", loops: pts.map((p) => [circle(p, f.diameter / 2)]), depth: f.depth || 0, through: !!f.through }];
+    const out = [{ ...base, kind: "cut", loops: pts.map((p) => [circle(p, f.diameter / 2)]), depth: f.depth || 0, through: !!f.through,
+      wizard: holeWizard(f, pts) }];
     if (f.cbore_d) {
       out.push({ ...base, id: `${f.id}_cbore`, kind: "cut", name: `${name} counterbore`, loops: pts.map((p) => [circle(p, f.cbore_d / 2)]), depth: f.cbore_depth });
     }
@@ -261,6 +262,61 @@ function expand(f) {
   if (f.type === "fillet") return [{ ...base, kind: "fillet", size: f.radius }];
   if (f.type === "chamfer") return [{ ...base, kind: "chamfer", size: f.distance }];
   throw new Error(`unknown feature ${f.type}`);
+}
+
+// ---------- SOLIDWORKS Hole Wizard (JIS) ----------
+const JIS_PITCH = { 1.6: 0.35, 2: 0.4, 2.5: 0.45, 3: 0.5, 4: 0.7, 5: 0.8, 6: 1, 8: 1.25, 10: 1.5, 12: 1.75, 14: 2, 16: 2, 20: 2.5, 24: 3 };
+const SCREWS = Object.keys(JIS_PITCH).map(Number).sort((a, b) => a - b);
+const mm = (v) => String(round(v, 3));
+
+// Largest metric screw that passes through a hole of diameter d.
+function screwFor(d) {
+  const s = SCREWS.filter((m) => m <= d - 0.05).pop();
+  return s ? `M${s}` : null;
+}
+
+function threadName(t) {
+  const m = t.trim().match(/^M(\d+(?:\.\d+)?)(?:\s*[xX×]\s*(\d+(?:\.\d+)?))?$/);
+  if (!m) return null;
+  const pitch = m[2] ? Number(m[2]) : JIS_PITCH[Number(m[1])];
+  return pitch ? `M${m[1]}x${pitch}` : null;
+}
+
+// What the macro needs to make this hole with Hole Wizard: type, JIS fastener, size, and
+// where the holes start in model space (mm) with the drilling direction.
+function holeWizard(f, pts) {
+  const pl = PLANES[f.plane];
+  if (!pl) return null;
+  const sgn = f.direction === "reverse" ? -1 : 1;
+  const dir = pl.n.map((v) => v * sgn);
+  const at = pts.map(([u, v]) => [0, 1, 2].map((k) => round(pl.x[k] * u + pl.y[k] * v + pl.n[k] * (f.offset || 0), 6)));
+  const w = { std: 9, through: !!f.through, end: f.end || "up_to_next", dia: f.diameter, depth: f.depth || 0, points: at, dir, vals: Array(12).fill(-1) };
+  if (f.thread) {
+    const size = threadName(f.thread);
+    if (!size) return null;
+    // Tapped hole: Value1 thread depth, Value7 cosmetic thread (with callout), Value8 thread end condition
+    Object.assign(w, { type: 4, fastener: f.tap_type === "standard" ? 164 : 163, size, dia: -1, label: `JIS ${f.tap_type === "standard" ? "tapped" : "bottoming tapped"} hole ${size}` });
+    w.vals[0] = f.through ? -1 : (f.thread_depth || -1);
+    w.vals[6] = 1;
+    w.vals[7] = f.through ? 2 : 0;
+  } else if (f.cbore_d) {
+    const size = f.screw || screwFor(f.diameter);
+    if (!size) return null;
+    Object.assign(w, { type: 0, fastener: 156, size, label: `JIS counterbore ${size}, Ø${mm(f.diameter)} with Ø${mm(f.cbore_d)} x ${mm(f.cbore_depth)}` });
+    w.vals[0] = f.cbore_d; w.vals[1] = f.cbore_depth;
+  } else if (f.csk_d) {
+    const size = f.screw || screwFor(f.diameter);
+    if (!size) return null;
+    Object.assign(w, { type: 1, fastener: 158, size, label: `JIS countersink ${size}, Ø${mm(f.diameter)} with Ø${mm(f.csk_d)} x ${mm(f.csk_angle_deg)}°` });
+    w.vals[0] = f.csk_d; w.vals[1] = -2; // angle, filled in by the macro writer in radians
+    w.csk_angle_deg = f.csk_angle_deg;
+  } else {
+    const size = f.screw || screwFor(f.diameter);
+    if (!size) return null;
+    Object.assign(w, { type: 2, fastener: 161, size, label: `JIS hole Ø${mm(f.diameter)}` });
+  }
+  w.label += f.through ? (w.end === "through_all" ? ", through all" : ", up to next") : `, depth ${mm(f.depth)}`;
+  return w;
 }
 
 function range(step, reach) {

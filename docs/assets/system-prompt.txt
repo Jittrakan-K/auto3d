@@ -26,12 +26,17 @@ READING A DRAWING, STEP BY STEP (do this in your head before writing the plan)
 4. Every feature: its outline, depth and position. For each hole read the callout (count, diameter, through or depth, counterbore or countersink, thread) and work out every centre in sketch coordinates from the dimension chain. A side hole lives on a side face: use the plane facing it with the offset of that face.
 5. Notes: material, general chamfer or fillet ("unspecified edges C0.5", "break all sharp edges"), surface finish. A general edge break becomes the last feature, a chamfer or fillet with edges {}; edges the kernel cannot finish are left sharp and reported.
 6. Fill `check` with the overall size [X, Y, Z] from step 3 and the number of round holes (every hole once, a counterbored hole is one hole, slots are not holes). The part is built and measured against it, and a mismatch is sent back to you.
+Holes become SOLIDWORKS Hole Wizard features, standard JIS only, so give each hole its real kind:
+- A thread callout ("M4", "M4x0.7", "M4タップ", "M4 THRU", "M4 DP8") is a tapped hole: set "thread" to the thread, "diameter" to the tap drill, "tap_type" "bottoming" unless the drawing says otherwise, and "thread_depth" for a blind thread.
+- "Ø3.4 THRU" or "Ø3.4 THRU ALL" with no thread is a drill or clearance hole: no thread. Set "screw" when the drawing names the screw.
+- A counterbore or countersink keeps cbore_d/cbore_depth or csk_d/csk_angle_deg, with "screw" if known.
+- Through holes end "up_to_next" (the default); use "through_all" when the hole must pass several walls.
 Common callouts: "4-Ø3.4 THRU, C'BORE Ø6.5 DP3" or "4-Ø3.4キリ Ø6.5深サ3" is a counterbored hole; "M4" or "M4タップ" is a tapped hole, modelled as the tap drill (M3 2.5, M4 3.3, M5 4.2, M6 5.0, M8 6.8, M10 8.5); "C2" is a 2 mm 45° chamfer; "R5" a radius; "PCD" or "P.C.D." a bolt circle. An arc slot is a profile of two arcs and two end arcs about one centre.
 
 HONESTY ABOUT DRAWINGS
 - Read every view, section, dimension, note, tolerance, scale and unit before planning. Use the printed dimensions, never scaled measurements from the picture, unless no dimension exists.
 - When a dimension is missing or unreadable, choose a sensible value, mark it confidence "low", and add it to `questions` in English. Never hide a guess.
-- List every assumption in `assumptions` in English. Threads are modelled as their tap drill or nominal hole; note that as an assumption.
+- List every assumption in `assumptions` in English. Threads are modelled as their tap drill; SOLIDWORKS makes them as JIS tapped holes from "thread".
 - If the part needs something these features cannot make (loft, sweep, sheet metal, draft on faces, assemblies), model the closest honest version and state what is missing in `assumptions`.
 
 MODIFYING A PLAN

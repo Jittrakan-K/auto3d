@@ -1,13 +1,13 @@
-import { Viewer } from "./js/viewer.js?v=202611141900";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141900";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141900";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611141900";
-import { startGuide, autoGuide } from "./js/guide.js?v=202611141900";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141900";
-import { quickPlan } from "./js/quick.js?v=202611141900";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141900";
-import { task } from "./js/progress.js?v=202611141900";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141900";
+import { Viewer } from "./js/viewer.js?v=202611141920";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611141920";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611141920";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611141920";
+import { startGuide, autoGuide } from "./js/guide.js?v=202611141920";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611141920";
+import { quickPlan } from "./js/quick.js?v=202611141920";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611141920";
+import { task } from "./js/progress.js?v=202611141920";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611141920";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -67,7 +67,7 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611141900"),
+    import("./vendor/kernel/cad-kernel.js?v=202611141920"),
     fetch("assets/macro-helpers.bas").then((r) => r.text()),
     fetch("assets/plan-schema.json").then((r) => r.json()),
     fetch("assets/system-prompt.txt").then((r) => r.text()),
@@ -140,7 +140,10 @@ async function showJob(raw, plan, result, source) {
   show($("assume-box"), notes.length > 0);
   list($("assumptions"), notes);
   renderDims(raw, plan);
-  list($("features"), plan.features.map((f) => f.name || f.id));
+  list($("features"), plan.features.map((f) => {
+    const w = result.steps?.find((s) => s.id === f.id)?.wizard;
+    return w ? `${f.name || f.id} · ${w.label}` : (f.name || f.id);
+  }));
   $("plan-json").value = JSON.stringify(raw, null, 2);
   viewer.load(meshOf(result));
   if (source) {

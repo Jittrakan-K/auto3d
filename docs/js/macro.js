@@ -29,9 +29,31 @@ function entity(s) {
 }
 const expect = (s) => `${num(s.volume_after)}, ${num(s.center_after[0])}, ${num(s.center_after[1])}, ${num(s.center_after[2])}`;
 
-function stepSub(i, step) {
+// Hole Wizard call; falls back to the plain sketch cut written after it when SOLIDWORKS refuses.
+function wizardLine(step, last) {
+  const w = step.wizard;
+  const vals = w.vals.map((v, k) => {
+    if (v === -1) return "-1";
+    if (w.type === 4) return k === 0 ? m(v) : String(v); // thread depth in metres; the rest are codes
+    if (w.type === 1 && k === 1) return num(rad(w.csk_angle_deg));
+    return m(v);
+  }).join(",");
+  const pts = w.points.map((p) => p.map(m).join(",")).join(";");
+  const label = ascii(step.name, step.id);
+  return `    If HoleWiz("${label}", ${w.type}, ${w.fastener}, "${w.size}", ${vb(w.through)}, ${w.end === "through_all" ? 1 : 11}, ` +
+    `${w.dia === -1 ? "-1" : m(w.dia)}, ${w.through ? "0.0" : m(w.depth)}, "${vals}", "${pts}", ${num(w.dir[0])}, ${num(w.dir[1])}, ${num(w.dir[2])}, ${expect(last)}) Then\n` +
+    "        WizFlag 1\n        Exit Sub\n    End If\n    WizFlag 0";
+}
+
+function stepSub(i, step, steps) {
   const label = ascii(step.name, step.id);
   const lines = [`Sub Step${i}()`];
+  if (step.wizard) {
+    const group = steps.filter((s) => s === step || s.id.startsWith(`${step.id}_`));
+    lines.push(wizardLine(step, group[group.length - 1]));
+  } else if (steps.some((s) => s.wizard && step.id.startsWith(`${s.id}_`))) {
+    lines.push("    If WizFlag() Then Exit Sub"); // already made by Hole Wizard with its hole
+  }
   if (step.kind === "fillet" || step.kind === "chamfer") {
     lines.push("    Part.ClearSelection2 True");
     for (const [x, y, z] of step.edge_points) lines.push(`    PickEdge ${m(x)}, ${m(y)}, ${m(z)}`);
@@ -64,7 +86,7 @@ function stepSub(i, step) {
 export function render(steps, partName) {
   const fileName = ascii(partName, "AutoDesign_Part").replaceAll(" ", "_");
   const calls = steps.map((_, i) => `    Step${i + 1}`).join("\n");
-  const subs = steps.map((s, i) => stepSub(i + 1, s)).join("\n\n");
+  const subs = steps.map((s, i) => stepSub(i + 1, s, steps)).join("\n\n");
   const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves ${fileName}.SLDPRT next to this macro.

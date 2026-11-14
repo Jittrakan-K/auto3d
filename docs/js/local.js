@@ -42,13 +42,21 @@ export async function launchLocal(waitMs = 45000, onTick = () => {}) {
   return { running: false };
 }
 
+// The desktop app does not know the web-only fields yet (Hole Wizard details, check).
+function forDesktop(raw) {
+  const plan = JSON.parse(JSON.stringify(raw));
+  delete plan.check;
+  for (const f of plan.features || []) for (const k of ["thread", "tap_type", "thread_depth", "screw", "end"]) delete f[k];
+  return plan;
+}
+
 export async function localSldprt(raw) {
   let r;
   try {
     r = await fetch(`${LOCAL}/api/web/sldprt`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ plan: raw }),
+      body: JSON.stringify({ plan: forDesktop(raw) }),
     });
   } catch {
     throw new LocalError("Could not reach the desktop app. Start start.bat and try again");

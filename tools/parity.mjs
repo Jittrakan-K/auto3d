@@ -27,7 +27,9 @@ for (const [name, py] of Object.entries(ref)) {
     const c = Math.hypot(...s.center_after.map((x, k) => x - p.c[k]));
     if (v > 0.01 || c > 0.01 || s.edge_points.length !== p.edges.length) { bad++; console.log(name, s.id, { v, c }); }
   });
-  const a = M.render(r.steps, plan.name).split("\r\n"), b = py.macro.split("\r\n");
+  // Hole Wizard lines are written by the browser only; the desktop app still cuts holes from sketches.
+  const WIZ = /^(    If HoleWiz\(|        WizFlag 1$|        Exit Sub$|    End If$|    WizFlag 0$|    If WizFlag\(\) Then Exit Sub$)/;
+  const a = M.render(r.steps, plan.name).split("\r\n").filter((l) => !WIZ.test(l)), b = py.macro.split("\r\n").filter((l) => !WIZ.test(l));
   if (a.length !== b.length) { bad++; console.log(name, "macro length differs"); }
   a.forEach((l, i) => {
     const x = l.match(NUM) || [], y = (b[i] || "").match(NUM) || [];

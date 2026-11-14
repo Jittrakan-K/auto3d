@@ -135,6 +135,80 @@ Sub Revolve(label As String, nm As String, isCut As Boolean, ang As Double, expV
     Problems = Problems & label & vbCrLf
 End Sub
 
+Function WizFlag(Optional ByVal v As Integer = -1) As Boolean
+    ' Remembers whether the last hole was made by Hole Wizard, so its counterbore step is skipped.
+    Static made As Boolean
+    If v >= 0 Then made = (v = 1)
+    WizFlag = made
+End Function
+
+Function MatchesLoose(expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
+    ' Hole Wizard uses standard drill and tap sizes and drill points, so allow a little more.
+    Dim mp As Object, c As Variant, v As Double, dx As Double, dy As Double, dz As Double
+    MatchesLoose = False
+    On Error Resume Next
+    Set mp = Part.Extension.CreateMassProperty
+    v = mp.Volume * 1E+09
+    c = mp.CenterOfMass
+    If Err.Number <> 0 Then
+        Err.Clear
+        Exit Function
+    End If
+    On Error GoTo 0
+    dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
+    MatchesLoose = (Abs(v - expV) / expV <= 0.01) And (dx * dx + dy * dy + dz * dz <= 0.25)
+End Function
+
+Function HoleWiz(label As String, gtype As Long, fastener As Long, size As String, thru As Boolean, firstEnd As Long, _
+                 dia As Double, depth As Double, vals As String, pts As String, dx As Double, dy As Double, dz As Double, _
+                 expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
+    ' Hole Wizard, standard JIS (9). Each hole is picked on the face where it starts.
+    ' Through holes try Up To Next (11), then Through All (1).
+    Dim v As Variant, p As Variant, q As Variant, k As Long, tries As Long, endT As Long, f As Object
+    Dim a(11) As Double
+    HoleWiz = False
+    v = Split(vals, ",")
+    For k = 0 To 11
+        a(k) = Val(v(k))
+    Next k
+    p = Split(pts, ";")
+    For tries = 0 To 1
+        If thru Then
+            endT = firstEnd
+            If tries = 1 Then endT = IIf(firstEnd = 11, 1, 11)
+            If gtype = 4 Then a(7) = IIf(endT = 1, 1, 2)
+        Else
+            If tries = 1 Then Exit Function
+            endT = 0
+        End If
+        Part.ClearSelection2 True
+        For k = 0 To UBound(p)
+            q = Split(p(k), ",")
+            Part.Extension.SelectByRay Val(q(0)) - dx * 0.0001, Val(q(1)) - dy * 0.0001, Val(q(2)) - dz * 0.0001, _
+                dx, dy, dz, 0.0002, 2, True, 0, 0
+        Next k
+        Set f = Nothing
+        On Error Resume Next
+        Set f = fm.HoleWizard5(gtype, 9, fastener, size, endT, dia, depth, -1, a(0), a(1), a(2), a(3), a(4), a(5), _
+            a(6), a(7), a(8), a(9), a(10), a(11), "", False, True, True, True, True, False)
+        On Error GoTo 0
+        If Not f Is Nothing Then
+            Part.EditRebuild3
+            If MatchesLoose(expV, ex, ey, ez) Then
+                On Error Resume Next
+                f.Name = label
+                On Error GoTo 0
+                Part.ClearSelection2 True
+                HoleWiz = True
+                Exit Function
+            End If
+            Part.EditUndo2 1
+            Part.EditRebuild3
+        End If
+    Next tries
+    Part.ClearSelection2 True
+End Function
+
 Sub PickEdge(x As Double, y As Double, z As Double)
     ' Pick by geometry so the result does not depend on the current view.
     Dim b As Variant, e As Variant, p As Variant, sd As Object, i As Long

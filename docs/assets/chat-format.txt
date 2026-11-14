@@ -19,7 +19,7 @@ FEATURES
 - extrude: {"id","name","type":"extrude","plane":"Front|Top|Right","offset":0,"sketch":[entities],"depth":>0,"direction":"normal|reverse|both"}
 - cut: {"id","name","type":"cut","plane","offset","sketch":[entities],"depth":>0 OR "through":true,"direction":"normal|reverse|both"}  ("both" only with through)
 - revolve: {"id","name","type":"revolve","plane","sketch":[entities],"axis_a":[x,y],"axis_b":[x,y],"angle_deg":360,"cut":false}
-- hole: {"id","name","type":"hole","plane","offset","direction":"normal|reverse","points":[[x,y],...] and/or "bolt_circle":{"cx","cy","pcd","count","start_deg"} and/or "grid":{"cx","cy","nx","ny","dx","dy"},"diameter","depth" OR "through":true, optional "cbore_d"+"cbore_depth" OR "csk_d"+"csk_angle_deg"}
+- hole: {"id","name","type":"hole","plane","offset","direction":"normal|reverse","points":[[x,y],...] and/or "bolt_circle":{"cx","cy","pcd","count","start_deg"} and/or "grid":{"cx","cy","nx","ny","dx","dy"},"diameter","depth" OR "through":true, optional "cbore_d"+"cbore_depth" OR "csk_d"+"csk_angle_deg", optional "thread":"M4x0.7" (tapped; diameter = tap drill) with "tap_type":"bottoming|standard" and "thread_depth", optional "screw":"M3", optional "end":"up_to_next|through_all"}
 - fillet: {"id","name","type":"fillet","radius","edges":selector}
 - chamfer: {"id","name","type":"chamfer","distance","edges":selector}
 

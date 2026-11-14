@@ -203,7 +203,8 @@ function checkFeature(c, f, path) {
     extrude: ["plane", "offset", "sketch", "depth", "direction"],
     cut: ["plane", "offset", "sketch", "depth", "through", "direction"],
     revolve: ["plane", "sketch", "axis_a", "axis_b", "angle_deg", "cut"],
-    hole: ["plane", "offset", "direction", "points", "bolt_circle", "grid", "diameter", "depth", "through", "cbore_d", "cbore_depth", "csk_d", "csk_angle_deg"],
+    hole: ["plane", "offset", "direction", "points", "bolt_circle", "grid", "diameter", "depth", "through", "cbore_d", "cbore_depth", "csk_d", "csk_angle_deg",
+      "thread", "tap_type", "thread_depth", "screw", "end"],
     fillet: ["radius", "edges"],
     chamfer: ["distance", "edges"],
   }[type];
@@ -266,6 +267,15 @@ function checkFeature(c, f, path) {
     if (has("cbore_d") && has("csk_d")) c.at(path, "a hole cannot be both counterbored and countersunk");
     if (has("cbore_d") && f.cbore_d <= d) c.at(path, "cbore_d must be larger than diameter");
     if (has("csk_d") && f.csk_d <= d) c.at(path, "csk_d must be larger than diameter");
+    // Hole Wizard (JIS) details for SOLIDWORKS
+    if (has("thread")) {
+      if (typeof f.thread !== "string" || !/^M\d+(\.\d+)?(\s*[xX×]\s*\d+(\.\d+)?)?$/.test(f.thread.trim())) c.at(`${path}.thread`, "must be a metric thread like M4 or M4x0.7");
+      if (has("cbore_d") || has("csk_d")) c.at(path, "a tapped hole cannot have a counterbore or countersink");
+    }
+    c.enumOf(f, "tap_type", path, ["bottoming", "standard"], "bottoming");
+    c.num(f, "thread_depth", path, { gt: 0 });
+    if (has("screw") && (typeof f.screw !== "string" || !/^M\d+(\.\d+)?$/.test(f.screw.trim()))) c.at(`${path}.screw`, "must be a screw size like M3");
+    c.enumOf(f, "end", path, ["up_to_next", "through_all"], "up_to_next");
   } else {
     c.num(f, type === "fillet" ? "radius" : "distance", path, { required: true, gt: 0 });
     if (f.edges === undefined) f.edges = {};
