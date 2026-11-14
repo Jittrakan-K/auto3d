@@ -45,9 +45,23 @@ End Sub
 Function EndSketch() As String
     sm.AddToDB = False
     sm.DisplayWhenAdded = True
+    DefineSketch
     sm.InsertSketch True
     EndSketch = Part.FeatureByPositionReverse(0).Name
 End Function
+
+Sub DefineSketch()
+    ' Same as Tools > Dimensions > Fully Define Sketch, measured from the origin, so the
+    ' sketch turns black with its sizes shown. If it fails the sketch is kept as drawn.
+    ' Relations: coincident, horizontal, vertical, tangent, perpendicular, concentric.
+    On Error Resume Next
+    Part.ClearSelection2 True
+    Part.Extension.SelectByID2 "Point1@Origin", "EXTSKETCHPOINT", 0, 0, 0, False, 6, Nothing, 0
+    sm.FullyDefineSketch True, True, 606, True, 1, Nothing, 1, Nothing, 1, 1
+    Part.ClearSelection2 True
+    Err.Clear
+    On Error GoTo 0
+End Sub
 
 Function Matches(expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
     Dim mp As Object, c As Variant, v As Double, dx As Double, dy As Double, dz As Double
