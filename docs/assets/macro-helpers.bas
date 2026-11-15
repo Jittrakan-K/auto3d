@@ -1,4 +1,22 @@
 
+Sub LogLine(t As String)
+    ' Writes AUTO3D_log.txt next to the macro, to see what SOLIDWORKS did at each step.
+    Static started As Boolean
+    Dim fn As Integer, path As String
+    On Error Resume Next
+    path = swApp.GetCurrentMacroPathFolder & "\AUTO3D_log.txt"
+    fn = FreeFile
+    If started Then
+        Open path For Append As #fn
+    Else
+        Open path For Output As #fn
+        started = True
+    End If
+    Print #fn, t
+    Close #fn
+    Err.Clear
+End Sub
+
 Function FindPlanes() As Boolean
     ' Planes(0) faces Z, Planes(1) faces Y, Planes(2) faces X, whatever the template calls
     ' them, so a Z-up template builds the same part as the standard Y-up one.
@@ -9,6 +27,7 @@ Function FindPlanes() As Boolean
             Set Planes(n) = f
             n = n + 1
             nv = PlaneNormal(f)
+            If IsArray(nv) Then LogLine "plane " & f.Name & " normal " & Format(nv(0), "0.00") & ", " & Format(nv(1), "0.00") & ", " & Format(nv(2), "0.00") Else LogLine "plane " & f.Name & " normal unknown"
             If IsArray(nv) Then
                 For k = 0 To 2
                     If Abs(nv(2 - k)) > 0.99 Then Set found(k) = f
@@ -22,6 +41,7 @@ Function FindPlanes() As Boolean
             Set Planes(k) = found(k)
         Next k
     End If
+    LogLine "using " & Planes(0).Name & " (Z), " & Planes(1).Name & " (Y), " & Planes(2).Name & " (X)"
     FindPlanes = (n = 3)
 End Function
 
@@ -72,9 +92,16 @@ Function OffsetPlane(idx As Long, offM As Double) As Object
 End Function
 
 Sub BeginSketch(pl As Object)
+    Dim ok As Boolean
     Part.ClearSelection2 True
-    pl.Select2 False, 0
+    If pl Is Nothing Then
+        LogLine "sketch: no plane"
+    Else
+        ok = pl.Select2(False, 0)
+        LogLine "sketch on " & pl.Name & " selected=" & ok
+    End If
     sm.InsertSketch True
+    LogLine "  active sketch: " & Not (sm.ActiveSketch Is Nothing)
     sm.AddToDB = True
     sm.DisplayWhenAdded = False
     SketchAxes
@@ -101,7 +128,10 @@ Sub SketchAxes()
         Kux = a(0) - o(0): Kuy = a(1) - o(1)
         Kvx = b(0) - o(0): Kvy = b(1) - o(1)
         If Kux * Kvy - Kuy * Kvx < 0 Then KMir = -1
+    Else
+        LogLine "  sketch axes unknown (error " & Err.Number & ")"
     End If
+    LogLine "  axes u=(" & Format(Kux, "0.00") & ", " & Format(Kuy, "0.00") & ") v=(" & Format(Kvx, "0.00") & ", " & Format(Kvy, "0.00") & ") o=(" & Format(Kox * 1000, "0.00") & ", " & Format(Koy * 1000, "0.00") & ")"
     Err.Clear
     On Error GoTo 0
 End Sub
@@ -115,7 +145,7 @@ Function SY(u As Double, v As Double) As Double
 End Function
 
 Sub SkLine(u1 As Double, v1 As Double, u2 As Double, v2 As Double)
-    sm.CreateLine SX(u1, v1), SY(u1, v1), 0, SX(u2, v2), SY(u2, v2), 0
+    If sm.CreateLine(SX(u1, v1), SY(u1, v1), 0, SX(u2, v2), SY(u2, v2), 0) Is Nothing Then LogLine "  line failed"
 End Sub
 
 Sub SkCenterLine(u1 As Double, v1 As Double, u2 As Double, v2 As Double)
@@ -123,18 +153,22 @@ Sub SkCenterLine(u1 As Double, v1 As Double, u2 As Double, v2 As Double)
 End Sub
 
 Sub SkCircle(cu As Double, cv As Double, r As Double)
-    sm.CreateCircleByRadius SX(cu, cv), SY(cu, cv), 0, r
+    If sm.CreateCircleByRadius(SX(cu, cv), SY(cu, cv), 0, r) Is Nothing Then LogLine "  circle failed"
 End Sub
 
 Sub SkArc(cu As Double, cv As Double, au As Double, av As Double, bu As Double, bv As Double, d As Long)
-    sm.CreateArc SX(cu, cv), SY(cu, cv), 0, SX(au, av), SY(au, av), 0, SX(bu, bv), SY(bu, bv), 0, d * KMir
+    If sm.CreateArc(SX(cu, cv), SY(cu, cv), 0, SX(au, av), SY(au, av), 0, SX(bu, bv), SY(bu, bv), 0, d * KMir) Is Nothing Then LogLine "  arc failed"
 End Sub
 
 Function EndSketch() As String
     sm.AddToDB = False
     sm.DisplayWhenAdded = True
+    On Error Resume Next
+    LogLine "  segments: " & sm.ActiveSketch.GetSketchSegmentCount
+    On Error GoTo 0
     sm.InsertSketch True
     EndSketch = Part.FeatureByPositionReverse(0).Name
+    LogLine "  closed as " & EndSketch
 End Function
 
 Sub DefineAllSketches()
@@ -238,6 +272,7 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
             Next c
         Next b
     Next a
+    LogLine "  " & label & ": made=" & made & " got " & got
     If made Then
         Problems = Problems & label & " (got " & got & ", expected " & Format(expV, "0.0") & " mm3 at " & _
             Format(ex, "0.00") & ", " & Format(ey, "0.00") & ", " & Format(ez, "0.00") & ")" & vbCrLf

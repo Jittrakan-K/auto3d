@@ -7,8 +7,8 @@ const MAX_PAGES = 2;
 let pdfjs = null;
 async function loadPdf() {
   if (!pdfjs) {
-    pdfjs = await import("../vendor/pdfjs/pdf.min.mjs?v=202611151205");
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.mjs?v=202611151205", import.meta.url).href;
+    pdfjs = await import("../vendor/pdfjs/pdf.min.mjs?v=202611151215");
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.mjs?v=202611151215", import.meta.url).href;
   }
   return pdfjs;
 }
