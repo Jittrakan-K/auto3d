@@ -266,7 +266,7 @@ Function Matches(expV As Double, ex As Double, ey As Double, ez As Double) As Bo
     On Error GoTo 0
     If Not IsArray(c) Or v <= 0 Then Exit Function
     dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
-    Matches = (Abs(v - expV) / expV <= 0.0005) And (dx * dx + dy * dy + dz * dz <= 0.0025)
+    Matches = (Abs(v - VolAdj - expV) / expV <= 0.0005) And (dx * dx + dy * dy + dz * dz <= 0.0025)
 End Function
 
 Function PickSketch(nm As String) As Boolean
@@ -324,6 +324,14 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
         Problems = Problems & label & " (SOLIDWORKS did not create it, sketch " & nm & ")" & vbCrLf
     End If
 End Sub
+
+Function VolNow() As Double
+    Dim mp As Object
+    On Error Resume Next
+    Set mp = Part.Extension.CreateMassProperty
+    VolNow = mp.Volume * 1E+09
+    Err.Clear
+End Function
 
 Function VolumeNow() As String
     Dim mp As Object
@@ -418,6 +426,8 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
         If Not f Is Nothing Then
             Part.EditRebuild3
             If MatchesLoose(expV, ex, ey, ez) Then
+                ' Standard drill points and sizes change the volume a little; later checks allow for it.
+                VolAdj = VolNow() - expV
                 On Error Resume Next
                 f.Name = label
                 On Error GoTo 0
@@ -438,6 +448,12 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
 End Function
 
 Sub PickEdge(x As Double, y As Double, z As Double)
+    ' Remember the edge for a retry, then select it.
+    EdgePts = EdgePts & Trim(Str(x)) & "," & Trim(Str(y)) & "," & Trim(Str(z)) & ";"
+    PickOne x, y, z
+End Sub
+
+Sub PickOne(x As Double, y As Double, z As Double)
     ' Pick by geometry so the result does not depend on the current view.
     Dim b As Variant, e As Variant, p As Variant, sd As Object, i As Long
     Dim dx As Double, dy As Double, dz As Double
@@ -456,28 +472,83 @@ Sub PickEdge(x As Double, y As Double, z As Double)
     Next i
 End Sub
 
-Sub FinishFillet(label As String, r As Double, expV As Double, ex As Double, ey As Double, ez As Double)
-    Dim a0(0) As Double, v As Variant, f As Object
+Function MakeFinish(isFillet As Boolean, size As Double) As Object
+    Dim a0(0) As Double, v As Variant
     a0(0) = 0
     v = a0
-    Set f = fm.FeatureFillet3(195, r, r, 0, 0, 0, 0, v, v, v, v, v, v, v)
-    Part.EditRebuild3
-    If Matches(expV, ex, ey, ez) Then
-        If Not f Is Nothing Then f.Name = label
+    On Error Resume Next
+    If isFillet Then
+        Set MakeFinish = fm.FeatureFillet3(195, size, size, 0, 0, 0, 0, v, v, v, v, v, v, v)
     Else
-        Problems = Problems & label & vbCrLf
+        Set MakeFinish = fm.InsertFeatureChamfer(6, 1, size, 0.785398163397448, 0, 0, 0, 0)
     End If
+    Err.Clear
+End Function
+
+Sub SelectPts(pts As String)
+    Dim p As Variant, q As Variant, k As Long
+    Part.ClearSelection2 True
+    p = Split(pts, ";")
+    For k = 0 To UBound(p)
+        If p(k) <> "" Then
+            q = Split(p(k), ",")
+            PickOne Val(q(0)), Val(q(1)), Val(q(2))
+        End If
+    Next k
+End Sub
+
+Sub Finish(isFillet As Boolean, label As String, size As Double, expV As Double, ex As Double, ey As Double, ez As Double)
+    ' All picked edges at once. If SOLIDWORKS refuses, keep the edges it accepts one by one
+    ' (tested, then made as one feature) and leave the rest sharp.
+    Dim f As Object, pts As String, keep As String, p As Variant, k As Long, n As Long, skipped As Long
+    pts = EdgePts
+    EdgePts = ""
+    Set f = MakeFinish(isFillet, size)
+    If Not f Is Nothing Then
+        Part.EditRebuild3
+        f.Name = label
+        If Not Matches(expV, ex, ey, ez) Then LogLine "  " & label & ": made, volume " & VolumeNow()
+        Exit Sub
+    End If
+    LogLine "  " & label & ": refused for all edges, trying one by one"
+    p = Split(pts, ";")
+    For k = 0 To UBound(p)
+        If p(k) <> "" Then
+            n = n + 1
+            SelectPts keep & p(k) & ";"
+            Set f = MakeFinish(isFillet, size)
+            If f Is Nothing Then
+                skipped = skipped + 1
+            Else
+                keep = keep & p(k) & ";"
+                Part.ClearSelection2 True
+                f.Select2 False, 0
+                Part.Extension.DeleteSelection2 0
+                Part.EditRebuild3
+            End If
+        End If
+    Next k
+    Part.ClearSelection2 True
+    If keep <> "" Then
+        SelectPts keep
+        Set f = MakeFinish(isFillet, size)
+        Part.EditRebuild3
+        If Not f Is Nothing Then f.Name = label
+    End If
+    If keep = "" Or f Is Nothing Then
+        Problems = Problems & label & " (SOLIDWORKS refused every edge)" & vbCrLf
+    ElseIf skipped > 0 Then
+        Problems = Problems & label & " (left sharp on " & skipped & " of " & n & " edges)" & vbCrLf
+    End If
+    Part.ClearSelection2 True
+End Sub
+
+Sub FinishFillet(label As String, r As Double, expV As Double, ex As Double, ey As Double, ez As Double)
+    Finish True, label, r, expV, ex, ey, ez
 End Sub
 
 Sub FinishChamfer(label As String, d As Double, expV As Double, ex As Double, ey As Double, ez As Double)
-    Dim f As Object
-    Set f = fm.InsertFeatureChamfer(6, 1, d, 0.785398163397448, 0, 0, 0, 0)
-    Part.EditRebuild3
-    If Matches(expV, ex, ey, ez) Then
-        If Not f Is Nothing Then f.Name = label
-    Else
-        Problems = Problems & label & vbCrLf
-    End If
+    Finish False, label, d, expV, ex, ey, ez
 End Sub
 '''
 
@@ -567,7 +638,7 @@ def render(steps: list[Step], part_name: str, quiet: bool = False) -> str:
     file_name = _ascii(part_name, "AutoDesign_Part").replace(" ", "_")
     calls = "\n".join(f"    Step{i}" for i in range(1, len(steps) + 1))
     subs = "\n\n".join(_step_sub(i, s) for i, s in enumerate(steps, 1))
-    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15f)
+    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15g)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves {file_name}.SLDPRT next to this macro.
 Option Explicit
@@ -579,6 +650,7 @@ Dim Planes(2) As Object
 Dim Problems As String
 Dim CurPlane As Long
 Dim Kox As Double, Koy As Double, Kux As Double, Kuy As Double, Kvx As Double, Kvy As Double, KMir As Long
+Dim EdgePts As String, VolAdj As Double
 
 Sub main()
     Dim tpl As String, folder As String, target As String
