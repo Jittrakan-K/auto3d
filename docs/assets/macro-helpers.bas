@@ -54,13 +54,15 @@ End Function
 
 Function PlaneNormal(pf As Object) As Variant
     ' Normal of a reference plane in model space, or Empty
-    Dim mu As Object, v As Object
+    Dim mu As Object, v As Object, a As Variant
     On Error Resume Next
     Set mu = swApp.GetMathUtility
     Set v = mu.CreateVector(D3(0, 0, 1))
     Set v = v.MultiplyTransform(pf.GetSpecificFeature2.Transform)
-    PlaneNormal = v.ArrayData
-    If Abs(PlaneNormal(0)) + Abs(PlaneNormal(1)) + Abs(PlaneNormal(2)) < 0.5 Then PlaneNormal = Empty
+    a = v.ArrayData
+    If IsArray(a) Then
+        If Abs(a(0)) + Abs(a(1)) + Abs(a(2)) > 0.5 Then PlaneNormal = a
+    End If
     Err.Clear
 End Function
 
