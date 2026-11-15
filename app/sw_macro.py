@@ -57,14 +57,22 @@ Function FindPlanes() As Boolean
     FindPlanes = (n = 3)
 End Function
 
+Function D3(a As Double, b As Double, c As Double) As Variant
+    ' SOLIDWORKS math objects need a real Double array; Array() gives Variants and reads as zeros.
+    Dim d(2) As Double
+    d(0) = a: d(1) = b: d(2) = c
+    D3 = d
+End Function
+
 Function PlaneNormal(pf As Object) As Variant
     ' Normal of a reference plane in model space, or Empty
     Dim mu As Object, v As Object
     On Error Resume Next
     Set mu = swApp.GetMathUtility
-    Set v = mu.CreateVector(Array(0#, 0#, 1#))
+    Set v = mu.CreateVector(D3(0, 0, 1))
     Set v = v.MultiplyTransform(pf.GetSpecificFeature2.Transform)
     PlaneNormal = v.ArrayData
+    If Abs(PlaneNormal(0)) + Abs(PlaneNormal(1)) + Abs(PlaneNormal(2)) < 0.5 Then PlaneNormal = Empty
     Err.Clear
 End Function
 
@@ -72,7 +80,7 @@ Function PlaneOrigin(pf As Object) As Variant
     Dim mu As Object, p As Object
     On Error Resume Next
     Set mu = swApp.GetMathUtility
-    Set p = mu.CreatePoint(Array(0#, 0#, 0#))
+    Set p = mu.CreatePoint(D3(0, 0, 0))
     Set p = p.MultiplyTransform(pf.GetSpecificFeature2.Transform)
     PlaneOrigin = p.ArrayData
     Err.Clear
@@ -123,16 +131,16 @@ Sub SketchAxes()
     ' How this plan's sketch axes (u, v) land in the SOLIDWORKS sketch:
     ' Front u=X v=Y, Top u=X v=-Z, Right u=-Z v=Y.
     Dim mu As Object, xf As Object, o As Variant, a As Variant, b As Variant, uu As Variant, vv As Variant
-    Dim us As Variant, vs As Variant
-    us = Array(Array(1#, 0#, 0#), Array(1#, 0#, 0#), Array(0#, 0#, -1#))
-    vs = Array(Array(0#, 1#, 0#), Array(0#, 0#, -1#), Array(0#, 1#, 0#))
-    uu = us(CurPlane)
-    vv = vs(CurPlane)
+    Select Case CurPlane
+        Case 0: uu = D3(1, 0, 0): vv = D3(0, 1, 0)
+        Case 1: uu = D3(1, 0, 0): vv = D3(0, 0, -1)
+        Case Else: uu = D3(0, 0, -1): vv = D3(0, 1, 0)
+    End Select
     Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1: KMir = 1
     On Error Resume Next
     Set mu = swApp.GetMathUtility
     Set xf = sm.ActiveSketch.ModelToSketchTransform
-    o = mu.CreatePoint(Array(0#, 0#, 0#)).MultiplyTransform(xf).ArrayData
+    o = mu.CreatePoint(D3(0, 0, 0)).MultiplyTransform(xf).ArrayData
     a = mu.CreatePoint(uu).MultiplyTransform(xf).ArrayData
     b = mu.CreatePoint(vv).MultiplyTransform(xf).ArrayData
     If Err.Number = 0 And IsArray(o) And IsArray(a) And IsArray(b) Then
@@ -140,6 +148,11 @@ Sub SketchAxes()
         Kux = a(0) - o(0): Kuy = a(1) - o(1)
         Kvx = b(0) - o(0): Kvy = b(1) - o(1)
         If Kux * Kvy - Kuy * Kvx < 0 Then KMir = -1
+        If Abs(Kux * Kvy - Kuy * Kvx) < 0.5 Then
+            ' not a usable mapping: keep the sketch axes as they are
+            Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1: KMir = 1
+            LogLine "  sketch axes not usable, kept as drawn"
+        End If
     Else
         LogLine "  sketch axes unknown (error " & Err.Number & ")"
     End If
@@ -535,7 +548,7 @@ def render(steps: list[Step], part_name: str, quiet: bool = False) -> str:
     file_name = _ascii(part_name, "AutoDesign_Part").replace(" ", "_")
     calls = "\n".join(f"    Step{i}" for i in range(1, len(steps) + 1))
     subs = "\n\n".join(_step_sub(i, s) for i, s in enumerate(steps, 1))
-    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15d)
+    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15e)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves {file_name}.SLDPRT next to this macro.
 Option Explicit
