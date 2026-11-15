@@ -339,7 +339,7 @@ dialog label{font-weight:500;font-size:14px}
 .log-facts{display:flex;flex-wrap:wrap;gap:4px 20px;margin:0}
 .log-facts dt{font-size:11.5px;color:var(--muted)}
 .log-facts dd{margin:0;font-size:13.5px;font-variant-numeric:tabular-nums}
-.log-acts{grid-column:2;display:flex;gap:8px}
+.log-acts{grid-column:2;display:flex;flex-wrap:wrap;gap:8px}
 .log-acts .btn{min-height:36px;font-size:13.5px}
 .log-empty{margin-top:24px;padding:48px 16px;text-align:center;border:1.5px dashed var(--dash);border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted)}
 @media (max-width:860px){

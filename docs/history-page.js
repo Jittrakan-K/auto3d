@@ -1,4 +1,4 @@
-import { loadHistory, saveHistory, removeEntry } from "./js/history.js?v=202611151050";
+import { loadHistory, saveHistory, removeEntry } from "./js/history.js?v=202611151110";
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("en-US", { maximumFractionDigits: d });
@@ -43,7 +43,12 @@ function render() {
       del.dataset.armed = "1"; del.textContent = "Click again to delete"; del.classList.add("danger");
       setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = "Delete"; del.classList.remove("danger"); } }, 3000);
     };
-    acts.append(open, del);
+    // Downloads open the part in the builder, rebuild it there and save the file.
+    const macro = el("a", "btn", "SOLIDWORKS macro");
+    macro.href = `./?open=${encodeURIComponent(e.id)}&get=macro`;
+    const step = el("a", "btn", "STEP");
+    step.href = `./?open=${encodeURIComponent(e.id)}&get=step`;
+    acts.append(open, macro, step, del);
     li.append(pic, body, acts);
     return li;
   }));

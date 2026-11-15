@@ -1,13 +1,13 @@
-import { Viewer } from "./js/viewer.js?v=202611151050";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611151050";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611151050";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611151050";
-import { startGuide, autoGuide } from "./js/guide.js?v=202611151050";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611151050";
-import { quickPlan } from "./js/quick.js?v=202611151050";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611151050";
-import { task } from "./js/progress.js?v=202611151050";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611151050";
+import { Viewer } from "./js/viewer.js?v=202611151110";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611151110";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611151110";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611151110";
+import { startGuide, autoGuide } from "./js/guide.js?v=202611151110";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611151110";
+import { quickPlan } from "./js/quick.js?v=202611151110";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611151110";
+import { task } from "./js/progress.js?v=202611151110";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611151110";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -67,12 +67,12 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611151050"),
-    fetch("assets/macro-helpers.bas?v=202611151050").then((r) => r.text()),
-    fetch("assets/plan-schema.json?v=202611151050").then((r) => r.json()),
-    fetch("assets/system-prompt.txt?v=202611151050").then((r) => r.text()),
+    import("./vendor/kernel/cad-kernel.js?v=202611151110"),
+    fetch("assets/macro-helpers.bas?v=202611151110").then((r) => r.text()),
+    fetch("assets/plan-schema.json?v=202611151110").then((r) => r.json()),
+    fetch("assets/system-prompt.txt?v=202611151110").then((r) => r.text()),
   ]);
-  state.chatFormat = await fetch("assets/chat-format.txt?v=202611151050").then((r) => r.text());
+  state.chatFormat = await fetch("assets/chat-format.txt?v=202611151110").then((r) => r.text());
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   const oc = await K.opencascade({ locateFile: () => wasm });
   K.setOC(oc);
@@ -639,13 +639,17 @@ $("settings-form").onsubmit = (e) => {
 
 // history.html links here with ?open=<id>
 function openFromHistory() {
-  const id = new URLSearchParams(location.search).get("open");
+  const q = new URLSearchParams(location.search);
+  const id = q.get("open"), get = q.get("get");
   if (!id) return;
   history.replaceState(null, "", location.pathname);
   const entry = getEntry(id);
   if (!entry) { fail("This part is no longer in the history"); return; }
   state.job = { source: entry.source };
-  buildRaw(structuredClone(entry.raw), null, entry.source || entry.name);
+  buildRaw(structuredClone(entry.raw), null, entry.source || entry.name).then(() => {
+    const btn = { macro: "dl-sw", step: "dl-step" }[get];
+    if (btn && !$(btn).disabled) $(btn).click();
+  });
 }
 
 (async () => {

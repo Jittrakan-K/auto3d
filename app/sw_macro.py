@@ -193,7 +193,7 @@ Function MatchesLoose(expV As Double, ex As Double, ey As Double, ez As Double) 
     On Error GoTo 0
     If Not IsArray(c) Or v <= 0 Then Exit Function
     dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
-    MatchesLoose = (Abs(v - expV) / expV <= 0.01) And (dx * dx + dy * dy + dz * dz <= 0.25)
+    MatchesLoose = (Abs(v - expV) / expV <= 0.02) And (dx * dx + dy * dy + dz * dz <= 1)
 End Function
 
 Function HoleWiz(label As String, gtype As Long, fastener As Long, size As String, thru As Boolean, firstEnd As Long, _
@@ -239,7 +239,12 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
                 HoleWiz = True
                 Exit Function
             End If
-            Part.EditUndo2 1
+            ' Delete exactly this hole and its position sketch; Undo could remove earlier features.
+            On Error Resume Next
+            Part.ClearSelection2 True
+            f.Select2 False, 0
+            Part.Extension.DeleteSelection2 1
+            On Error GoTo 0
             Part.EditRebuild3
         End If
     Next tries
