@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { OrbitControls } from "../vendor/OrbitControls.js?v=202611151225";
-import { RoomEnvironment } from "../vendor/RoomEnvironment.js?v=202611151225";
+import { OrbitControls } from "../vendor/OrbitControls.js?v=202611151340";
+import { RoomEnvironment } from "../vendor/RoomEnvironment.js?v=202611151340";
 
 // Directions follow SOLIDWORKS (Y up). Third angle layout: top above front, right beside it.
 const DIRS = {

@@ -114,42 +114,59 @@ Sub BeginSketch(pl As Object)
     LogLine "  active sketch: " & Not (sm.ActiveSketch Is Nothing)
     sm.AddToDB = True
     sm.DisplayWhenAdded = False
-    SketchAxes
+    SketchAxes pl
 End Sub
 
-Sub SketchAxes()
-    ' How this plan's sketch axes (u, v) land in the SOLIDWORKS sketch:
-    ' Front u=X v=Y, Top u=X v=-Z, Right u=-Z v=Y.
-    Dim mu As Object, xf As Object, o As Variant, a As Variant, b As Variant, uu As Variant, vv As Variant
+Sub SketchAxes(pl As Object)
+    ' How this plan's sketch axes (u, v) land in the SOLIDWORKS sketch.
+    ' Plan: Front u=X v=Y, Top u=X v=-Z, Right u=-Z v=Y (model X, Y, Z).
+    ' A sketch on a plane uses that plane's own x and y axes, read from its transform.
+    Dim uu As Variant, vv As Variant, ax As Variant, ay As Variant, o As Variant, d As Double
     Select Case CurPlane
         Case 0: uu = D3(1, 0, 0): vv = D3(0, 1, 0)
         Case 1: uu = D3(1, 0, 0): vv = D3(0, 0, -1)
         Case Else: uu = D3(0, 0, -1): vv = D3(0, 1, 0)
     End Select
     Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1: KMir = 1
-    On Error Resume Next
-    Set mu = swApp.GetMathUtility
-    Set xf = sm.ActiveSketch.ModelToSketchTransform
-    o = mu.CreatePoint(D3(0, 0, 0)).MultiplyTransform(xf).ArrayData
-    a = mu.CreatePoint(uu).MultiplyTransform(xf).ArrayData
-    b = mu.CreatePoint(vv).MultiplyTransform(xf).ArrayData
-    If Err.Number = 0 And IsArray(o) And IsArray(a) And IsArray(b) Then
-        Kox = o(0): Koy = o(1)
-        Kux = a(0) - o(0): Kuy = a(1) - o(1)
-        Kvx = b(0) - o(0): Kvy = b(1) - o(1)
-        If Kux * Kvy - Kuy * Kvx < 0 Then KMir = -1
-        If Abs(Kux * Kvy - Kuy * Kvx) < 0.5 Then
-            ' not a usable mapping: keep the sketch axes as they are
-            Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1: KMir = 1
+    ax = PlaneAxis(pl, 1, 0, 0)
+    ay = PlaneAxis(pl, 0, 1, 0)
+    o = PlaneOrigin(pl)
+    If IsArray(ax) And IsArray(ay) And IsArray(o) Then
+        LogLine "  plane x=(" & Format(ax(0), "0.00") & ", " & Format(ax(1), "0.00") & ", " & Format(ax(2), "0.00") & ") y=(" & _
+            Format(ay(0), "0.00") & ", " & Format(ay(1), "0.00") & ", " & Format(ay(2), "0.00") & ")"
+        Kux = Dot3(uu, ax): Kuy = Dot3(uu, ay)
+        Kvx = Dot3(vv, ax): Kvy = Dot3(vv, ay)
+        Kox = -Dot3(o, ax): Koy = -Dot3(o, ay)
+        d = Kux * Kvy - Kuy * Kvx
+        If Abs(d) < 0.5 Then
             LogLine "  sketch axes not usable, kept as drawn"
+            Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1
+        ElseIf d < 0 Then
+            KMir = -1
         End If
     Else
-        LogLine "  sketch axes unknown (error " & Err.Number & ")"
+        LogLine "  plane axes unknown, kept as drawn"
     End If
     LogLine "  axes u=(" & Format(Kux, "0.00") & ", " & Format(Kuy, "0.00") & ") v=(" & Format(Kvx, "0.00") & ", " & Format(Kvy, "0.00") & ") o=(" & Format(Kox * 1000, "0.00") & ", " & Format(Koy * 1000, "0.00") & ")"
-    Err.Clear
-    On Error GoTo 0
 End Sub
+
+Function PlaneAxis(pf As Object, x As Double, y As Double, z As Double) As Variant
+    ' One axis of a reference plane in model space, or Empty
+    Dim mu As Object, v As Object, a As Variant
+    On Error Resume Next
+    Set mu = swApp.GetMathUtility
+    Set v = mu.CreateVector(D3(x, y, z))
+    Set v = v.MultiplyTransform(pf.GetSpecificFeature2.Transform)
+    a = v.ArrayData
+    If IsArray(a) Then
+        If Abs(a(0)) + Abs(a(1)) + Abs(a(2)) > 0.5 Then PlaneAxis = a
+    End If
+    Err.Clear
+End Function
+
+Function Dot3(a As Variant, b As Variant) As Double
+    Dot3 = a(0) * b(0) + a(1) * b(1) + a(2) * b(2)
+End Function
 
 Function SX(u As Double, v As Double) As Double
     SX = Kox + u * Kux + v * Kvx
