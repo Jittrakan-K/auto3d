@@ -23,9 +23,9 @@ const vb = (f) => (f ? "True" : "False");
 const rad = (deg) => (deg * Math.PI) / 180;
 
 function entity(s) {
-  if (s.t === "line") return `    sm.CreateLine ${m(s.a[0])}, ${m(s.a[1])}, 0, ${m(s.b[0])}, ${m(s.b[1])}, 0`;
-  if (s.t === "circle") return `    sm.CreateCircleByRadius ${m(s.c[0])}, ${m(s.c[1])}, 0, ${m(s.r)}`;
-  return `    sm.CreateArc ${m(s.c[0])}, ${m(s.c[1])}, 0, ${m(s.a[0])}, ${m(s.a[1])}, 0, ${m(s.b[0])}, ${m(s.b[1])}, 0, ${s.ccw ? 1 : -1}`;
+  if (s.t === "line") return `    SkLine ${m(s.a[0])}, ${m(s.a[1])}, ${m(s.b[0])}, ${m(s.b[1])}`;
+  if (s.t === "circle") return `    SkCircle ${m(s.c[0])}, ${m(s.c[1])}, ${m(s.r)}`;
+  return `    SkArc ${m(s.c[0])}, ${m(s.c[1])}, ${m(s.a[0])}, ${m(s.a[1])}, ${m(s.b[0])}, ${m(s.b[1])}, ${s.ccw ? 1 : -1}`;
 }
 const expect = (s) => `${num(s.volume_after)}, ${num(s.center_after[0])}, ${num(s.center_after[1])}, ${num(s.center_after[2])}`;
 
@@ -64,7 +64,7 @@ function stepSub(i, step, steps) {
     for (const loop of step.loops) for (const s of loop) lines.push(entity(s));
     if (step.axis) {
       const [[ax, ay], [bx, by]] = step.axis;
-      lines.push(`    sm.CreateCenterLine ${m(ax)}, ${m(ay)}, 0, ${m(bx)}, ${m(by)}, 0`);
+      lines.push(`    SkCenterLine ${m(ax)}, ${m(ay)}, ${m(bx)}, ${m(by)}`);
     }
     lines.push("    nm = EndSketch()");
     if (step.kind === "revolve") {
@@ -87,7 +87,7 @@ export function render(steps, partName) {
   const fileName = ascii(partName, "AutoDesign_Part").replaceAll(" ", "_");
   const calls = steps.map((_, i) => `    Step${i + 1}`).join("\n");
   const subs = steps.map((s, i) => stepSub(i + 1, s, steps)).join("\n\n");
-  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15b)
+  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15c)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves ${fileName}.SLDPRT next to this macro.
 Option Explicit
@@ -97,6 +97,8 @@ Dim fm As Object
 Dim sm As Object
 Dim Planes(2) As Object
 Dim Problems As String
+Dim CurPlane As Long
+Dim Kox As Double, Koy As Double, Kux As Double, Kuy As Double, Kvx As Double, Kvy As Double, KMir As Long
 
 Sub main()
     Dim tpl As String, folder As String, target As String

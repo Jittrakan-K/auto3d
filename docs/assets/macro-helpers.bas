@@ -1,25 +1,74 @@
 
 Function FindPlanes() As Boolean
-    Dim f As Object, n As Long
+    ' Planes(0) faces Z, Planes(1) faces Y, Planes(2) faces X, whatever the template calls
+    ' them, so a Z-up template builds the same part as the standard Y-up one.
+    Dim f As Object, n As Long, k As Long, nv As Variant, found(2) As Object
     Set f = Part.FirstFeature
     Do While Not f Is Nothing And n < 3
         If f.GetTypeName2 = "RefPlane" Then
             Set Planes(n) = f
             n = n + 1
+            nv = PlaneNormal(f)
+            If IsArray(nv) Then
+                For k = 0 To 2
+                    If Abs(nv(2 - k)) > 0.99 Then Set found(k) = f
+                Next k
+            End If
         End If
         Set f = f.GetNextFeature
     Loop
+    If Not found(0) Is Nothing And Not found(1) Is Nothing And Not found(2) Is Nothing Then
+        For k = 0 To 2
+            Set Planes(k) = found(k)
+        Next k
+    End If
     FindPlanes = (n = 3)
 End Function
 
+Function PlaneNormal(pf As Object) As Variant
+    ' Normal of a reference plane in model space, or Empty
+    Dim mu As Object, v As Object
+    On Error Resume Next
+    Set mu = swApp.GetMathUtility
+    Set v = mu.CreateVector(Array(0#, 0#, 1#))
+    Set v = v.MultiplyTransform(pf.GetSpecificFeature2.Transform)
+    PlaneNormal = v.ArrayData
+    Err.Clear
+End Function
+
+Function PlaneOrigin(pf As Object) As Variant
+    Dim mu As Object, p As Object
+    On Error Resume Next
+    Set mu = swApp.GetMathUtility
+    Set p = mu.CreatePoint(Array(0#, 0#, 0#))
+    Set p = p.MultiplyTransform(pf.GetSpecificFeature2.Transform)
+    PlaneOrigin = p.ArrayData
+    Err.Clear
+End Function
+
 Function OffsetPlane(idx As Long, offM As Double) As Object
+    Dim pl As Object, o As Variant
+    CurPlane = idx
     If offM <= 0 Then
         Set OffsetPlane = Planes(idx)
         Exit Function
     End If
     Part.ClearSelection2 True
     Planes(idx).Select2 False, 0
-    Set OffsetPlane = fm.InsertRefPlane(8, offM, 0, 0, 0, 0)
+    Set pl = fm.InsertRefPlane(8, offM, 0, 0, 0, 0)
+    ' The offset goes along the template plane's own normal; put it on the +X/+Y/+Z side.
+    o = PlaneOrigin(pl)
+    If IsArray(o) Then
+        If o(2 - idx) < 0 Then
+            Part.ClearSelection2 True
+            pl.Select2 False, 0
+            Part.Extension.DeleteSelection2 0
+            Part.ClearSelection2 True
+            Planes(idx).Select2 False, 0
+            Set pl = fm.InsertRefPlane(8 + 256, offM, 0, 0, 0, 0)
+        End If
+    End If
+    Set OffsetPlane = pl
 End Function
 
 Sub BeginSketch(pl As Object)
@@ -28,6 +77,57 @@ Sub BeginSketch(pl As Object)
     sm.InsertSketch True
     sm.AddToDB = True
     sm.DisplayWhenAdded = False
+    SketchAxes
+End Sub
+
+Sub SketchAxes()
+    ' How this plan's sketch axes (u, v) land in the SOLIDWORKS sketch:
+    ' Front u=X v=Y, Top u=X v=-Z, Right u=-Z v=Y.
+    Dim mu As Object, xf As Object, o As Variant, a As Variant, b As Variant, uu As Variant, vv As Variant
+    Dim us As Variant, vs As Variant
+    us = Array(Array(1#, 0#, 0#), Array(1#, 0#, 0#), Array(0#, 0#, -1#))
+    vs = Array(Array(0#, 1#, 0#), Array(0#, 0#, -1#), Array(0#, 1#, 0#))
+    uu = us(CurPlane)
+    vv = vs(CurPlane)
+    Kox = 0: Koy = 0: Kux = 1: Kuy = 0: Kvx = 0: Kvy = 1: KMir = 1
+    On Error Resume Next
+    Set mu = swApp.GetMathUtility
+    Set xf = sm.ActiveSketch.ModelToSketchTransform
+    o = mu.CreatePoint(Array(0#, 0#, 0#)).MultiplyTransform(xf).ArrayData
+    a = mu.CreatePoint(uu).MultiplyTransform(xf).ArrayData
+    b = mu.CreatePoint(vv).MultiplyTransform(xf).ArrayData
+    If Err.Number = 0 And IsArray(o) And IsArray(a) And IsArray(b) Then
+        Kox = o(0): Koy = o(1)
+        Kux = a(0) - o(0): Kuy = a(1) - o(1)
+        Kvx = b(0) - o(0): Kvy = b(1) - o(1)
+        If Kux * Kvy - Kuy * Kvx < 0 Then KMir = -1
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Function SX(u As Double, v As Double) As Double
+    SX = Kox + u * Kux + v * Kvx
+End Function
+
+Function SY(u As Double, v As Double) As Double
+    SY = Koy + u * Kuy + v * Kvy
+End Function
+
+Sub SkLine(u1 As Double, v1 As Double, u2 As Double, v2 As Double)
+    sm.CreateLine SX(u1, v1), SY(u1, v1), 0, SX(u2, v2), SY(u2, v2), 0
+End Sub
+
+Sub SkCenterLine(u1 As Double, v1 As Double, u2 As Double, v2 As Double)
+    sm.CreateCenterLine SX(u1, v1), SY(u1, v1), 0, SX(u2, v2), SY(u2, v2), 0
+End Sub
+
+Sub SkCircle(cu As Double, cv As Double, r As Double)
+    sm.CreateCircleByRadius SX(cu, cv), SY(cu, cv), 0, r
+End Sub
+
+Sub SkArc(cu As Double, cv As Double, au As Double, av As Double, bu As Double, bv As Double, d As Long)
+    sm.CreateArc SX(cu, cv), SY(cu, cv), 0, SX(au, av), SY(au, av), 0, SX(bu, bv), SY(bu, bv), 0, d * KMir
 End Sub
 
 Function EndSketch() As String
@@ -139,7 +239,8 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
         Next b
     Next a
     If made Then
-        Problems = Problems & label & " (volume " & got & " mm3, expected " & Format(expV, "0.0") & ")" & vbCrLf
+        Problems = Problems & label & " (got " & got & ", expected " & Format(expV, "0.0") & " mm3 at " & _
+            Format(ex, "0.00") & ", " & Format(ey, "0.00") & ", " & Format(ez, "0.00") & ")" & vbCrLf
     Else
         Problems = Problems & label & " (SOLIDWORKS did not create it, sketch " & nm & ")" & vbCrLf
     End If
@@ -150,7 +251,10 @@ Function VolumeNow() As String
     VolumeNow = "none"
     On Error Resume Next
     Set mp = Part.Extension.CreateMassProperty
-    VolumeNow = Format(mp.Volume * 1E+09, "0.0")
+    Dim c As Variant
+    c = mp.CenterOfMass
+    VolumeNow = Format(mp.Volume * 1E+09, "0.0") & " mm3 at " & Format(c(0) * 1000, "0.00") & ", " & _
+        Format(c(1) * 1000, "0.00") & ", " & Format(c(2) * 1000, "0.00")
     Err.Clear
 End Function
 
