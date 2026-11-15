@@ -33,22 +33,45 @@ End Sub
 Function EndSketch() As String
     sm.AddToDB = False
     sm.DisplayWhenAdded = True
-    DefineSketch
     sm.InsertSketch True
     EndSketch = Part.FeatureByPositionReverse(0).Name
 End Function
 
-Sub DefineSketch()
-    ' Same as Tools > Dimensions > Fully Define Sketch, measured from the origin, so the
-    ' sketch turns black with its sizes shown. If it fails the sketch is kept as drawn.
+Sub DefineAllSketches()
+    ' After the part is built and checked: Tools > Dimensions > Fully Define Sketch on every
+    ' sketch, measured from the origin, so sketches turn black with their sizes shown.
     ' Relations: coincident, horizontal, vertical, tangent, perpendicular, concentric.
+    ' Any sketch that cannot be defined is left as drawn.
+    Dim f As Object, s As Object
     On Error Resume Next
+    Set f = Part.FirstFeature
+    Do While Not f Is Nothing
+        If f.GetTypeName2 = "ProfileFeature" Then DefineOne f
+        Set s = f.GetFirstSubFeature
+        Do While Not s Is Nothing
+            If s.GetTypeName2 = "ProfileFeature" Then DefineOne s
+            Set s = s.GetNextSubFeature
+        Loop
+        Set f = f.GetNextFeature
+    Loop
+    Part.ClearSelection2 True
+    Part.EditRebuild3
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Sub DefineOne(sk As Object)
+    On Error Resume Next
+    Part.ClearSelection2 True
+    If Not sk.Select2(False, 0) Then Exit Sub
+    Part.EditSketch
+    If sm.ActiveSketch Is Nothing Then Exit Sub
     Part.ClearSelection2 True
     Part.Extension.SelectByID2 "Point1@Origin", "EXTSKETCHPOINT", 0, 0, 0, False, 6, Nothing, 0
     sm.FullyDefineSketch True, True, 606, True, 1, Nothing, 1, Nothing, 1, 1
     Part.ClearSelection2 True
+    sm.InsertSketch True
     Err.Clear
-    On Error GoTo 0
 End Sub
 
 Function Matches(expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
@@ -63,6 +86,7 @@ Function Matches(expV As Double, ex As Double, ey As Double, ez As Double) As Bo
         Exit Function
     End If
     On Error GoTo 0
+    If Not IsArray(c) Or v <= 0 Then Exit Function
     dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
     Matches = (Abs(v - expV) / expV <= 0.0005) And (dx * dx + dy * dy + dz * dz <= 0.0025)
 End Function
@@ -155,6 +179,7 @@ Function MatchesLoose(expV As Double, ex As Double, ey As Double, ez As Double) 
         Exit Function
     End If
     On Error GoTo 0
+    If Not IsArray(c) Or v <= 0 Then Exit Function
     dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
     MatchesLoose = (Abs(v - expV) / expV <= 0.01) And (dx * dx + dy * dy + dz * dz <= 0.25)
 End Function

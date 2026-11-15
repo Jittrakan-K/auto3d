@@ -115,6 +115,7 @@ Sub main()
         Exit Sub
     End If
 ${calls}
+    DefineAllSketches
     Part.ClearSelection2 True
     Part.EditRebuild3
     folder = swApp.GetCurrentMacroPathFolder
