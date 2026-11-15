@@ -112,7 +112,7 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
           dang As Double, t0 As Long, startM As Double, firstDir As Boolean, _
           expV As Double, ex As Double, ey As Double, ez As Double)
     Dim f As Object, a As Long, b As Long, c As Long, dirFlag As Boolean, fs As Boolean, dOut As Boolean
-    Dim useDraft As Boolean, nA As Long, nB As Long
+    Dim useDraft As Boolean, nA As Long, nB As Long, made As Boolean, got As String
     useDraft = (dang > 0)
     nA = 0: If t0 = 3 Then nA = 1
     nB = 0: If useDraft Then nB = 1
@@ -135,6 +135,7 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
                 End If
                 On Error GoTo 0
                 If Not f Is Nothing Then
+                    made = True
                     Part.EditRebuild3
                     If Matches(expV, ex, ey, ez) Then
                         On Error Resume Next
@@ -142,14 +143,28 @@ Sub Solid(label As String, nm As String, isCut As Boolean, sd As Boolean, t1 As 
                         On Error GoTo 0
                         Exit Sub
                     End If
+                    got = VolumeNow()
                     Part.EditUndo2 1
                     Part.EditRebuild3
                 End If
             Next c
         Next b
     Next a
-    Problems = Problems & label & vbCrLf
+    If made Then
+        Problems = Problems & label & " (volume " & got & " mm3, expected " & Format(expV, "0.0") & ")" & vbCrLf
+    Else
+        Problems = Problems & label & " (SOLIDWORKS did not create it, sketch " & nm & ")" & vbCrLf
+    End If
 End Sub
+
+Function VolumeNow() As String
+    Dim mp As Object
+    VolumeNow = "none"
+    On Error Resume Next
+    Set mp = Part.Extension.CreateMassProperty
+    VolumeNow = Format(mp.Volume * 1E+09, "0.0")
+    Err.Clear
+End Function
 
 Sub Revolve(label As String, nm As String, isCut As Boolean, ang As Double, expV As Double, ex As Double, ey As Double, ez As Double)
     Dim f As Object, c As Long
@@ -256,6 +271,7 @@ Sub PickEdge(x As Double, y As Double, z As Double)
     Dim b As Variant, e As Variant, p As Variant, sd As Object, i As Long
     Dim dx As Double, dy As Double, dz As Double
     b = Part.GetBodies2(0, False)
+    If Not IsArray(b) Then Exit Sub ' no solid yet: an earlier feature failed
     e = b(0).GetEdges
     Set sd = Part.SelectionManager.CreateSelectData
     sd.Mark = 1
@@ -380,7 +396,7 @@ def render(steps: list[Step], part_name: str, quiet: bool = False) -> str:
     file_name = _ascii(part_name, "AutoDesign_Part").replace(" ", "_")
     calls = "\n".join(f"    Step{i}" for i in range(1, len(steps) + 1))
     subs = "\n\n".join(_step_sub(i, s) for i, s in enumerate(steps, 1))
-    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018
+    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15b)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves {file_name}.SLDPRT next to this macro.
 Option Explicit
