@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611162235";
+import { holePoints } from "./plan.js?v=202611162245";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
@@ -271,8 +271,9 @@ const mm = (v) => String(round(v, 3));
 
 // Largest metric screw that passes through a hole of diameter d.
 function screwFor(d) {
-  const s = SCREWS.filter((m) => m <= d - 0.05).pop();
-  return s ? `M${s}` : null;
+  // Holes smaller than any screw still use Hole Wizard: smallest size with the exact diameter.
+  const s = SCREWS.filter((m) => m <= d - 0.05).pop() || SCREWS[0];
+  return `M${s}`;
 }
 
 function threadName(t) {
