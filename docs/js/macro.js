@@ -87,7 +87,7 @@ export function render(steps, partName) {
   const fileName = ascii(partName, "AutoDesign_Part").replaceAll(" ", "_");
   const calls = steps.map((_, i) => `    Step${i + 1}`).join("\n");
   const subs = steps.map((s, i) => stepSub(i + 1, s, steps)).join("\n\n");
-  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-15g)
+  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-16b)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves ${fileName}.SLDPRT next to this macro.
 Option Explicit

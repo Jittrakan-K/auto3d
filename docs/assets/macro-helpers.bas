@@ -360,6 +360,39 @@ Function WizFlag(Optional ByVal v As Integer = -1) As Boolean
     WizFlag = made
 End Function
 
+Sub AddHolePoints(f As Object, p As Variant)
+    ' Put the remaining hole centres (model x,y,z in metres) into the Hole Wizard position sketch.
+    Dim s As Object, sk As Object, xf As Object, mu As Object, a As Variant, q As Variant, k As Long, n As Long
+    On Error Resume Next
+    Set s = f.GetFirstSubFeature
+    Do While Not s Is Nothing
+        If s.GetTypeName2 = "ProfileFeature" Then Exit Do
+        Set s = s.GetNextSubFeature
+    Loop
+    If s Is Nothing Then
+        LogLine "  hole positions: no position sketch"
+        Exit Sub
+    End If
+    Set sk = s.GetSpecificFeature2
+    Set xf = sk.ModelToSketchTransform
+    Set mu = swApp.GetMathUtility
+    Part.ClearSelection2 True
+    s.Select2 False, 0
+    Part.EditSketch
+    sm.AddToDB = True
+    For k = 1 To UBound(p)
+        q = Split(p(k), ",")
+        a = mu.CreatePoint(D3(Val(q(0)), Val(q(1)), Val(q(2)))).MultiplyTransform(xf).ArrayData
+        If Not sm.CreatePoint(a(0), a(1), 0) Is Nothing Then n = n + 1
+    Next k
+    sm.AddToDB = False
+    sm.InsertSketch True
+    Part.ClearSelection2 True
+    Part.ForceRebuild3 False
+    LogLine "  hole positions: 1 + " & n & " of " & UBound(p)
+    Err.Clear
+End Sub
+
 Function MatchesLoose(expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
     ' Hole Wizard uses standard drill and tap sizes and drill points, so allow a little more.
     Dim mp As Object, c As Variant, v As Double, dx As Double, dy As Double, dz As Double
@@ -375,7 +408,7 @@ Function MatchesLoose(expV As Double, ex As Double, ey As Double, ez As Double) 
     On Error GoTo 0
     If Not IsArray(c) Or v <= 0 Then Exit Function
     dx = c(0) * 1000 - ex: dy = c(1) * 1000 - ey: dz = c(2) * 1000 - ez
-    MatchesLoose = (Abs(v - expV) / expV <= 0.02) And (dx * dx + dy * dy + dz * dz <= 1)
+    MatchesLoose = (Abs(v - expV) / expV <= 0.005) And (dx * dx + dy * dy + dz * dz <= 0.25)
 End Function
 
 Function HoleWiz(label As String, gtype As Long, fastener As Long, size As String, thru As Boolean, firstEnd As Long, _
@@ -400,18 +433,18 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
             If tries = 1 Then Exit Function
             endT = 0
         End If
+        ' Hole Wizard takes one position from the selection; the others are added to its sketch.
         Part.ClearSelection2 True
-        For k = 0 To UBound(p)
-            q = Split(p(k), ",")
-            Part.Extension.SelectByRay Val(q(0)) - dx * 0.0001, Val(q(1)) - dy * 0.0001, Val(q(2)) - dz * 0.0001, _
-                dx, dy, dz, 0.0002, 2, True, 0, 0
-        Next k
+        q = Split(p(0), ",")
+        Part.Extension.SelectByRay Val(q(0)) - dx * 0.0001, Val(q(1)) - dy * 0.0001, Val(q(2)) - dz * 0.0001, _
+            dx, dy, dz, 0.0002, 2, False, 0, 0
         Set f = Nothing
         On Error Resume Next
         Set f = fm.HoleWizard5(gtype, 9, fastener, size, endT, dia, depth, -1, a(0), a(1), a(2), a(3), a(4), a(5), _
             a(6), a(7), a(8), a(9), a(10), a(11), "", False, True, True, True, True, False)
         On Error GoTo 0
         If Not f Is Nothing Then
+            If UBound(p) > 0 Then AddHolePoints f, p
             Part.EditRebuild3
             If MatchesLoose(expV, ex, ey, ez) Then
                 ' Standard drill points and sizes change the volume a little; later checks allow for it.

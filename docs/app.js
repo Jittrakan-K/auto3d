@@ -1,13 +1,13 @@
-import { Viewer } from "./js/viewer.js?v=202611151405";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611151405";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611151405";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611151405";
-import { startGuide, autoGuide } from "./js/guide.js?v=202611151405";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611151405";
-import { quickPlan } from "./js/quick.js?v=202611151405";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611151405";
-import { task } from "./js/progress.js?v=202611151405";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611151405";
+import { Viewer } from "./js/viewer.js?v=202611162235";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611162235";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611162235";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611162235";
+import { startGuide, autoGuide } from "./js/guide.js?v=202611162235";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611162235";
+import { quickPlan } from "./js/quick.js?v=202611162235";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611162235";
+import { task } from "./js/progress.js?v=202611162235";
+import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611162235";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -67,12 +67,12 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611151405"),
-    fetch("assets/macro-helpers.bas?v=202611151405").then((r) => r.text()),
-    fetch("assets/plan-schema.json?v=202611151405").then((r) => r.json()),
-    fetch("assets/system-prompt.txt?v=202611151405").then((r) => r.text()),
+    import("./vendor/kernel/cad-kernel.js?v=202611162235"),
+    fetch("assets/macro-helpers.bas?v=202611162235").then((r) => r.text()),
+    fetch("assets/plan-schema.json?v=202611162235").then((r) => r.json()),
+    fetch("assets/system-prompt.txt?v=202611162235").then((r) => r.text()),
   ]);
-  state.chatFormat = await fetch("assets/chat-format.txt?v=202611151405").then((r) => r.text());
+  state.chatFormat = await fetch("assets/chat-format.txt?v=202611162235").then((r) => r.text());
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   const oc = await K.opencascade({ locateFile: () => wasm });
   K.setOC(oc);
@@ -140,10 +140,13 @@ async function showJob(raw, plan, result, source) {
   show($("assume-box"), notes.length > 0);
   list($("assumptions"), notes);
   renderDims(raw, plan);
-  list($("features"), plan.features.map((f) => {
-    const w = result.steps?.find((s) => s.id === f.id)?.wizard;
-    return w ? `${f.name || f.id} · ${w.label}` : (f.name || f.id);
-  }));
+  // Same-face holes are built as one feature; list what was actually built.
+  const built = [];
+  for (const s of result.steps || []) {
+    if (built.some((b) => s.id.startsWith(`${b.id}_`))) continue; // counterbore or countersink of a hole
+    built.push({ id: s.id, label: s.wizard ? `${s.name} · ${s.wizard.label}` : s.name });
+  }
+  list($("features"), built.length ? built.map((b) => b.label) : plan.features.map((f) => f.name || f.id));
   $("plan-json").value = JSON.stringify(raw, null, 2);
   viewer.load(meshOf(result));
   if (source) {

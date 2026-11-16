@@ -1,7 +1,7 @@
 // Builds a plan into a real B-rep solid with OpenCASCADE (replicad, WebAssembly).
 // Same behaviour as app/cad_engine.py: each feature becomes primitive steps, and every
 // step records the volume and centre of mass the SOLIDWORKS macro must reproduce.
-import { holePoints } from "./plan.js?v=202611151405";
+import { holePoints } from "./plan.js?v=202611162235";
 
 let R = null;
 export function useKernel(replicad) { R = replicad; }
@@ -436,12 +436,49 @@ function countHoles(body) {
   } catch (e) { console.warn("hole count", e); return null; }
 }
 
+// Holes of the same kind that start on the same face become one feature, like one
+// Hole Wizard feature with several positions in SOLIDWORKS. Only holes separated by
+// other cuts are joined, so nothing that adds material is skipped over.
+const HOLE_KEYS = ["plane", "offset", "direction", "diameter", "depth", "through", "cbore_d", "cbore_depth", "csk_d", "csk_angle_deg",
+  "thread", "tap_type", "thread_depth", "screw", "end"];
+function holeKey(f) {
+  return JSON.stringify(HOLE_KEYS.map((k) => (typeof f[k] === "number" ? round(f[k], 6) : f[k] ?? null)));
+}
+function holeName(names, n) {
+  const base = names[0].replace(/\s*\d+$/, "").trim();
+  const same = names.every((x) => x.replace(/\s*\d+$/, "").trim() === base);
+  return `${same ? base : names[0]} x${n}`;
+}
+export function mergeHoles(features) {
+  const out = [];
+  for (const f of features) {
+    if (f.type === "hole") {
+      const key = holeKey(f);
+      let target = null;
+      for (let i = out.length - 1; i >= 0; i--) {
+        const g = out[i];
+        if (g.type === "hole" && holeKey(g) === key) { target = g; break; }
+        if (g.type !== "hole" && g.type !== "cut") break; // material added in between: keep apart
+      }
+      if (target) {
+        target.points = [...holePoints(target), ...holePoints(f)];
+        delete target.bolt_circle; delete target.grid;
+        target.merged = [...(target.merged || [target.name || target.id]), f.name || f.id];
+        target.name = holeName(target.merged, target.points.length);
+        continue;
+      }
+      out.push({ ...f });
+    } else out.push(f);
+  }
+  return out;
+}
+
 export function build(plan) {
   if (!R) throw new Error("CAD kernel is not loaded");
   let body = null;
   const steps = [];
   const warnings = [];
-  for (const feature of plan.features) {
+  for (const feature of mergeHoles(plan.features)) {
     let expanded;
     try { expanded = expand(feature); } catch (e) { throw new BuildError(feature.id, e.message); }
     for (const step of expanded) {
