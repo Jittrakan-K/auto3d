@@ -9,18 +9,18 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#8f86ea">
+<meta name="theme-color" content="#f6f6f9">
 <meta name="description" content="Turn a STEP file into a 2D drawing with views, dimensions and a title block">
-<link rel="stylesheet" href="style.css?v=202611200930">
+<link rel="stylesheet" href="style.css?v=202611201000">
 </head>
 <body class="drawing-page">
 <div class="app">
   <nav class="rail" aria-label="Main menu">
     <a class="rail-logo" href="./" aria-label="AUTO3D home"><img src="favicon.svg" width="34" height="34" alt=""></a>
     <a class="rail-btn" href="./" title="New part"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>New</span></a>
+    <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <a class="rail-btn active" href="drawing.html" aria-current="page" title="2D drawing"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 15.5h17M13 15.5v4M7 8h5v5H7z"/></svg><span>Drawing</span></a>
     <a class="rail-btn" href="./?guide" title="First-time guide"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5z"/></svg><span>Guide</span></a>
-    <a class="rail-btn" href="history.html" title="History"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>History</span></a>
     <span class="rail-gap"></span>
   </nav>
 
@@ -56,14 +56,14 @@
     </form>
   </section>
 
-  <section class="stage" aria-label="Drawing preview">
+  <main class="stage" aria-label="Drawing preview">
     <header class="stage-head">
       <div class="stage-status"><span id="dw-status" class="state wait">Loading engine</span></div>
       <h2 class="stage-heading"><span id="dw-heading" class="stage-title">Drawing preview</span></h2>
       <p id="dw-sub" class="stage-sub">Choose a STEP file to lay out its front, top, right and isometric views</p>
     </header>
     <div class="frame sheet-frame">
-      <div class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="dw-sheet-label" class="muted small"></span></div>
+      <div class="frame-bar"><span id="dw-sheet-label" class="muted small"></span></div>
       <div id="dw-preview" class="sheet-preview">
         <div class="empty"><svg class="draw-cube" viewBox="0 0 120 120" width="112" height="112" aria-hidden="true"><path class="e e1" d="M60 14L100 36 60 58 20 36Z"/><path class="e e2" d="M20 36v46l40 23V58"/><path class="e e3" d="M100 36v46l-40 23"/><path class="face" d="M60 58l40-22v46l-40 23Z"/></svg><p>Your drawing will appear here</p></div>
       </div>
@@ -85,7 +85,7 @@
         <button id="dw-svg" class="btn" type="button" disabled>Download</button>
       </div>
     </div>
-  </section>
+  </main>
 
   <aside class="inspector" aria-label="Details">
     <h2>On the sheet</h2>
@@ -114,6 +114,6 @@
     </div>
   </aside>
 </div>
-<script type="module" src="drawing-page.js?v=202611200930"></script>
+<script type="module" src="drawing-page.js?v=202611201000"></script>
 </body>
 </html>

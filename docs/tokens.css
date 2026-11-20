@@ -1,0 +1,43 @@
+:root {
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  /* app type scale, 1.125 to 1.2 steps; dense on purpose: the builder fits one window */
+  --text-xs: 12px; --text-sm: 13px; --text-md: 14px; --text-lg: 16px; --text-xl: 18px; --text-2xl: 22px; --text-3xl: 26px;
+  --text-display-s: 22px; --text-display: 26px; --text-section: 16px; --text-title: 14px; --text-lead: 14px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: #b42f2f; --color-error-bg: #fbeaea;
+  --color-success: #187a4c; --color-success-bg: #e8f5ee;
+  --color-flag: #fff3d1; --color-flag-ink: #6b4e00;
+  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+
+  /* brand: the logo's violet (#6b5ce7) is the one accent; everything else is a quiet neutral */
+  --color-paper: #f6f6f9;      /* the window behind the columns */
+  --color-paper-2: #ffffff;    /* columns and dialogs */
+  --color-paper-3: #f0eff5;    /* wells: inputs, stats, the frame bar */
+  --color-ink: #17151f;
+  --color-ink-2: #4a4758;
+  --color-muted: #6b6879;
+  --color-rule: #e6e4ee;
+  --color-rule-strong: #d6d3e2;
+  --color-accent: #6b5ce7;
+  --color-accent-hover: #5b4bdb;
+  --color-accent-ink: #ffffff;
+  --color-accent-text: #5546d1;
+  --color-accent-soft: #efedfd;
+  --color-accent-line: #c9c2f7;
+  --color-focus: #5b4bdb;
+  --color-scrim: rgb(23 21 31 / 0.45);
+  --color-scrim-soft: rgb(23 21 31 / 0.3);
+  --color-glass: rgb(255 255 255 / 0.88);
+
+  --font-display: "Inter", "Plex Thai", "Leelawadee UI", Tahoma, ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", "Plex Thai", "Leelawadee UI", Tahoma, ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: var(--font-body);
+  --display-weight: 600;
+
+  --radius-card: 12px; --radius-control: 8px; --radius-small: 6px; --radius-pill: 999px;
+  --rule-hair: 1px; --shadow-card: none;
+  --shadow-float: 0 12px 32px -12px rgb(23 21 31 / 0.28);
+  --tracking-display: -0.01em;
+}

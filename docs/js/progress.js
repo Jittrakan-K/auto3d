@@ -27,7 +27,7 @@ function setPill(kind, text) {
 
 function setPercent(value, label) {
   pct = Math.max(pct, Math.min(100, Math.round(value)));
-  $("progress-bar").style.width = `${pct}%`;
+  $("progress-bar").style.transform = `scaleX(${pct / 100})`;
   const out = $("progress-pct");
   const from = Number(out.textContent) || 0, to = pct, t0 = performance.now();
   const tick = (now) => {
@@ -64,7 +64,7 @@ export const task = {
     card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
     setPill("run", "In progress");
     document.querySelector(".progress").classList.remove("done", "fail");
-    $("progress-bar").style.width = "0%";
+    $("progress-bar").style.transform = "scaleX(0)";
     $("progress-pct").textContent = "0";
     setStage("Building your part", "Each feature is built in order, then the files are checked", true);
     setPercent(2, title);

@@ -53,7 +53,9 @@ function place() {
   el.scrollIntoView({ block: "nearest", inline: "nearest" });
   const r = el.getBoundingClientRect(), pad = 6;
   spot.hidden = false;
-  Object.assign(spot.style, { left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
+  // size changes instantly; the move between targets is a transform, so it stays smooth
+  Object.assign(spot.style, { left: "0px", top: "0px", width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px`,
+    transform: `translate(${r.left - pad}px, ${r.top - pad}px)` });
 
   // Card beside the target: right if there is room, else left, else below or above.
   card.style.transform = "none";

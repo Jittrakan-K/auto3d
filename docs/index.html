@@ -10,15 +10,15 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#8f86ea">
+<meta name="theme-color" content="#f6f6f9">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611200930">
+<link rel="stylesheet" href="style.css?v=202611201000">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
-<div id="file-open" hidden style="max-width:560px;margin:80px auto;padding:24px;border:2px solid #1a1d1c;font:16px/1.7 'Leelawadee UI',Tahoma,sans-serif;color:#1a1d1c;background:#fff">
-  <h1 style="font-size:20px;margin:0 0 12px">Open this site through its GitHub Pages link</h1>
-  <p style="margin:0">Browsers block a page opened from a folder from loading its parts. Open it from GitHub Pages instead, e.g. <b>https://jittrakan-k.github.io/auto3d/</b>. Setup is in README.md</p>
+<div id="file-open" hidden>
+  <h1>Open this site through its GitHub Pages link</h1>
+  <p>Browsers block a page opened from a folder from loading its parts. Open it from GitHub Pages instead, e.g. <b>https://jittrakan-k.github.io/auto3d/</b>. Setup is in README.md</p>
 </div>
 <script>
   if (location.protocol === "file:") {
@@ -98,8 +98,8 @@
         <a id="pro-open" class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
       </div>
       <p id="pro-tip" class="muted small" hidden>Set up a Claude project in Settings and a drawing goes over in one paste</p>
-      <label for="pro-reply">Claude's answer</label>
-      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="Claude's answer lands here when you come back. Or click Build from answer"></textarea>
+      <label for="pro-reply">Claude’s answer</label>
+      <textarea id="pro-reply" rows="5" spellcheck="false" placeholder="Claude’s answer lands here when you come back. Or click Build from answer"></textarea>
       <button id="pro-build" class="btn primary wide" type="button">Build from answer</button>
       <div id="pro-fix" hidden>
         <p id="pro-error" class="error"></p>
@@ -122,7 +122,7 @@
     </div>
   </section>
 
-  <section class="stage" aria-label="Drawing">
+  <main class="stage" aria-label="Model">
     <header class="stage-head">
       <div class="stage-status">
         <span id="st-ai" class="state" hidden></span>
@@ -145,7 +145,6 @@
 
     <div class="frame">
       <div class="frame-bar">
-        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
         <div class="seg" role="group" aria-label="View">
           <button type="button" data-view="quad" aria-pressed="true">4 views</button>
           <button type="button" data-view="iso" aria-pressed="false">Iso</button>
@@ -207,9 +206,9 @@
           <button id="dl-sldprt" disabled class="btn" type="button">Create</button>
         </div>
       </div>
-      <a id="to-drawing" class="to-drawing" href="drawing.html?from=builder" hidden>Make a 2D drawing of this part <span aria-hidden="true">→</span></a>
+      <a id="to-drawing" class="to-drawing" href="drawing.html?from=builder" hidden>Make a 2D drawing of this part</a>
     </div>
-  </section>
+  </main>
 
   <aside class="inspector" aria-label="Details">
     <div id="no-model" class="muted">Dimensions appear here once a part is built. Change any value to update the model</div>
@@ -240,7 +239,7 @@
         <p id="sw-local-msg"></p>
         <ol class="steps">
           <li>Once: <a href="https://github.com/Jittrakan-K/auto3d/archive/refs/heads/main.zip">download the desktop app (.zip)</a>, extract it and run <b>install.bat</b> (or <b>update.bat</b> if installed)</li>
-          <li>Click <b>Create</b> again. When the browser asks to open the app, tick "Always allow" and open it</li>
+          <li>Click <b>Create</b> again. When the browser asks to open the app, tick “Always allow” and open it</li>
           <li>Allow local network access if the browser asks</li>
         </ol>
         <p class="small"><b>Company PC, cannot install?</b> Click <b>Download</b> on the SOLIDWORKS macro card and run it with your macro button (see Open in SOLIDWORKS below). It gives the same .SLDPRT with a feature tree</p>
@@ -260,7 +259,7 @@
       </summary>
 
       <section class="sw-group">
-        <h3>Set up the button <span>Once</span></h3>
+        <h3>Set up the button once</h3>
         <ol class="sw-steps">
           <li><span>Copy the launcher code</span><button id="copy-launcher" class="cell-btn inline" type="button">Copy</button></li>
           <li><span>Tools › Macro › New, save as <b>AUTO_DESIGN_3D.swp</b></span></li>
@@ -288,7 +287,7 @@
     <label for="api-key">Claude API key</label>
     <input id="api-key" type="password" autocomplete="off" placeholder="sk-ant-...">
     <label class="check"><input id="remember" type="checkbox"> Remember the key in this browser</label>
-    <p class="muted small">Optional. Without a key the site uses your Claude Pro chat. API usage is billed separately from Claude Pro to the key's account. The key goes straight from this browser to Claude and is forgotten when the tab closes unless you tick remember</p>
+    <p class="muted small">Optional. Without a key the site uses your Claude Pro chat. API usage is billed separately from Claude Pro to the key’s account. The key goes straight from this browser to Claude and is forgotten when the tab closes unless you tick remember</p>
     <label for="model">Model</label>
     <select id="model"></select>
     <p class="muted small">claude-opus-5-5 reads drawings in more detail. claude-sonnet-5-5 is cheaper and faster</p>
@@ -312,6 +311,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611200930"></script>
+<script type="module" src="app.js?v=202611201000"></script>
 </body>
 </html>
