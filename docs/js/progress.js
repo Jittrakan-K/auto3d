@@ -122,6 +122,7 @@ export const task = {
     current = null;
     running = false;
     setPill("run", "Waiting");
+    $("progress-label").textContent = title;
     setStage(title, sub, false);
   },
 };

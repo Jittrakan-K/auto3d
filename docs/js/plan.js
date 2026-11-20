@@ -312,7 +312,10 @@ export function parsePlan(raw) {
       if (data.check.holes != null && !(Number.isInteger(data.check.holes) && data.check.holes >= 0)) c.at("check.holes", "must be a whole number");
     }
   }
-  if (typeof data.name !== "string" || !data.name.length || data.name.length > 80) c.at("name", "must be 1 to 80 characters");
+  // A name is a label, not geometry: shorten a long one and fill an empty one instead of failing
+  if (typeof data.name !== "string" || !data.name.trim()) data.name = "Part";
+  data.name = data.name.trim();
+  if (data.name.length > 80) data.name = `${data.name.slice(0, 79).trimEnd()}…`;
   c.str(data, "description", "plan");
   c.num(data, "density_g_cm3", "plan", { def: 7.85, gt: 0 });
   data.parameters = data.parameters || [];

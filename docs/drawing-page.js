@@ -1,5 +1,5 @@
-import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611162245";
-import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611162245";
+import { makeDrawing, projectAll, fmtScale, fmtLen } from "./js/drawing.js?v=202611200930";
+import { toSVG, toDXF, toPDF } from "./js/export2d.js?v=202611200930";
 
 const $ = (id) => document.getElementById(id);
 const state = { K: null, shape: null, views: null, name: "", drawing: null };
@@ -17,7 +17,7 @@ function download(blob, name) {
 const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 async function loadKernel() {
-  const K = await import("./vendor/kernel/cad-kernel.js?v=202611162245");
+  const K = await import("./vendor/kernel/cad-kernel.js?v=202611200930");
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   K.setOC(await K.opencascade({ locateFile: () => wasm }));
   state.K = K;
@@ -36,7 +36,8 @@ async function loadStep(text, name) {
     state.shape = null;
     $("dw-heading").classList.remove("working");
     $("dw-heading").textContent = "Could not read the file";
-    fail(`This file could not be read as a STEP part: ${e.message || e}`);
+    console.error(e);
+    fail("This file could not be read as a STEP part. Export it again from your CAD as STEP AP203 or AP214 and choose it here");
     return;
   }
   state.name = name.replace(/\.(step|stp)$/i, "");
