@@ -101,7 +101,9 @@ export const task = {
     setPill("ok", "Completed");
     setPercent(100, `${name} is ready`);
     document.querySelector(".progress").classList.add("done");
-    setStage("Part ready", "Check the dimensions on the right, then download the files below", false);
+    setStage("Part ready", matchMedia("(max-width: 860px)").matches
+      ? "Check the dimensions further down, then download the files"
+      : "Check the dimensions on the right, then download the files below", false);
   },
 
   fail(message) {
