@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#f6f6f9">
 <meta name="description" content="Build STEP files and SOLIDWORKS 2018+ parts from a command or a drawing">
-<link rel="stylesheet" href="style.css?v=202611201030">
+<link rel="stylesheet" href="style.css?v=202611201045">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -200,11 +200,6 @@
           <div><h3>SOLIDWORKS macro <small>.swb, nothing to install</small></h3><p>Builds the feature tree in 2018+</p></div>
           <button id="dl-sw" disabled class="btn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19.5h14"/></svg> Download</button>
         </div>
-        <div class="file-card">
-          <span class="file-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
-          <div><h3>.SLDPRT <small>via the desktop app</small></h3><p id="sw-local-state">Uses SOLIDWORKS on this PC</p></div>
-          <button id="dl-sldprt" disabled class="btn" type="button">Create</button>
-        </div>
       </div>
       <a id="to-drawing" class="to-drawing" href="drawing.html?from=builder" hidden>Make a 2D drawing of this part</a>
     </div>
@@ -234,17 +229,6 @@
       <h2>Feature tree</h2>
       <ol id="features" class="features"></ol>
 
-      <div id="sw-local-help" class="callout" hidden>
-        <h2>Create .SLDPRT with SOLIDWORKS on this PC</h2>
-        <p id="sw-local-msg"></p>
-        <ol class="steps">
-          <li>Once: <a href="https://github.com/Jittrakan-K/auto3d/archive/refs/heads/main.zip">download the desktop app (.zip)</a>, extract it and run <b>install.bat</b> (or <b>update.bat</b> if installed)</li>
-          <li>Click <b>Create</b> again. When the browser asks to open the app, tick “Always allow” and open it</li>
-          <li>Allow local network access if the browser asks</li>
-        </ol>
-        <p class="small"><b>Company PC, cannot install?</b> Click <b>Download</b> on the SOLIDWORKS macro card and run it with your macro button (see Open in SOLIDWORKS below). It gives the same .SLDPRT with a feature tree</p>
-        <p class="small">Still stuck? Keep <b>start.bat</b> running instead. Stop the background app with <b>stop.bat</b></p>
-      </div>
 
       <details class="raw">
         <summary>Edit JSON plan</summary>
@@ -311,6 +295,6 @@
     </div>
   </form>
 </dialog>
-<script type="module" src="app.js?v=202611201030"></script>
+<script type="module" src="app.js?v=202611201045"></script>
 </body>
 </html>

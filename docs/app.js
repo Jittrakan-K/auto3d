@@ -1,13 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611201030";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611201030";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611201030";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611201030";
-import { startGuide, autoGuide } from "./js/guide.js?v=202611201030";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611201030";
-import { quickPlan } from "./js/quick.js?v=202611201030";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611201030";
-import { task } from "./js/progress.js?v=202611201030";
-import { localStatus, localSldprt, launchLocal, LocalError } from "./js/local.js?v=202611201030";
+import { Viewer } from "./js/viewer.js?v=202611201045";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611201045";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611201045";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611201045";
+import { startGuide, autoGuide } from "./js/guide.js?v=202611201045";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611201045";
+import { quickPlan } from "./js/quick.js?v=202611201045";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611201045";
+import { task } from "./js/progress.js?v=202611201045";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -67,12 +66,12 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611201030"),
-    fetch("assets/macro-helpers.bas?v=202611201030").then((r) => r.text()),
-    fetch("assets/plan-schema.json?v=202611201030").then((r) => r.json()),
-    fetch("assets/system-prompt.txt?v=202611201030").then((r) => r.text()),
+    import("./vendor/kernel/cad-kernel.js?v=202611201045"),
+    fetch("assets/macro-helpers.bas?v=202611201045").then((r) => r.text()),
+    fetch("assets/plan-schema.json?v=202611201045").then((r) => r.json()),
+    fetch("assets/system-prompt.txt?v=202611201045").then((r) => r.text()),
   ]);
-  state.chatFormat = await fetch("assets/chat-format.txt?v=202611201030").then((r) => r.text());
+  state.chatFormat = await fetch("assets/chat-format.txt?v=202611201045").then((r) => r.text());
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   const oc = await K.opencascade({ locateFile: () => wasm });
   K.setOC(oc);
@@ -120,7 +119,7 @@ async function showJob(raw, plan, result, source) {
   show($("no-model"), false);
   show($("details"), true);
   show($("title-block"), true);
-  for (const id of ["dl-step", "dl-sldprt", "dl-sw"]) $(id).disabled = false;
+  for (const id of ["dl-step", "dl-sw"]) $(id).disabled = false;
   show($("to-drawing"), true);
   if (!document.body.classList.contains("seen-model")) { $("sw-setup").open = false; document.body.classList.add("seen-model"); }
   show($("modify-row"), true);
@@ -498,60 +497,6 @@ $("build-json").onclick = () => {
   buildRaw(raw, "Edited JSON plan");
 };
 $("dl-step").onclick = () => download(state.job.step, `${safeName(state.job.plan.name)}.step`);
-// ---------- .SLDPRT through SOLIDWORKS on this computer ----------
-function localHelp(text) {
-  $("sw-local-msg").textContent = text || "";
-  show($("sw-local-help"), !!text);
-  if (text) {
-    $("details").hidden = false;
-    $("sw-local-help").scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-}
-async function refreshLocal() {
-  const st = await localStatus();
-  const cell = $("sw-local-state");
-  if (st.blocked) cell.textContent = "Browser blocked local access";
-  else if (!st.running) cell.textContent = "Desktop app not found";
-  else if (!st.sw.available) cell.textContent = st.sw.reason;
-  else cell.textContent = `SOLIDWORKS ${st.sw.version} on this PC, opens in ${st.sw.version}+`;
-  return st;
-}
-function sldprtSay(text) { $("sw-local-state").textContent = text; }
-const NO_APP = "The desktop app is not on this PC. Use SOLIDWORKS macro instead, it needs nothing installed";
-$("dl-sldprt").onclick = async () => {
-  localHelp(""); fail("");
-  const btn = $("dl-sldprt");
-  btn.disabled = true;
-  btn.textContent = "Checking…";
-  sldprtSay("Looking for the desktop app on this PC");
-  try {
-    let st = await localStatus(8000);
-    if (st.blocked) { sldprtSay("Browser blocked local access"); localHelp("The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"); return; }
-    if (!st.running) {
-      btn.textContent = "Starting…";
-      st = await launchLocal(20000, (sec) => sldprtSay(`Starting the desktop app. Click Open if the browser asks (${sec} s)`));
-      if (!st.running) {
-        sldprtSay(st.blocked ? "Browser blocked local access" : "Desktop app not found");
-        localHelp(st.blocked
-          ? "The browser blocks this site from reaching your PC. Click the icon left of the address, open Site settings, allow local network access, then try again"
-          : NO_APP);
-        return;
-      }
-    }
-    if (!st.sw.available) { sldprtSay(st.sw.reason); localHelp(st.sw.reason); return; }
-    btn.textContent = "Building…";
-    sldprtSay(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
-    busy(`SOLIDWORKS ${st.sw.version} is building each feature, 1 to 2 minutes`);
-    const r = await localSldprt(state.job.raw);
-    download(r.blob, r.name);
-    sldprtSay(r.ok ? `Saved ${r.name}` : r.message);
-    if (!r.ok) fail(r.message);
-  } catch (e) {
-    if (e instanceof LocalError) { sldprtSay("Could not reach the desktop app"); localHelp(e.message); }
-    else fail(`Something went wrong: ${e.message}`);
-  } finally { busy(""); btn.disabled = false; btn.textContent = "Create"; }
-};
-
 $("to-drawing").onclick = async (e) => {
   e.preventDefault();
   try {

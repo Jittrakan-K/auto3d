@@ -10,7 +10,7 @@ const STEPS = [
   { sel: "#generate", title: "3. Build model", text: "Builds each feature in order, checks the result and shows it. Nothing downloads until you choose a file" },
   { sel: "#examples", title: "Try a sample", text: "Click any sample part to see a finished result straight away" },
   { sel: ".frame", title: "4. Check the part", text: "Four views like a drawing. Switch to one view, Lines or Shaded, and drag to turn the model" },
-  { sel: ".files-grid", title: "5. Download", text: "STEP opens in any CAD. SOLIDWORKS macro rebuilds the part with a feature tree and dimensioned sketches. .SLDPRT needs the desktop app" },
+  { sel: ".files-grid", title: "5. Download", text: "STEP opens in any CAD. SOLIDWORKS macro rebuilds the part with a feature tree and dimensioned sketches" },
   { sel: "#sw-setup", title: "Set up SOLIDWORKS once", text: "Make the macro button one time. After that every part is one click in SOLIDWORKS, with nothing to install" },
   { sel: "#open-settings", title: "Settings", text: "Add a Claude project link so a drawing goes over in one paste, or an API key to skip Claude chat entirely" },
   { sel: '.rail a[href="history.html"]', title: "History", text: "Every part you build is kept here. Open it again, back it up or delete it" },

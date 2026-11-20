@@ -4,8 +4,8 @@
  * axes: neutral/inter/violet · posture: kept · contrast: pass · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E3 S4 R4 V3 · weakest: E (the view stays an app shell), kept on purpose: positions and functions are the owner's */
 /* Hallmark · waive 75 · .app fits 100vh at ≥861px with four columns · body 14px so the builder fits one window without scrolling (owner's request) */
-@import url("./tokens.css?v=202611201030");
-@import url("./base.css?v=202611201030");
+@import url("./tokens.css?v=202611201045");
+@import url("./base.css?v=202611201045");
 
 @font-face{font-family:"Inter";font-weight:400;src:url(vendor/fonts/inter-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+00D7,U+203A;font-display:swap}
 @font-face{font-family:"Inter";font-weight:500;src:url(vendor/fonts/inter-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+00D7,U+203A;font-display:swap}
@@ -220,7 +220,8 @@ body:not(.has-model) .vlabel{opacity:0}
 #tb-verify.bad{background:var(--color-error-bg);color:var(--color-error)}
 #tb-verify.bad::after{display:none}
 body:not(.has-model) .stat dd{color:var(--color-muted)}
-.files-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-xs)}
+.files-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xs)}
+.drawing-page .files-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .file-card{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr auto;gap:var(--space-xs) var(--space-sm);padding:var(--space-sm);border:var(--rule-hair) solid var(--color-rule);border-radius:var(--radius-card);background:var(--color-paper-2);transition:border-color var(--dur-micro)}
 .file-card:hover{border-color:var(--color-rule-strong)}
 .file-card.main{border-color:var(--color-accent-line)}
@@ -354,7 +355,7 @@ dialog .steps.small{font-size:var(--text-sm);gap:var(--space-xs)}
   .app{grid-template-columns:72px minmax(280px,320px) minmax(0,1fr) minmax(250px,290px)}
 }
 @media (max-width:1100px){
-  .files-grid{grid-template-columns:minmax(0,1fr)}
+  .files-grid,.drawing-page .files-grid{grid-template-columns:minmax(0,1fr)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 /* desktop: the whole app fits the window, columns scroll on their own */
@@ -375,7 +376,8 @@ dialog .steps.small{font-size:var(--text-sm);gap:var(--space-xs)}
   .stat.wide dd{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #tb-verify{font-size:var(--text-xs);padding:1px var(--space-xs);white-space:normal}
   .result{gap:var(--space-xs)}
-  .files-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .files-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .drawing-page .files-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .file-card{grid-template-columns:minmax(0,1fr);gap:var(--space-xs);padding:var(--space-sm)}
   .file-ic,.file-card h3 small,.file-card p{display:none}
   .file-card .btn{grid-column:auto;width:100%;min-height:34px;padding:0 var(--space-sm)}
