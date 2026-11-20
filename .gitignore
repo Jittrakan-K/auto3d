@@ -14,3 +14,4 @@ sw_test_log.txt
 # node tools
 node_modules/
 .hallmark/
+.impeccable/
