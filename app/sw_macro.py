@@ -427,7 +427,7 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
                  dia As Double, depth As Double, vals As String, pts As String, dx As Double, dy As Double, dz As Double, _
                  expV As Double, ex As Double, ey As Double, ez As Double) As Boolean
     ' Hole Wizard, standard JIS (9). Each hole is picked on the face where it starts.
-    ' Through holes try Up To Next (11), then Through All (1).
+    ' Through holes try Up To Next (2), then Through All (1); the end condition is read back.
     Dim v As Variant, p As Variant, q As Variant, k As Long, tries As Long, endT As Long, f As Object
     Dim a(11) As Double
     HoleWiz = False
@@ -439,7 +439,7 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
     For tries = 0 To 1
         If thru Then
             endT = firstEnd
-            If tries = 1 Then endT = IIf(firstEnd = 11, 1, 11)
+            If tries = 1 Then endT = IIf(firstEnd = 2, 1, 2)
             If gtype = 4 Then a(7) = IIf(endT = 1, 1, 2)
         Else
             If tries = 1 Then Exit Function
@@ -458,7 +458,7 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
         If Not f Is Nothing Then
             If UBound(p) > 0 Then AddHolePoints f, p
             Part.EditRebuild3
-            If MatchesLoose(expV, ex, ey, ez) Then
+            If MatchesLoose(expV, ex, ey, ez) And (Not thru Or EndIs(f, endT)) Then
                 ' Standard drill points and sizes change the volume a little; later checks allow for it.
                 VolAdj = VolNow() - expV
                 On Error Resume Next
@@ -478,6 +478,17 @@ Function HoleWiz(label As String, gtype As Long, fastener As Long, size As Strin
         End If
     Next tries
     Part.ClearSelection2 True
+End Function
+
+Function EndIs(f As Object, endT As Long) As Boolean
+    ' A small hole barely changes the volume, so check the end condition itself:
+    ' SOLIDWORKS falls back to Blind when it does not take the one asked for.
+    Dim d As Object
+    EndIs = True
+    On Error Resume Next
+    Set d = f.GetDefinition
+    If Not d Is Nothing Then EndIs = (d.EndCondition = endT)
+    On Error GoTo 0
 End Function
 
 Sub PickEdge(x As Double, y As Double, z As Double)

@@ -40,7 +40,7 @@ function wizardLine(step, last) {
   }).join(",");
   const pts = w.points.map((p) => p.map(m).join(",")).join(";");
   const label = ascii(step.name, step.id);
-  return `    If HoleWiz("${label}", ${w.type}, ${w.fastener}, "${w.size}", ${vb(w.through)}, ${w.end === "through_all" ? 1 : 11}, ` +
+  return `    If HoleWiz("${label}", ${w.type}, ${w.fastener}, "${w.size}", ${vb(w.through)}, ${w.end === "through_all" ? 1 : 2}, ` +
     `${w.dia === -1 ? "-1" : m(w.dia)}, ${w.through ? "0.0" : m(w.depth)}, "${vals}", "${pts}", ${num(w.dir[0])}, ${num(w.dir[1])}, ${num(w.dir[2])}, ${expect(last)}) Then\n` +
     "        WizFlag 1\n        Exit Sub\n    End If\n    WizFlag 0";
 }
@@ -87,7 +87,7 @@ export function render(steps, partName) {
   const fileName = ascii(partName, "AutoDesign_Part").replaceAll(" ", "_");
   const calls = steps.map((_, i) => `    Step${i + 1}`).join("\n");
   const subs = steps.map((s, i) => stepSub(i + 1, s, steps)).join("\n\n");
-  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-16b)
+  const head = `' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-20a)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves ${fileName}.SLDPRT next to this macro.
 Option Explicit

@@ -1,12 +1,12 @@
-import { Viewer } from "./js/viewer.js?v=202611201045";
-import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611201045";
-import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611201045";
-import { canSnap, drawingPng } from "./js/snap.js?v=202611201045";
-import { startGuide, autoGuide } from "./js/guide.js?v=202611201045";
-import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611201045";
-import { quickPlan } from "./js/quick.js?v=202611201045";
-import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611201045";
-import { task } from "./js/progress.js?v=202611201045";
+import { Viewer } from "./js/viewer.js?v=202611201100";
+import { useKernel, stepBlob, verifyStep, meshOf } from "./js/cad.js?v=202611201100";
+import { useHelpers, render as renderMacro } from "./js/macro.js?v=202611201100";
+import { canSnap, drawingPng } from "./js/snap.js?v=202611201100";
+import { startGuide, autoGuide } from "./js/guide.js?v=202611201100";
+import { MODELS, makePlan, toBlocks, tryBuild, checkPlan, AiError } from "./js/ai.js?v=202611201100";
+import { quickPlan } from "./js/quick.js?v=202611201100";
+import { addEntry, getEntry, loadHistory } from "./js/history.js?v=202611201100";
+import { task } from "./js/progress.js?v=202611201100";
 
 const $ = (id) => document.getElementById(id);
 const VIEW_NAMES = { iso: "Isometric", front: "Front", top: "Top", right: "Right" };
@@ -66,12 +66,12 @@ function refreshStatus() {
 
 async function loadKernel() {
   const [K, helpers, schema, system] = await Promise.all([
-    import("./vendor/kernel/cad-kernel.js?v=202611201045"),
-    fetch("assets/macro-helpers.bas?v=202611201045").then((r) => r.text()),
-    fetch("assets/plan-schema.json?v=202611201045").then((r) => r.json()),
-    fetch("assets/system-prompt.txt?v=202611201045").then((r) => r.text()),
+    import("./vendor/kernel/cad-kernel.js?v=202611201100"),
+    fetch("assets/macro-helpers.bas?v=202611201100").then((r) => r.text()),
+    fetch("assets/plan-schema.json?v=202611201100").then((r) => r.json()),
+    fetch("assets/system-prompt.txt?v=202611201100").then((r) => r.text()),
   ]);
-  state.chatFormat = await fetch("assets/chat-format.txt?v=202611201045").then((r) => r.text());
+  state.chatFormat = await fetch("assets/chat-format.txt?v=202611201100").then((r) => r.text());
   const wasm = new URL("vendor/kernel/replicad_single.wasm", document.baseURI).href;
   const oc = await K.opencascade({ locateFile: () => wasm });
   K.setOC(oc);

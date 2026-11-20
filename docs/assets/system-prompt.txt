@@ -30,7 +30,7 @@ Holes become SOLIDWORKS Hole Wizard features, standard JIS only, so give each ho
 - A thread callout ("M4", "M4x0.7", "M4タップ", "M4 THRU", "M4 DP8") is a tapped hole: set "thread" to the thread, "diameter" to the tap drill, "tap_type" "bottoming" unless the drawing says otherwise, and "thread_depth" for a blind thread.
 - "Ø3.4 THRU" or "Ø3.4 THRU ALL" with no thread is a drill or clearance hole: no thread. Set "screw" when the drawing names the screw.
 - A counterbore or countersink keeps cbore_d/cbore_depth or csk_d/csk_angle_deg, with "screw" if known.
-- Through holes end "up_to_next" (the default); use "through_all" when the hole must pass several walls.
+- "THRU" and "THRU ALL" on a drawing both mean "through": true with "end": "up_to_next" (Up To Next in SOLIDWORKS). Never make them blind. Use "through_all" only when the user's own command asks for Through All.
 Common callouts: "4-Ø3.4 THRU, C'BORE Ø6.5 DP3" or "4-Ø3.4キリ Ø6.5深サ3" is a counterbored hole; "M4" or "M4タップ" is a tapped hole, modelled as the tap drill (M3 2.5, M4 3.3, M5 4.2, M6 5.0, M8 6.8, M10 8.5); "C2" is a 2 mm 45° chamfer; "R5" a radius; "PCD" or "P.C.D." a bolt circle. An arc slot is a profile of two arcs and two end arcs about one centre.
 
 HONESTY ABOUT DRAWINGS
