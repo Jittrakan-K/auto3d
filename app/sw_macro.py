@@ -682,7 +682,7 @@ def render(steps: list[Step], part_name: str, quiet: bool = False) -> str:
     file_name = _ascii(part_name, "AutoDesign_Part").replace(" ", "_")
     calls = "\n".join(f"    Step{i}" for i in range(1, len(steps) + 1))
     subs = "\n\n".join(_step_sub(i, s) for i, s in enumerate(steps, 1))
-    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-16b)
+    head = f'''' AUTO DESIGN 3D macro for SOLIDWORKS 2018 (build 2026-11-20a)
 ' Tools > Macro > Run, choose this .swb file (or paste it into a new macro).
 ' It builds the part, then saves {file_name}.SLDPRT next to this macro.
 Option Explicit
